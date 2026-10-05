@@ -13,14 +13,14 @@ Claude Code's home. `./install.sh` copies this folder into `~/.claude` and merge
 
 ## What is here
 
-| Path                           | What it is                                            | Why                                                               |
-| ------------------------------ | ----------------------------------------------------- | ----------------------------------------------------------------- |
-| `CLAUDE.md`                    | Rules for the main session                            | One short core. Less text, better adherence.                      |
-| `settings.json`                | Merged into `~/.claude/settings.json` by `install.sh` | Repo keys win. Claude Code keeps the keys it writes.              |
-| `agents/`                      | `scout`, `verifier`, `planner`                        | A fresh context for a wide read, a refutation or a long plan.     |
-| `hooks/`                       | Git guard, worktree guard, session plans              | A rule in code always runs. A rule in text is only advice.        |
-| `statusline-command.sh`        | The status line                                       | Profile, folder, branch, model, tokens, diff and age in one line. |
-| [`../bin/quiet`](../bin/quiet) | `quiet <command>`, installed in `~/.local/bin`        | One line on a pass, the full output on a failure. Saves context.  |
+| Path                           | What it is                                            | Why                                                                           |
+| ------------------------------ | ----------------------------------------------------- | ----------------------------------------------------------------------------- |
+| `CLAUDE.md`                    | Rules for the main session                            | One short core. Less text, better adherence.                                  |
+| `settings.json`                | Merged into `~/.claude/settings.json` by `install.sh` | Repo keys win. Claude Code keeps the keys it writes.                          |
+| `agents/`                      | `scout`, `verifier`, `worker`, `planner`              | A fresh context for a wide read, a refutation, delegated work or a long plan. |
+| `hooks/`                       | Git guard, worktree guard, session plans              | A rule in code always runs. A rule in text is only advice.                    |
+| `statusline-command.sh`        | The status line                                       | Profile, folder, branch, model, tokens, diff and age in one line.             |
+| [`../bin/quiet`](../bin/quiet) | `quiet <command>`, installed in `~/.local/bin`        | One line on a pass, the full output on a failure. Saves context.              |
 
 ## How Claude sizes the work
 
@@ -45,14 +45,16 @@ Claude Code's home. `./install.sh` copies this folder into `~/.claude` and merge
 
 ## Agents
 
-| Agent      | Model              | Job                                                                                            | Why this way                                                                   |
-| ---------- | ------------------ | ---------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------ |
-| `scout`    | Sonnet 5.5, `high` | Maps what exists. Returns facts, checks, open decisions and risk, or `CLEAR:`. Read-only.      | Reading is cheap, and speed matters more.                                      |
-| `verifier` | Opus 5.5, `xhigh`  | Tries to refute finished work: code, an analysis, a plan, a number. Has no Edit or Write tool. | A missed failure costs more than tokens.                                       |
-| `planner`  | Opus 5.5, `xhigh`  | Writes one plan file in `~/.local/state/plans/<repo>/`, only when you ask by name.             | Outside the repo, so nothing commits it. A hook points to it after compaction. |
+| Agent      | Model              | Job                                                                                                                                                         | Why this way                                                                                                                                    |
+| ---------- | ------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------- |
+| `scout`    | Sonnet 5.5, `high` | Maps what exists. Returns facts, checks, open decisions and risk, or `CLEAR:`. Read-only.                                                                   | Reading is cheap, and speed matters more.                                                                                                       |
+| `verifier` | Opus 5.5, `xhigh`  | Tries to refute finished work: code, an analysis, a plan, a number. Has no Edit or Write tool.                                                              | A missed failure costs more than tokens.                                                                                                        |
+| `worker`   | Opus 5.5, `xhigh`  | Does the work Claude delegates: research, code search, multi-step tasks and code changes. Used instead of `general-purpose`. Report leads with the outcome. | `general-purpose` plus how to find the repo's coding rules, and pragmatism and concision rules. The rules live in one file, not in every brief. |
+| `planner`  | Opus 5.5, `xhigh`  | Writes one plan file in `~/.local/state/plans/<repo>/`, only when you ask by name.                                                                          | Outside the repo, so nothing commits it. A hook points to it after compaction.                                                                  |
 
-- All three set `omitClaudeMd: true`. Main-session rules ("fix each failure", "run the gate", "ask me") would fight their jobs. Each reads the repo's `AGENTS.md` and `CLAUDE.md` itself.
-- None of the three can start another agent.
+- All four set `omitClaudeMd: true`. Main-session rules ("fix each failure", "run the gate", "ask me") would fight their jobs. Each reads the repo's `AGENTS.md` and `CLAUDE.md` itself.
+- None of the four can start another agent.
+- Each prompt keeps the style of the built-in `general-purpose` prompt: an opening paragraph, then plain labeled lists such as `Your strengths:` and `Guidelines:`. No bold, and no headings outside the plan template.
 
 ## Settings, grouped
 
@@ -70,6 +72,7 @@ Claude Code's home. `./install.sh` copies this folder into `~/.claude` and merge
 - **Small task:** just ask. No ceremony.
 - **Second opinion on anything:** "verify this".
 - **Fuzzy request:** "align first".
+- **Big change on many files:** "use workers". Claude gives each independent part to a `worker`.
 - **More than one sitting:** "use the planner".
 - **See the real app run:** `/verify`. Run `/run-skill-generator` once per repo; `/verify` and `verifier` then reuse its launch recipe.
 - **Bugs in a diff:** `/code-review`. **Simpler code:** `/simplify`.

@@ -8,7 +8,8 @@ Scope and quality are separate. Scope is exactly what I asked for. Quality is wh
 - Before you report, review your work as that reviewer would. Done is when you'd approve it: request met, checks green, nothing extra. Then report and stop; no rating or polish rounds unless I ask.
 - Keep going while a step doesn't need me. Ask before deleting data or changing anything outside this repo. When you need me, open with it: numbered, one concrete action each.
 - Write to me in ASD-STE100 Simplified Technical English. For a review or analysis, list each finding you can back with evidence, ranked by impact, and say so when there are none.
-- Work directly, with the fewest subagents needed. Search with the grep, glob and read tools yourself, not through the task tool, except for `scout` as `# Size the work` says.
+- Work directly, with the fewest subagents needed. Search with the grep, glob and read tools yourself, not through the task tool, except for `scout` as `# Size the work` says. When a large change splits into independent parts on disjoint files, give each part to a `worker`, briefed with the goal, the files it owns, the example or plan to follow, and the check, and review every diff it returns before you accept it.
+- Call the task tool with `subagent_type` `planner` only when I ask for the planner by name. Brief it with the request, the repo root, the constraints, the decisions, the relevant files and any existing plan or blocker. It returns a plan: put its steps in your todo list, and send a revision to the same `planner` with its `task_id`. My task request authorizes the work, not the planner's plan.
 
 # Size the work
 
@@ -18,7 +19,7 @@ The work can be code, a product decision, an analysis, a document, a config or a
 - Verify: a mistake in the work is costly or hard to see. Examples: code that changes a schema, migrates stored data, changes how money moves, changes auth, permissions or concurrency, or changes an existing public contract; or a number, claim or recommendation that drives a costly decision. Before you report, call the task tool with `subagent_type` `verifier`, and brief it with my request word for word, the work (the repo root and changed paths, or the full text) and the claims to prove. Fix each `FAIL` you confirm, and send the fixes to the same `verifier` with its `task_id`. Stop after 3 `verifier` runs in total. Report each claim that did not get a `PASS`.
 - Align: the request reads two ways that lead to different results, or it leaves a choice only I can make, such as product behavior, scope, priority or spend. When the facts need a wide read, call the task tool with `subagent_type` `scout`. Then give me 10 lines at most: the goal, the options with their trade-offs and evidence, what is out of scope, how we will know it worked, and your pick. Act after I choose. Make the other choices as a senior engineer would, and say which. Align and Verify can both apply.
 - Check code by reading the change first. Beyond the checks and the gate above, run something only when reading cannot settle that the change works, and then the narrowest thing: a script, one HTTP request, the CLI, or agent-browser for a page. Start the whole app or several services only when the behavior spans them. Add a test only where the repo already has tests of that kind, unless I ask. Check a decision or an analysis against its sources: the code, the data, the docs or the page.
-- When you run as `scout` or `verifier`, your agent prompt wins where it conflicts with this file.
+- When you run as `scout`, `verifier`, `worker` or `planner`, your agent prompt wins where it conflicts with this file.
 
 # Git
 

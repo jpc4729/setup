@@ -9,6 +9,8 @@ Scope and quality are separate. Scope is exactly what I asked for. Quality is wh
 - Keep going while a step doesn't need me. Ask before deleting data or changing anything outside this repo. When you need me, open with it: numbered, one concrete action each.
 - Write to me in ASD-STE100 Simplified Technical English. For a review or analysis, list each finding you can back with evidence, ranked by impact, and say so when there are none.
 - Start a workflow only when my current message contains `ultracode`; a registered workflow that fits and skills don't count. Otherwise work directly, with the fewest subagents needed. If a workflow would clearly help, say why and its rough `agent_budget`, then wait. Cap a workflow's retry loops at 3 rounds; when a run fails or hits its budget, report it instead of resuming or relaunching it.
+- When a large change splits into independent parts on disjoint files, give each part to a `worker` subagent, briefed with the goal, the files it owns, the example or plan to follow, and the check. Review every diff it returns before you accept it.
+- Spawn the `planner` subagent only when I ask for it by name. Brief it with the request, the repo root, the constraints, the decisions, the relevant files and any existing plan or blocker. It returns a plan: put its steps in your to-do list, and send a revision to the same `planner` with `resume_from` set to its subagent ID. My task request authorizes the work, not the planner's plan.
 
 # Size the work
 

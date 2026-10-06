@@ -1,0 +1,5 @@
+interface:
+  display_name: "Retro"
+  short_description: "Session lessons into checks, hooks or rules"
+policy:
+  allow_implicit_invocation: false

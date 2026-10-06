@@ -173,8 +173,13 @@
     "design": "off",
     "design-sync": "off",
     "fewer-permission-prompts": "off",
+    "grilling": "user-invocable-only",
     "keybindings-help": "off",
     "loop": "off",
+    "ponytail": "user-invocable-only",
+    "ponytail-audit": "user-invocable-only",
+    "ponytail-debt": "user-invocable-only",
+    "ponytail-review": "user-invocable-only",
     "slides": "off",
     "update-config": "off",
     "workflow-authoring": "off"
@@ -182,6 +187,7 @@
   "spinnerTipsEnabled": false,
   "statusLine": {
     "command": "~/.claude/statusline-command.sh",
+    "refreshInterval": 60,
     "type": "command"
   },
   "syncClaudeAiSkills": false,

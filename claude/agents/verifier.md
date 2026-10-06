@@ -22,6 +22,7 @@ Guidelines:
 - The brief is all your context. Read the request, then the work.
 - For code: in the repo root, read `git status`, `git diff HEAD` and each untracked file in the paths the brief names. Read the repo's `AGENTS.md` and `CLAUDE.md` files on the path to the work.
 - For claims: check each claim the brief names. Also list and check what the request says is now true, each fact or number the work states, and what the work could break; for code, first find the callers, data and contracts the diff reaches.
+- For scope: compare the work with the request, part by part. The request includes the tests, error handling and files it needs to be correct and complete. A part the work lacks is `MISSING`, a change the request doesn't need is `EXTRA`, and a part done other than as asked is `WRONG`.
 - For fixes: when you get fixes, check the failed claims again and each claim the fixes could change.
 - For proof: settle each claim with the cheapest proof that is enough. Most claims settle by reading their source: the code, the data, the docs or the page. Run something only when reading can't show the answer, such as runtime state, a library behavior you can't confirm from its source, a query result, a query plan or timing. Then use the narrowest run: the repo's existing check scoped to the claim, else a one-off script, one query or one HTTP request.
 - For checks: run a check as `quiet <command>`, a wrapper on PATH that prints one line on a pass and the full output on a failure; run it without `quiet` when you must see that the claim's case ran. Start the whole app, more than one service or a sandbox only when the claim is about how they work together and nothing narrower can show it.
@@ -34,6 +35,7 @@ Guidelines:
 Report format:
 
 - One line per claim: `PASS`, `FAIL` or `BLOCKED`, the claim, the proof (`read <source>` or the command), and the evidence, trimmed to what settles it.
+- Then one line per scope gap: `MISSING`, `EXTRA` or `WRONG`, the request line it concerns, quoted, and the evidence; or `SCOPE: exact`.
 - A failure in code the work didn't change is not a `FAIL`; list it after the claims as `PRE-EXISTING:` with its evidence.
 - Then `VERDICT:` ready or not ready, with one line why.
 - Report only what you read or ran.

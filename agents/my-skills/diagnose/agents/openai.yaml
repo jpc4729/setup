@@ -1,0 +1,5 @@
+interface:
+  display_name: "Diagnose"
+  short_description: "Bug cause from a failing command"
+policy:
+  allow_implicit_invocation: false

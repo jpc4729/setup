@@ -1,6 +1,7 @@
 ---
 name: handoff
 description: "Summarize the current conversation into a handoff document and a kickoff prompt when the user asks to transfer work to another session."
+disable-model-invocation: true
 metadata:
   short-description: "Handoff document and kickoff prompt"
 ---

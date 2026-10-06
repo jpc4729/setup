@@ -126,3 +126,35 @@ for dir in "$repo"/agents/skills/*/ "$repo"/agents/my-skills/*/; do
     ln -sfn "../../.agents/skills/$name" "$link"
   fi
 done
+
+# Skills you start by name. The `user-invocable-only` entries of Claude's
+# skillOverrides are the one list. Codex, Cursor and Grok have no such setting,
+# so each installed copy gets the flag each one honors: `disable-model-invocation`
+# for Cursor and Grok, `policy.allow_implicit_invocation` for Codex. opencode
+# denies the same names in opencode.jsonc.
+while IFS= read -r name; do
+  for skill in "$HOME/.agents/skills/$name" "$HOME/.cursor/skills/$name"; do
+    if [[ -n "$dry" ]]; then
+      echo "start $skill only by name"
+      continue
+    fi
+    [[ -f "$skill/SKILL.md" ]] || continue
+    awk '
+      NR == 1 && $0 == "---" { print; print "disable-model-invocation: true"; fm = 1; next }
+      fm && $0 == "---" { fm = 0 }
+      fm && /^disable-model-invocation:/ { next }
+      { print }
+    ' "$skill/SKILL.md" > "$skill/SKILL.md.tmp"
+    mv "$skill/SKILL.md.tmp" "$skill/SKILL.md"
+    mkdir -p "$skill/agents"
+    yaml="$skill/agents/openai.yaml"
+    [[ -f "$yaml" ]] || : > "$yaml"
+    awk '
+      /^[[:space:]]*allow_implicit_invocation:/ { next }
+      { print }
+      /^policy:/ { print "  allow_implicit_invocation: false"; done = 1 }
+      END { if (!done) { print "policy:"; print "  allow_implicit_invocation: false" } }
+    ' "$yaml" > "$yaml.tmp"
+    mv "$yaml.tmp" "$yaml"
+  done
+done < <(jq -r '.skillOverrides // {} | to_entries[] | select(.value == "user-invocable-only") | .key' "$repo/claude/settings.json")

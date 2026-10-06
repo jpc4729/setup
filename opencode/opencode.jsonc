@@ -74,6 +74,16 @@
     "external_directory": {
       "*": "ask"
     },
+    // Skills you start by name: the model can't load them, and `/name` still
+    // runs them. Same names as the `user-invocable-only` entries of Claude's
+    // skillOverrides.
+    "skill": {
+      "grilling": "deny",
+      "ponytail": "deny",
+      "ponytail-audit": "deny",
+      "ponytail-debt": "deny",
+      "ponytail-review": "deny"
+    },
 
     // opencode has no PreToolUse hook a shell script can register, so unlike
     // Claude, Codex and Grok this list is the whole of its enforcement. It is

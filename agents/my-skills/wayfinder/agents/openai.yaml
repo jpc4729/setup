@@ -1,0 +1,5 @@
+interface:
+  display_name: "Wayfinder"
+  short_description: "Decision map for work bigger than one session"
+policy:
+  allow_implicit_invocation: false

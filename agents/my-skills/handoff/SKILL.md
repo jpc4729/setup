@@ -1,6 +1,7 @@
 ---
 name: handoff
 description: "Summarize the current conversation into a handoff document and a kickoff prompt when the user asks to transfer work to another session."
+argument-hint: "[what the next session will do]"
 disable-model-invocation: true
 metadata:
   short-description: "Handoff document and kickoff prompt"
@@ -14,6 +15,7 @@ The handoff must work with any model, harness, or tool set. Describe the work an
 
 Write it so a new session can continue the work. If file writing is available and permitted, save a Markdown file in the operating system's temporary directory and report its path. Never save it in the current workspace. Otherwise, print the full document in the response. If the next session cannot access a saved file, tell the user to attach or paste its contents.
 
+- First reach a safe point: finish the current step or undo it, so no file is left half-edited. Record what is still broken.
 - State the objective, scope, constraints, and definition of done. Record pending questions and approvals; the handoff does not grant new permissions.
 - State what is done, what remains, and what is blocked. Include the checks actually run and their results, with commands when applicable. Mark unverified claims and checks not run.
 - Record relevant working state, such as the repository, branch, changed files, and unfinished operations. Explain what must be checked again before work resumes.

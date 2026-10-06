@@ -13,14 +13,14 @@ Claude Code's home. `./install.sh` copies this folder into `~/.claude` and merge
 
 ## What is here
 
-| Path                           | What it is                                            | Why                                                                                                                |
-| ------------------------------ | ----------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------ |
-| `CLAUDE.md`                    | Rules for the main session                            | One short core. Less text, better adherence.                                                                       |
-| `settings.json`                | Merged into `~/.claude/settings.json` by `install.sh` | Repo keys win. Claude Code keeps the keys it writes.                                                               |
-| `agents/`                      | `scout`, `verifier`, `worker`, `planner`              | A fresh context for a wide read, a refutation, delegated work or a long plan.                                      |
-| `hooks/`                       | Git guard, worktree guard, session plans              | A rule in code always runs. A rule in text is only advice.                                                         |
-| `statusline-command.sh`        | The status line                                       | Profile, folder, branch, model, tokens, rate limits and prompt cache when they need you, diff and age in one line. |
-| [`../bin/quiet`](../bin/quiet) | `quiet <command>`, installed in `~/.local/bin`        | One line on a pass, the full output on a failure. Saves context.                                                   |
+| Path                           | What it is                                            | Why                                                                                                                       |
+| ------------------------------ | ----------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------- |
+| `CLAUDE.md`                    | Rules for the main session                            | One short core. Less text, better adherence.                                                                              |
+| `settings.json`                | Merged into `~/.claude/settings.json` by `install.sh` | Repo keys win. Claude Code keeps the keys it writes.                                                                      |
+| `agents/`                      | `scout`, `verifier`, `worker`, `planner`              | A fresh context for a wide read, a refutation, delegated work or a long plan.                                             |
+| `hooks/`                       | Git guard, worktree guard, session plans              | A rule in code always runs. A rule in text is only advice.                                                                |
+| `statusline-command.sh`        | The status line                                       | Profile, folder, branch, model, tokens, rate limits and prompt cache (dim until they need you), diff and age in one line. |
+| [`../bin/quiet`](../bin/quiet) | `quiet <command>`, installed in `~/.local/bin`        | One line on a pass, the full output on a failure. Saves context.                                                          |
 
 ## How Claude sizes the work
 
@@ -76,6 +76,7 @@ Claude Code's home. `./install.sh` copies this folder into `~/.claude` and merge
 - **Fuzzy request:** "align first".
 - **Big change on many files:** "use workers". Claude gives each independent part to a `worker`.
 - **More than one sitting:** "use the planner".
+- **Big idea with open questions:** `/wayfinder`. It maps the open decisions in a local file and resolves one per session.
 - **See the real app run:** `/verify`. Run `/run-skill-generator` once per repo; `/verify` and `verifier` then reuse its launch recipe.
 - **Bugs in a diff:** `/code-review`. **Simpler code:** `/simplify`.
 - **New session, same task:** the `handoff` skill.

@@ -1,6 +1,6 @@
 ---
 name: context-doctor
-description: "Minimizes agent-context Markdown in the target repository: AGENTS.md, CLAUDE.md, rules, skills, and the docs they load. Use for context audits, bloated or conflicting instructions, token waste, or a minimal new AGENTS.md."
+description: "Minimizes agent-context Markdown in the target repository: AGENTS.md, CLAUDE.md, rules, skills, and the docs they load."
 argument-hint: "[checkup | treat | scaffold]"
 disable-model-invocation: true
 metadata:

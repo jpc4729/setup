@@ -1,6 +1,6 @@
 ---
 name: bet
-description: "Plans test coverage as a Branching Expectation Tree (.tree). Use for a test plan, coverage audit or edge cases."
+description: "Plans test coverage as a Branching Expectation Tree (.tree). Use for a test plan, coverage audit or edge cases. Use intent for specs that people align on."
 argument-hint: "[path or feature]"
 disable-model-invocation: true
 metadata:

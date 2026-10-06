@@ -143,8 +143,8 @@ if [[ -f "$SKILL_DIR/SKILL.md" ]]; then
   fi
   assert_no_match "description has no angle brackets" "$DESC" '[<>]'
   assert_match "description names agent-context Markdown" "$DESC" 'agent-context Markdown'
-  assert_no_match "frontmatter carries no disable-model-invocation" "$SKILL_FM" \
-    '^disable-model-invocation:'
+  assert_match "frontmatter starts the skill only by name" "$SKILL_FM" \
+    '^disable-model-invocation: true'
   assert_match "argument-hint includes checkup" "$SKILL_FM" 'checkup'
   assert "SKILL.md entry point stays within 800 words" \
     test "$(wc -w < "$SKILL_DIR/SKILL.md" | tr -d ' ')" -le 800
@@ -156,8 +156,8 @@ fi
 # Codex expresses disable-model-invocation as its own key, and setting one
 # without the other is a skill that auto-activates in three tools and hides here.
 assert "agents/openai.yaml exists" test -f "$SKILL_DIR/agents/openai.yaml"
-assert_no_match "openai.yaml does not deny implicit invocation" \
-  "$(cat "$SKILL_DIR/agents/openai.yaml")" 'allow_implicit_invocation'
+assert_match "openai.yaml denies implicit invocation" \
+  "$(cat "$SKILL_DIR/agents/openai.yaml")" 'allow_implicit_invocation: false'
 # Grok promotes metadata.short-description and Codex reads the yaml; neither
 # falls back to the other, so a drift between them is two display strings.
 OPENAI_SD="$(sed -nE 's/^[[:space:]]*short_description:[[:space:]]*//p' \

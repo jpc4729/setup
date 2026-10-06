@@ -26,6 +26,8 @@ Infer the mode from the request. Default to review. A path scopes the work to th
 
 ## Vocabulary
 
+Use these words exactly in findings and reports; a synonym reads as a second concept.
+
 Surface: the whole composition.
 Edge: any line content can hang from — a container side, a column start, a divider, a baseline, the underside of an avatar, the boundary of the group above.
 Contact: an element aligned to an edge. Not literal touching.

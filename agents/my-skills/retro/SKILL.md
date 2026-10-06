@@ -34,15 +34,17 @@ Use the strongest rung that holds it. Agents copy what the code around them does
 4. A skill or subagent prompt, read only when used.
 5. A line in `CLAUDE.md` or `AGENTS.md`, read every turn. Use it last: for a pointer, or a rule no rung above can hold.
 
+Write each rule as the action to take, with a done condition the agent can check. Keep a prohibition only as a hard limit, next to its action. When the target file says it weakly, or where the session would not read it, reword or move that line and add one example of the failure, instead of a second copy.
+
 Drop a lesson when:
 
 - No future decision changes because of it.
 - It edits a skill or prompt that the session never loaded. If it should have loaded, fix its description instead.
-- The target file already says it clearly. Report it as an execution miss, not a new line.
+- The target file already says it clearly, where the session would read it. Report it as an execution miss, not a new line.
 - It names a SHA, a version or a path that will drift.
 
 ## Report
 
-Rank by impact, one line each: problem — evidence (a quote or a turn) — fix — rung and file. Then stop and ask which to apply.
+Rank by impact, one line each: problem — evidence (a quote or a turn) — fix — rung and file. Then one line per dropped lesson with its drop reason, so the user can override it. Then stop and ask which to apply.
 
 For each one the user picks, edit the source of a file that chezmoi or a generator manages, not the live copy. Make the smallest edit that holds the lesson, and delete each line it replaces.

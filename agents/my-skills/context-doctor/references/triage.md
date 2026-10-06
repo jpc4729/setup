@@ -2,7 +2,7 @@
 
 ## Protect the contract
 
-The object of this audit is the target codebase's context. Protect the current user's instructions, permissions, safety boundaries, and necessary repository behavior. Existing audited Markdown is not untouchable: its wording, duplication, and obsolete instructions are precisely what the user asked to reduce. Do not mistake a repeated instruction for an additional requirement.
+The object of this audit is the target codebase's context. Protect the current user's instructions, permissions, safety boundaries, and necessary repository behavior. Existing audited Markdown is not untouchable: its wording, duplication, and obsolete instructions are precisely what the user asked to reduce. Count a repeated instruction once; repetition adds no requirement.
 
 ## Inventory closure
 
@@ -18,22 +18,22 @@ For each decision, ask: under which task condition would its absence cause which
 
 Keep a decision when it preserves a current user requirement, a concrete house policy, or an evidenced non-obvious hazard. An observed failure, a verified wrapper prerequisite, a generated-file contract, or an explicit authorization boundary can establish necessity. “The agent might forget” and “this seems helpful” cannot justify generic advice. A unique workflow may be documented only in the audited file; lack of a second source does not make it disposable.
 
-Delete derivable facts when normal discovery supplies them in time. Verify actual enforcement, including scope and when it runs, before deleting covered prose. Investigate uncertain claims with a focused read; preserve the uncertain minimum and disclose it if evidence remains unavailable. Do not invent a plausible hazard to justify each old sentence.
+Delete derivable facts when normal discovery supplies them in time. Verify actual enforcement, including scope and when it runs, before deleting covered prose. Investigate uncertain claims with a focused read; preserve the uncertain minimum and disclose it if evidence remains unavailable.
 
 ## Semantic deduplication
 
-Split compound paragraphs into decisions in working notes. Compare scope, trigger, action, prohibition, exception, and exact command or path. Another instruction subsumes a decision only when it carries all necessary behavior and reaches every affected task. Match meaning, not keywords or repeated strings.
+Split compound paragraphs into decisions in working notes. Compare scope, trigger, action, prohibition, exception, done condition, and exact command or path. Another instruction subsumes a decision only when it carries all necessary behavior and reaches every affected task. Match meaning, not keywords or repeated strings.
 
 Merge paraphrases and stronger statements that fully cover weaker ones. Preserve distinctions between preference and obligation, before and after, local and production, permission and execution, and a general rule and its exception. A regeneration instruction does not imply review before publishing. An approval rule cannot disappear because a test passes.
 
-Draft the smallest candidate from retained decisions instead of preserving the old section structure. Remove headings and examples that explain nothing beyond those decisions. Keep an example only when its removal leaves a real ambiguity. Use full, clear sentences; fewer words with lost meaning is a failed reduction.
+Draft the smallest candidate from retained decisions instead of preserving the old section structure. Remove headings and examples that explain nothing beyond those decisions. Keep an example only when its removal leaves a real ambiguity. Use full, clear sentences; fewer words with lost meaning is a failed reduction. State each rule as the action to take. Keep a prohibition only when no action can replace it, and put its action beside it. End each step on a condition the agent can check, such as a command that passes, not on a vague state such as "understand the module". When one idea is spelled out in several places, name it with one common word the model already knows, define it once, and reuse that word.
 
 ## Deletion sequence
 
 1. Remove whole owned context files whose useful instructions are already available in the same task scope. Remove empty files and unnecessary adapters only after checking inbound references and active loaders. Leave human documentation and vendored sources outside this operation.
 2. Remove repeated preambles, directory tours, dependency versions, README excerpts, generic best practices, command catalogs, and explanations of how agents load rules. Preserve the exceptional command whose obvious alternative breaks the workflow.
 3. Remove rules already covered by an instruction in the same scope or by verified enforcement. A linter configuration alone does not prove it enforces a particular rule. Keep guidance needed to avoid harm before a check runs.
-4. Merge overlapping survivors into one precise instruction. Keep its trigger, action, exception, and necessary reason. Use the narrowest existing scope that reaches the task; do not move a local rule into every session just to remove a file.
+4. Merge overlapping survivors into one precise instruction. Keep its trigger, action, exception, done condition, and necessary reason. Use the narrowest existing scope that reaches the task; do not move a local rule into every session just to remove a file.
 5. Cut unnecessary pointers and compress the remaining sentences. Re-read the result for lost meaning, then repeat from whole files. Stop only when another deletion would remove necessary behavior or an explicit user constraint.
 
 Deletion precedes relocation. A new hook, skill, rule tree, or compatibility copy requires an independent need. One line can remain in the existing file; it does not need a new heading, wrapper, or reference document.
@@ -42,9 +42,11 @@ Deletion precedes relocation. A new hook, skill, rule tree, or compatibility cop
 
 An import loads a destination through the host. A prose-read asks the agent to open it. Both can spend the destination's full tokens; shortening the caller proves no saving by itself. Follow reachable destinations with a visited set so cycles terminate. Count shared content once in the source inventory, but every actual load in a task budget.
 
-Keep a pointer only for a necessary destination that the active tool does not already supply. Give conditional reads a task or path trigger and one destination. Remove vague requests for more context and lists of advertised skills. Inline a short fact only if doing so lowers the relevant task budget. Delete its source only when that source is owned, redundant, and has no other consumers.
+Keep a pointer only for a necessary destination that the active tool does not already supply. Give conditional reads a task or path trigger and one destination. The trigger's wording decides when the agent reads the destination: when a weak trigger misses a necessary destination, sharpen the trigger first, and inline the destination only if a sharp trigger still misses it. Remove vague requests for more context and lists of advertised skills. Inline what every task path needs, and keep behind a conditional pointer what only some paths reach; either move must lower the relevant task budget. Delete an inlined source only when it is owned, redundant, and has no other consumers.
 
-Do not force every human document to have an agent pointer. Do not insert token estimates or deletion justifications into the resulting instructions; those belong in the audit summary.
+A model-invoked skill's `description` is a pointer that every session loads. When no task needs the agent to start a skill on its own and no other skill starts it, make it user-invoked in every tool in use (`Skills across tools` in `references/tool-matrix.md`); its description then leaves the listing. In a description that stays, put the trigger word first, give one trigger per distinct case, merge synonyms, and cut what the body already says.
+
+Add an agent pointer to a human document only when a task needs it. Put token estimates and deletion reasons in the audit summary, not in the resulting instructions.
 
 The scanners warn at 60 root lines, 200 lines per file, and 32768 bytes in a chain. These are diagnostic limits, not targets or proof of what an installed host loaded. Pointer warnings are at most five in a root file, at most twelve in any file, and eight times a file's own tokens in undecidable reading. Continue deleting below these limits.
 
@@ -56,7 +58,7 @@ Capture these before editing and again over the same scope:
 - Loaded context: estimated tokens for each active tool and representative task path, including ancestor instructions and expanded imports. Use the same tasks before and after. Count conditional destinations on the tasks that trigger them.
 - Requested reading: destination tokens and undecidable tokens from prose pointers. Trace further reads instead of treating a pointer as a free line.
 
-Use the same estimator for both snapshots. `vitals.py` uses approximately characters / 4 and may miss surfaces. Its `context_tokens` is an inventory sum, despite the text report's “always-on” label; scoped files are not all loaded in every session. Do not present this sum as measured prompt usage. Missing loader evidence remains unknown, not zero.
+Use the same estimator for both snapshots. `vitals.py` uses approximately characters / 4 and may miss surfaces. Its `context_tokens` is an inventory sum, despite the text report's “always-on” label; scoped files are not all loaded in every session. Report this sum as an inventory estimate, not as measured prompt usage. Missing loader evidence remains unknown, not zero.
 
 ## Scanner states
 
@@ -133,4 +135,4 @@ The numbers below preserve `intake.sh` diagnostic references. They are investiga
 2. Revisit every surviving file, section, and decision. Attempt one more deletion or merge; retain it only with the evidence described above. Scanner health, a line cap, or an arbitrary percentage is never the stopping point. An unresolved scope prevents a claim of exhaustive reduction.
 3. Count the same original source inventory plus all additions and destinations. Owned Markdown tokens must fall for a Markdown reduction; task context must not increase. Moving the body behind a compulsory pointer, hiding it in comments, or changing line wrapping does not qualify. Preserve non-context code and configuration unless separately authorized.
 4. A no-change result requires evidence that each survivor is necessary, or that no context file is needed. Disclose required corrections that add tokens separately. Never manufacture cuts, hooks, adapters, or scaffolding to improve the headline.
-5. Show target-codebase before/after costs, major deletions, preserved contracts, and unresolved findings. Strict helper results and reasoned task coverage are distinct from running an agent with reduced context. Do not claim the latter without executing and inspecting it. Worked cases in `examples/reductions.md` calibrate judgment; handcrafted expected outputs do not measure autonomous performance.
+5. Show target-codebase before/after costs, major deletions, preserved contracts, and unresolved findings. Strict helper results and reasoned task coverage are distinct from running an agent with reduced context. Claim the latter only after you execute and inspect it. Worked cases in `examples/reductions.md` calibrate judgment; handcrafted expected outputs do not measure autonomous performance.

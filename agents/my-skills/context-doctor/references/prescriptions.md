@@ -16,7 +16,7 @@ Keep a command exception when the task runner alone does not reveal the trap:
 1. Run tests through `just test <path>`; bare `pytest` skips fixture setup.
 ```
 
-These illustrate shape, not facts to copy. Fill names from the repository. Do not add an install command, stack summary, Git policy, or definition of done unless it survives the deletion sequence.
+These illustrate shape, not facts to copy. Fill names from the repository. Add an install command, stack summary, Git policy, or definition of done only when it survives the deletion sequence.
 
 ## Smallest new file
 

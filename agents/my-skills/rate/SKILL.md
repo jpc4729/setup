@@ -50,6 +50,7 @@ Code:
 
 - A 10 is a bet you'd stake your reputation on; wouldn't bet → not a 10.
 - Below 10 without a receipt is a mood, not a score.
+- A score rises only when its receipt is cleared, never to end the loop.
 - Uneasy but nothing pointable → look harder (run it, reread the diff); still nothing → it's a 10.
 - All 10s on the first pass is a valid result. Do not invent problems to appear thorough.
 - Not: "Correctness: 9 — could be slightly better."

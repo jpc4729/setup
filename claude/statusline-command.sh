@@ -167,16 +167,18 @@ countdown() {
   fi
 }
 
-# Rate limits show only from 50% used, when they start to matter: yellow,
-# red from 75%, with the time until the window resets.
+# Rate limits always show, with the time until the window resets: dim below
+# 50% used, yellow from 50%, red from 75%. A limit the input omits stays out.
 limits_display=""
 add_limit() {
-  local label=$1 pct=$2 reset_at=$3 color=$YELLOW
-  if ((pct < 50)); then
+  local label=$1 pct=$2 reset_at=$3 color=$DIM
+  if ((pct < 0)); then
     return 0
   fi
   if ((pct >= 75)); then
     color=$RED
+  elif ((pct >= 50)); then
+    color=$YELLOW
   fi
   countdown "$reset_at"
   [[ -n "$limits_display" ]] && limits_display+=" "
@@ -188,17 +190,19 @@ add_limit() {
 add_limit 5h "$five_pct" "$five_reset"
 add_limit 7d "$week_pct" "$week_reset"
 
-# Prompt cache, only in its last 5 minutes and once it has expired: after
-# that, the next message sends the whole conversation again, slower and
-# at full price.
+# Prompt cache, always shown once caching is seen: dim, yellow in its last 5
+# minutes, red once it has expired. After that, the next message sends the
+# whole conversation again, slower and at full price.
 cache_display=""
 if [[ "$cache_seen" == "true" ]] && ((cache_expires > 0)); then
   countdown "$cache_expires"
   if [[ -z "$countdown_text" ]]; then
     cache_display="${RED}cache expired${RESET}"
-  elif ((cache_expires - now < 300)); then
+  else
+    cache_color=$DIM
+    ((cache_expires - now < 300)) && cache_color=$YELLOW
     [[ "$countdown_text" == "0m" ]] && countdown_text="<1m"
-    cache_display="${YELLOW}cache ${countdown_text}${RESET}"
+    cache_display="${cache_color}cache ${countdown_text}${RESET}"
   fi
 fi
 

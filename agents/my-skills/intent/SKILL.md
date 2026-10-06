@@ -1,6 +1,6 @@
 ---
 name: intent
-description: "Writes, aligns, audits, checks and verifies intent trees (.tree): what a product, a contract or a function should do, at any zoom, for humans to confirm and agents to prove. Use for behaviour specs, functional requirements, user stories and their acceptance criteria, breaking a requirement into finer ones, intent reviews, consistency audits, acceptance criteria, test plans, checking code against intent, or scoring how certain a behaviour is met."
+description: "Writes, aligns, audits, checks and verifies intent trees (.tree): what a product, a contract or a function should do, at any zoom, for humans to confirm and agents to prove. Use for behaviour specs, functional requirements, user stories and their acceptance criteria, breaking a requirement into finer ones, intent reviews, consistency audits, acceptance criteria, test plans, checking code against intent, or scoring how certain a behaviour is met. Use bet for one unit's test plan."
 argument-hint: "[map | write | align | audit | check | verify [static] | tests] [area, path or feature]"
 disable-model-invocation: true
 metadata:
@@ -25,6 +25,8 @@ This skill gives defaults, not a recipe. Four things are fixed: the notation, no
 - Revisit a decision when the result fights it: a home nobody finishes aligning, trees that restate code, areas nobody reads. Propose the change; never drift from a recorded decision silently.
 
 ## Terms
+
+Use these words exactly in trees, cards, indexes and reports; a synonym reads as a second concept.
 
 - Home: a folder of trees with its own index and settings. A repo has one home, `.intent/` by default, or several, one per audience or package, listed by a root index.
 - Index: the home's `README.md`. It holds the decisions, the settings, the areas and the format.
@@ -70,7 +72,16 @@ Budgets cap how much a home asks of the humans who align it: by default 12 leave
 - `verify`: stack evidence per leaf until its verdict is certain, and score that certainty from 0 to 10. `verify static` judges from the code alone and never runs the software.
 - `tests`: generate test code whose names are the leaves.
 
-With no mode named, pick from the request. A new feature or a question about intent is `write`. Breaking an outcome into finer rules is `write` with that outcome as the parent. "Is this right?" is `align`. "Is it consistent?" is `audit`. "Does it work?" is `check`. "How sure are we?" is `verify`. Every mode starts by finding the home: look for an index next to `.tree` files, or a root index that lists homes, before you create anything.
+With no mode named, pick from the request:
+
+- A new feature or a question about intent → `write`.
+- Breaking an outcome into finer rules → `write` with that outcome as the parent.
+- "Is this right?" → `align`.
+- "Is it consistent?" → `audit`.
+- "Does it work?" → `check`.
+- "How sure are we?" → `verify`.
+
+Every mode starts by finding the home: look for an index next to `.tree` files, or a root index that lists homes, before you create anything.
 
 The loop for new work is `write`, `align`, refine, build, `check`. To refine, `write` a child for each outcome the rank calls for, and `align` it with the people who own its decisions. Each level is checked at its own zoom, like the paired levels of a V-model. The loop for existing code is `map`, drafts, `align`, `audit`, `check`. `examples/prompts.md` holds a ready prompt for each stage; when a mode ends, offer the prompt for the next stage.
 

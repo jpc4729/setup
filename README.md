@@ -1,6 +1,6 @@
 # setup
 
-My agent setup for Claude Code, Codex, Cursor, Grok and opencode. It holds one set of rules, a git guard hook and 17 skills.
+My agent setup for Claude Code, Codex, Cursor, Grok and opencode. It holds one set of rules, a git guard hook and 18 skills.
 
 ## Install
 
@@ -57,6 +57,7 @@ Mine, under the repo's MIT license:
 - `rate`: scores work on every axis until each is 10.
 - `retro`: turns a session's mistakes and corrections into the strongest fix (a check, a hook, a script, a skill edit or a rule) and asks before it edits.
 - `ui-principles`: rules for clean, scannable UI layout.
+- `wayfinder`: maps the open decisions of an idea too big for one session in a local file, and resolves one decision per session until nothing is left to decide.
 
 Vendored. Each folder keeps its upstream `LICENSE`:
 

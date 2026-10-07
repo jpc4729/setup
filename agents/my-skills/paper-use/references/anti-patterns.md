@@ -4,15 +4,15 @@ Each entry: the symptom, the cause, the detection, the fix. Paper-specific entri
 
 ## File level
 
-**The fork.** `Project v2`, `Project — handoff`, `Project copy`. Cause: someone needed a safe place to try something. Detection: `list_files`, two names sharing a stem. Fix: none that is cheap — Paper tokens are file-level and a copy stops tracking the original, so the two files diverge from the moment they exist. **Paper-specific severity:** a permanent split, not a recoverable one. Prevent it with L1. The one sanctioned copy is a token redesign file: declared in the Index, disposable, never merged by hand (`prototypes.md`).
+**The fork.** `Project v2`, `Project — handoff`, `Project copy`. Cause: someone needed a safe place to try something. Detection: `list_resources`, two names sharing a stem. Fix: none that is cheap — Paper tokens are file-level and a copy stops tracking the original, so the two files diverge from the moment they exist. **Paper-specific severity:** a permanent split, not a recoverable one. Prevent it with L1. The one sanctioned copy is a token redesign file: declared in the Index, disposable, never merged by hand (`prototypes.md`).
 
-**The name that carries state.** `App-layout-v1-final-final`. Cause: file names used as version control. Detection: any version, date, or `final` in the file name. Fix: rename, and put the state where it can change — on the artboard.
+**The name that carries state.** `App-layout-v1-final-final`. Cause: file names used as version control. Detection: any version, date, or `final` in the file name. Fix: `rename_resource` after a yes (L10), and put the state where it can change — on the artboard.
 
 **The god file.** One file for every project a team owns. Cause: nobody decided what a file is. Detection: page names that name unrelated products. Fix: one file per project; that is the split L1 does allow.
 
 ## Page level
 
-**The status page.** `Ready for dev`, `In progress`. Cause: a convention carried over from another tool without checking. Detection: a page name that is a status. **Paper-specific:** `move_nodes` can now carry a board to another page, but every status change then costs a move plus a re-grid on the new page, where a status in the artboard name costs one rename. The page fills faster than anyone drains it, and one surface's states end up split across pages. Fix: purpose pages, status in the artboard name.
+**The status page.** `Ready for dev`, `In progress`. Cause: a convention carried over from another tool without checking. Detection: a page name that is a status. **Paper-specific:** `move_nodes` can carry a board to another page, but every status change then costs a move plus a re-grid on the new page, where a status in the artboard name costs one rename. The page fills faster than anyone drains it, and one surface's states end up split across pages. Fix: purpose pages, status in the artboard name.
 
 **The open-page dump.** New work lands wherever the user happened to be looking. Cause: writing before reading. Detection: C4 — an artboard whose surface has nothing to do with its page. **Paper-specific:** repairable, not free. Once the user agrees, `move_nodes` to the right page's `rootNodeId`, IDs preserved; the world position is kept too, so re-grid on the new page. The move is a repair, not a workflow; L3 exists to prevent it.
 
@@ -78,4 +78,4 @@ Each entry: the symptom, the cause, the detection, the fix. Paper-specific entri
 
 **The hand-merged prototype.** A prototype board moved onto a code-owned page, or a code-owned board edited to match a proposal, before the code ships. Cause: wanting the file to look current. Detection: C4 — a code-owned board with no manifest row, or one that differs from the running UI. Fix: a moved prototype board goes back to its prototype page; a code-owned board edited in place is re-authored from the code, after forking the edit into a `Proto` page if it is worth keeping. A code-owned page changes only through a re-mirror (`prototypes.md`).
 
-**Cleaning by deleting.** Tidying a file by removing what looks unused. **Paper-specific:** there is no undo through the MCP, and a deleted node is gone. A move between pages now exists and is the reversible repair: with an explicit ask, `move_nodes` to the archive page. Fix: L9 — report human work, move it only when asked, delete only what this session made.
+**Cleaning by deleting.** Tidying a file by removing what looks unused. **Paper-specific:** there is no undo through the MCP, and a deleted node is gone. A move between pages is the reversible repair: with an explicit ask, `move_nodes` to the archive page. Fix: L9 — report human work, move it only when asked, delete only what this session made.

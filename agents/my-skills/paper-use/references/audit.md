@@ -4,13 +4,13 @@ Read-only. It produces the table of contents the file should have had, and a num
 
 Twelve checks. The concern in each is tool-independent; only the detection and the fix below it are Paper's.
 
-The audit never moves the user's view: every read passes `fileId` and `pageId`, so the page they are looking at stays theirs. Tell the user one thing before starting: Paper meters nothing, so the budget is wall-clock and the single open file rather than a quota.
+The audit never moves the user's view: every page-scoped read passes `pageId`, so the page they are looking at stays theirs. Tell the user one thing before starting: the audit makes no metered call, so the budget is wall-clock and the single open file rather than a quota.
 
 ## The walk
 
 Pass `fileId` on every call that takes it.
 
-1. `list_files` — one file per project. Any second file whose name looks like the same project is C1, unless the Index declares it as a live token redesign file.
+1. `list_resources` — one file per project. Any second file whose name looks like the same project is C1, unless the Index declares it as a live token redesign file. The list is whole only when the result has no `truncated`: raise `limit` until then, and when `limit: 200` still truncates, say so in the report header.
 2. `get_basic_info({ fileId })` — record `fileName`, `pages[]`, `fontFamilies`, `tokens.items`, and the `contentHash` from the result header.
 3. Mirrored file — the Index declares owners, or the repo holds a manifest: read the Index's owner list and the manifest. No manifest at hand → the manifest clause of C4 is skipped, and the report header says so.
 4. For each page: `get_basic_info({ fileId, pageId })` for that page's `artboards[]` and `rootNodeId`. On a page the user is not viewing, a position or size that depends on layout comes back null; record it as a note, not a C7 defect.
@@ -31,8 +31,8 @@ Steps 1–6 are mandatory; they are the structure, and they are cheap. Steps 7�
 
 Severity: **blocker** breaks handoff, **defect** costs a reader time, **note** is advisory or needs a human hand.
 
-- **C1 · file boundary** — blocker. One file per project. Tokens are file-level and a copy stops tracking the original, so a second file is a permanent fork with no library that could heal it. Fix: none that is cheap — rename in the app and merge the fork by hand. A token redesign file declared in the Index is a note, not a blocker (L1).
-- **C2 · file identity** — defect. The file name is the project name, with no version, date, state or owner. Fix: rename in the app, and put the state where it can change — on the artboard.
+- **C1 · file boundary** — blocker. One file per project. Tokens are file-level and a copy stops tracking the original, so a second file is a permanent fork with no library that could heal it. Fix: none that is cheap — `rename_resource` after a yes that names the file (L10), and merge the fork by hand. A token redesign file declared in the Index is a note, not a blocker (L1).
+- **C2 · file identity** — defect. The file name is the project name, with no version, date, state or owner. Fix: `rename_resource` after a yes that names the file (L10), and put the state where it can change — on the artboard.
 - **C3 · page names and convention** — defect. Every page name is a purpose noun phrase, and one prefix convention runs across every page. `Page N`, `Untitled`, a status, a person or a bare date fails; mixed conventions fail. With five pages or fewer, plain purpose names are fully compliant. Fix: `rename_pages` in one batch, after a yes that names the pages (L10). In a mirrored file, update the manifest's Page column in the same change.
 - **C4 · one purpose and one owner per page** — defect. Every artboard on a page belongs to that page's flow or purpose, and a page holding several flows or about forty artboards is due a split (`page-taxonomy.md`). In a mirrored file, a board on a code-owned page with no manifest row, or a prototype board on one, fails too. An outlier is reported by name. Fix, once the user agrees: `move_nodes` to the right page's `rootNodeId` from `get_basic_info({ fileId, pageId })`; IDs are preserved (L3), and the world position too, so re-grid after (C7).
 - **C5 · artboard names** — blocker. Every artboard matches `NN · <Surface> — <state>`, ordinals unique, gapless within their band (`naming.md`), and under 50 characters. On a page that holds a flow review, the band ordinals and redesign codes of `naming.md` pass. On the archive and explorations pages, the state ends with a date (`naming.md`). Fix: `rename_nodes`.

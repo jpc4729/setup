@@ -1,5 +1,5 @@
 interface:
   display_name: "Paper Use"
-  short_description: "Structure and audit Paper files"
+  short_description: "Structure, mirror and audit Paper files"
 policy:
   allow_implicit_invocation: false

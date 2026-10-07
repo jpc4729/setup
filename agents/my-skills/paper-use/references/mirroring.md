@@ -2,7 +2,7 @@
 
 A mirrored file is a **derived artifact**. For every component the code exports and every screen state the code can reach, there is exactly one design node, authored from the code, named for its source, and recorded in the manifest. A difference between the node and the running UI is a defect in one of them, never a matter of taste.
 
-Most teams have a handoff ritual — design to code — and no sync ritual for shipped code back to the design. Every sprint that ships without updating both sides widens the gap, and drift only accumulates. The three phases below are that missing ritual, and step 5 of Converge is the part people skip.
+Most teams have a handoff ritual — design to code — and no sync ritual for shipped code back to the design. Every sprint that ships without updating both sides widens the gap, and drift only accumulates. The three phases below are that missing ritual, and step 3 of Converge is the part people skip.
 
 ## One rule above the rest
 
@@ -66,7 +66,7 @@ A screen depends on more than its own file: its components, the theme, its layou
    - Intended difference → promote the copy onto the mirrored page with `move_nodes`. IDs are kept, so the manifest takes the copy's id; the world position is kept too, so re-grid (L8). Move the old node to the archive, dated; the user's ask for the re-mirror covers that move.
    - Unintended difference → record it as a finding.
 9. **Prototypes.** A fork is behind when the mirrored row of its Source board has a Source file that changed since the fork's Source commit. List those prototype boards (`prototypes.md`).
-10. **Close.** Update `Release shown` in the manifest, the release's one source, and copy it to the Index; then report what was skipped. Paper meters nothing, so the limit is wall-clock and the single open file — say which pages you did not reach.
+10. **Close.** Update `Release shown` in the manifest, the release's one source, and copy it to the Index; then report what was skipped. Drift detection makes no metered call, so the limit is wall-clock and the single open file — say which pages you did not reach.
 
 ## The three phases
 

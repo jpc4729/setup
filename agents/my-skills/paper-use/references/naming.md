@@ -22,7 +22,7 @@ The one exception is a token redesign file, `<Project> — <Initiative>`, declar
 [NN · ][<Qualifier> — ]<Purpose>
 ```
 
-A noun phrase naming a purpose or a flow: `Checkout`, `Sign-in`, `Foundations`, `Components`. Prefix rules: `references/page-taxonomy.md`.
+A noun phrase naming a purpose or a flow: `Checkout`, `Sign-in`, `Foundations`, `Components`. Prefix rules: `page-taxonomy.md`.
 
 - The qualifier is a platform word, only when the platforms' layouts diverge — `10 · Web — Checkout`, `30 · Mobile — Checkout` — or `Proto` for a prototype page.
 - A prototype page names its initiative, not a version: `50 · Proto — One-page checkout`.

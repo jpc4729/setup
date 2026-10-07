@@ -11,7 +11,7 @@ Two consequences set the shape of everything below.
 1. **Fidelity is a discipline, not a guarantee.** The screenshot check after every artboard is mandatory. In a capture-based tool it confirms the capture; here it is the only thing between the file and a plausible fiction.
 2. **Drift is faster.** A captured frame is wrong only when the code changes. An authored artboard is wrong the moment anyone mis-reads a value.
 
-What Paper gives back for that cost: no quota of any kind, and a DOM-like canvas whose `get_jsx` output is already close to a web codebase's own idiom.
+What Paper gives back for that cost: no quota on any call this direction makes, and a DOM-like canvas whose `get_jsx` output is already close to a web codebase's own idiom.
 
 ## Order decides fidelity
 

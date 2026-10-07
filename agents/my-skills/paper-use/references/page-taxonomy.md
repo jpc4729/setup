@@ -55,7 +55,7 @@ The Index says which is which. A new flow in a mirrored file is designed on its 
 
 ## Purpose, not status
 
-Do not make status pages — `Ready for dev`, `In progress`, `Backlog`. Under that scheme a status change is a move to another page. `move_nodes` can make that move (`references/mcp-facts.md`), but each one also needs a re-grid on the new page (L8), while a status in the artboard name is one rename. A status page also splits one surface's states across pages.
+Do not make status pages — `Ready for dev`, `In progress`, `Backlog`. Under that scheme a status change is a move to another page. `move_nodes` can make that move (`mcp-facts.md`), but each one also needs a re-grid on the new page (L8), while a status in the artboard name is one rename. A status page also splits one surface's states across pages.
 
 Pages are purposes. Status lives where it can be changed — in the artboard name, or as a label inside the artboard, both editable with one call. `Explorations` and `Archive` are the exception, and they are lifecycle rather than status: work that has left the current design, not work waiting on someone. A `Proto` page is a purpose too: one initiative, from its review to its ship (`review.md`).
 

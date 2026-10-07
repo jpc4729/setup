@@ -1,6 +1,6 @@
 # What the Paper MCP can and cannot do
 
-The tool descriptions are the reference for parameters, defaults and formats, and this file does not repeat them. It holds what they leave out: what no tool does, what was seen live, and where the guide and the tools disagree. Checked against the tool descriptions on 2026-09-28; lines marked _exercised_ were run live in a scratch file on 2026-09-24. Every tool mechanism the laws in `SKILL.md` rely on traces to a line here or to a tool description; the owner and prototype rules are policy, not tool facts. A tool result that contradicts a line below wins; say so in the ledger.
+The tool descriptions are the reference for parameters, defaults and formats, and this file does not repeat them. It holds what they leave out: what no tool does, what was seen live, and where the guide and the tools disagree. Checked against the tool descriptions and the guide on 2026-10-07; lines marked _exercised_ were run live in a scratch file on 2026-09-24. Every tool mechanism the laws in `SKILL.md` rely on traces to a line here or to a tool description; the owner and prototype rules are policy, not tool facts. A tool result that contradicts a line below wins; say so in the ledger.
 
 ## What no tool does
 
@@ -14,7 +14,6 @@ The tool descriptions are the reference for parameters, defaults and formats, an
 
 ## Pages and measurement
 
-- A tool that takes `pageId` defaults to the page the user is viewing, which can change between calls. A tool that takes a node id acts on the page that node lives on.
 - A page the user is not viewing is not measured: a size or position that layout decides reads as null in `get_basic_info`, `get_children` and `get_node_info`, and as `?` in `get_tree_summary`.
 - `write_html` returns null positions for the nodes it creates, even on the viewed page. Read positions afterwards. _Exercised._
 - `get_screenshot` renders on a page the user is not viewing, a `fit-content` board included. _Exercised._

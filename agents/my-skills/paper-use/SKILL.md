@@ -37,17 +37,17 @@ The guide loaded in step 1 owns the design brief format, the `write_html` rules,
 ### Session start — every session, in this order, no shortcuts
 
 1. `get_guide({ topic: "paper-mcp-instructions" })` — once per session, before any other Paper tool. Again once the thread is long enough to drop it. Other topics on demand: `mobile-status-bar`, `image-generation`.
-2. `get_basic_info({ fileId?, pageId? })` — pages, artboards, fonts and tokens of any page. `isActive` marks the page the user is viewing; the user controls it, and it can change mid-session.
+2. `get_basic_info({ fileId?, pageId? })` — pages, artboards, fonts and tokens of any page.
 3. `get_selection` — what the user is pointing at; the selection is the brief when the request is vague.
 4. `get_font_family_info` — before the first typographic style of the session, and before using any family not already in `fontFamilies`.
 
 ### Tools, by purpose
 
-- Orient — `get_guide`, `list_files`, `open_file`, `get_basic_info`, `get_selection`.
+- Orient — `get_guide`, `list_resources`, `open_file`, `get_basic_info`, `get_selection`.
 - Read structure — `get_tree_summary` first, then `get_children`, `get_node_info`; `get_tokens` for the token set; `get_jsx`, `get_computed_styles` and `get_fill_image` only when exact values are needed.
 - Look — `get_screenshot`. Default scale 1; scale 2 only to read small text.
 - Create — `create_file`, `create_page`, `create_artboard`, `write_html`, `create_tokens`.
-- Change — `update_styles`, `set_text_content`, `rename_nodes`, `rename_pages`, `move_nodes`, `duplicate_nodes`, `set_tokens`, `delete_nodes`.
+- Change — `update_styles`, `set_text_content`, `rename_nodes`, `rename_pages`, `rename_resource`, `move_nodes`, `duplicate_nodes`, `set_tokens`, `delete_nodes`.
 - Search — `find_nodes` by computed style, token or text; the only mechanical way to find a hardcoded value.
 - Collaborate — `list_comment_threads`, `list_comment_thread_authors`, `get_comment_thread`, `set_comment_thread_status`.
 - Deliver — `export` for image, video and PDF; `export_combined_pdf`.
@@ -56,16 +56,14 @@ The guide loaded in step 1 owns the design brief format, the `write_html` rules,
 ### On top of the guide
 
 - The design brief goes out with the L10 structural plan, never instead of it.
-- `layer-name` on every element a human would point at (L4). A repeated element is an `<x-paper-clone node-id="…" />` of its canonical copy, never a second writing of the same HTML (L5).
 - `get_screenshot` takes a `nodeId`: the artboard or the group, never "the page".
 - `update_styles` returns the styles it dropped under `ignoredStyles`. Read that key after every call; a style listed there did not apply.
 
 ### Targeting
 
 - Every mutation takes a node id from a read call, never a guessed one.
-- Pass `fileId` on every call, and check the file header on every result as the guide says.
-- Pass `pageId` explicitly to every page-scoped tool. Omitted, it means the page the user is viewing, and that can change between calls.
-- A tool that takes a node id acts on the page that node lives on.
+- Pass `fileId` on every call that takes it, and check the file header on every result as the guide says.
+- Pass `pageId` explicitly to every page-scoped tool (L3).
 - `open_file` on a file that is not open moves the user's view to it. Say so before calling it.
 - Never put a node id in user-facing text or in a report; name the layer instead.
 
@@ -91,7 +89,7 @@ Eleven laws. The concern in each is tool-independent; only the mechanism below i
 
 **L9 — Delete only what you made.** Anything a human made is reported, never deleted. With an explicit ask, `move_nodes` to the archive page is the reversible alternative to deletion; there is no version history behind you. `delete_nodes` only on nodes this session created, never to restart your own work: a section that came out wrong gets targeted fixes. A node that looks misparented gets a `get_node_info` read of its parent before any delete; the tool asks for it. One exception: a stale clone may be regenerated from its sheet cell, with its texts and overrides restored — a code-owned clone under the re-mirror's ask, a human's clone only after a yes that names the boards (`references/components.md`).
 
-**L10 — Confirm the structure and the budget, then build.** With the design brief, post the structural plan: file, page, artboard names with their ordinals, and which tokens are new — plus what the session will spend. Paper meters nothing, so the budget is wall-clock and the single open file: one page at a time, and name what you did not reach. Six lines at most. Wait for a yes when a page will be created, because no tool can delete one, or when an existing name will change.
+**L10 — Confirm the structure and the budget, then build.** With the design brief, post the structural plan: file, page, artboard names with their ordinals, and which tokens are new — plus what the session will spend. Paper meters only image generation, which runs only when the user asks for it, so the budget is wall-clock and the single open file: one page at a time, and name what you did not reach. Six lines at most. Wait for a yes when a page will be created, because no tool can delete one, or when an existing name will change.
 
 **L11 — End clean.** `finish_working_on_nodes` with the ids of the artboards you touched, then one ledger line per page touched: what was added, where, and what is still open. Before the ledger, leave no `Frame`-class name, no duplicate ordinal, and no raw literal that a token already covers.
 
@@ -115,8 +113,8 @@ Eleven laws. The concern in each is tool-independent; only the mechanism below i
 
 Nine steps.
 
-1. **Preflight.** `get_guide({ topic: "paper-mcp-instructions" })`. Paper Desktop must be running with a file open; a failed connection means telling the user to open it, not retrying. Nothing is metered, so the budget is wall-clock and the single open file.
-2. **Orient.** `list_files` → does a file for this project already exist (L1)? `get_basic_info` → pages, active page, artboards, fonts, tokens. Never write before reading.
+1. **Preflight.** `get_guide({ topic: "paper-mcp-instructions" })`. Paper Desktop must be running with a file open; a failed connection means telling the user to open it, not retrying. Only image generation is metered, and it runs only when the user asks for it, so the budget is wall-clock and the single open file.
+2. **Orient.** `list_resources` → does a file for this project already exist (L1)? `get_basic_info` → pages, active page, artboards, fonts, tokens. Never write before reading.
 3. **Place the work.** Pick the page by purpose and owner. A code-owned page is never the target of a design change: that work goes to a prototype page. An existing page → keep its `pageId`, and confirm with `get_basic_info({ pageId })` that its name is the one you chose (L3). A new page goes into the plan of step 4 and is created only after the yes.
 4. **Post the design brief and the structural plan** before any mutation (L10). Wait only when a page will be created or a name changed. After the yes, `create_page({ fileId, name })`, keep the `pageId` it returns, and pass it to `create_artboard` and every other page-scoped call.
 5. **Foundations before pixels.**

@@ -22,6 +22,7 @@ Guidelines:
 - For ambiguities: settle them from evidence in the repo, in three `Decisions` at most. Return `DECIDE:` with two options and your pick only when a wrong reading voids a step.
 - For a new plan: return it only in your final message, in the shape below, not as a plan file, to-do item, hook, scheduled task or separate chat.
 - For a revision of a blocked plan: read the plan in the brief first, keep every done step as written, change only open steps, and set `Next:` to the first open one.
+- Your turn ends at your first message without a tool call, and that message is your report. Never end a turn with a status note or with the next step you plan; take that step, and keep calling tools until the report is ready.
 
 Report format (at most 50 lines, in this shape):
 

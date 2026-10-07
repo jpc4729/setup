@@ -25,6 +25,7 @@ Guidelines:
 - For scratch work: create scratch files with the shell, only under one `mktemp -d` directory, and delete it before you return. Stop every process you start.
 - NEVER edit or create a file outside the scratch directory (no `--fix`, `--write` or snapshot update), install dependencies or run git writes. Change data only on a local or test instance, never on a shared or production one.
 - When a claim needs access you don't have, mark it `BLOCKED` with what it needs.
+- Your turn ends at your first message without a tool call, and that message is your report. Never end a turn with a status note or with the next step you plan; take that step, and keep calling tools until the report is ready.
 
 Report format:
 

@@ -12,19 +12,32 @@ set -euo pipefail
 
 input=$(cat)
 
+# The user settings file of this profile, for the auto-compact window. A missing
+# or broken file reads as no setting.
+settings="${CLAUDE_CONFIG_DIR:-$HOME/.claude}/settings.json"
+[[ -r "$settings" ]] || settings=/dev/null
+
 # Extract values in one jq call. The statusline runs often, so avoid
 # repeated parser startup for each field. Fields are split on \x1f, which
 # IFS does not collapse, so an empty field keeps its place. clean drops
 # control characters, so a name can neither break the split nor print an
 # escape sequence.
-IFS=$'\x1f' read -r cwd model ctx_size lines_added lines_removed input_tokens cache_create cache_read duration_ms effort \
+IFS=$'\x1f' read -r cwd model ctx_size compact_window lines_added lines_removed input_tokens cache_create cache_read duration_ms effort \
   five_pct five_reset week_pct week_reset cache_seen cache_expires < <(
-    jq -r '
+    jq -r --rawfile settings "$settings" '
     def clean: gsub("[[:cntrl:]]"; "");
+    # The auto-compact window as Claude Code picks it from settings: the
+    # model entry under modelSettings, else the top-level key; 0 for "auto".
+    # Keys are the plain model id, without the [1m] suffix.
+    def compact_window:
+      (.model.id // "" | sub("\\[1m\\]$"; "")) as $id
+      | try ($settings | fromjson | .modelSettings[$id].autoCompactWindow // .autoCompactWindow // 0) catch 0
+      | if type == "number" then floor else 0 end;
     [
       (.cwd // "" | clean),
       (.model.display_name // .model.name // "claude" | clean),
       (.context_window.context_window_size // 0),
+      compact_window,
       (.cost.total_lines_added // 0),
       (.cost.total_lines_removed // 0),
       (.context_window.current_usage.input_tokens // 0),
@@ -126,12 +139,18 @@ fmt_tokens() {
 # Context tokens — used_tokens is the input-only sum that matches used_percentage
 used_tokens=$((input_tokens + cache_create + cache_read))
 # The JSON's context_window_size always reports the model's native window (1M),
-# even when CLAUDE_CODE_AUTO_COMPACT_WINDOW lowers the effective ceiling — use
-# the override as /max so the display matches where auto-compact actually fires.
+# even when an auto-compact window lowers the effective ceiling. Use that window
+# as /max so the display matches where auto-compact fires. As in Claude Code,
+# CLAUDE_CODE_AUTO_COMPACT_WINDOW outranks the settings, 0 is ignored, and a
+# value below 100000 counts as 100000. A leading zero is ignored too, so bash
+# never reads the value as octal.
 ctx_max=$ctx_size
-if [[ "${CLAUDE_CODE_AUTO_COMPACT_WINDOW:-}" =~ ^[0-9]+$ ]] &&
-  ((CLAUDE_CODE_AUTO_COMPACT_WINDOW > 0 && CLAUDE_CODE_AUTO_COMPACT_WINDOW < ctx_size)); then
-  ctx_max=$CLAUDE_CODE_AUTO_COMPACT_WINDOW
+window=$compact_window
+if [[ "${CLAUDE_CODE_AUTO_COMPACT_WINDOW:-}" =~ ^[1-9][0-9]*$ ]]; then
+  window=$((CLAUDE_CODE_AUTO_COMPACT_WINDOW < 100000 ? 100000 : CLAUDE_CODE_AUTO_COMPACT_WINDOW))
+fi
+if ((window > 0 && window < ctx_size)); then
+  ctx_max=$window
 fi
 ctx_display=""
 if ((ctx_max > 0)); then

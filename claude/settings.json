@@ -4,10 +4,12 @@
     "commit": "",
     "pr": ""
   },
+  "autoCompactWindow": 400000,
   "autoInstallIdeExtension": false,
   "autoMemoryEnabled": false,
   "availableModels": [
     "claude-fable-5-1",
+    "claude-haiku-5-5",
     "claude-opus-5-5",
     "claude-sonnet-5-5"
   ],
@@ -37,7 +39,6 @@
   "enforceAvailableModels": true,
   "env": {
     "CLAUDE_BASH_MAINTAIN_PROJECT_WORKING_DIR": "1",
-    "CLAUDE_CODE_AUTO_COMPACT_WINDOW": "400000",
     "CLAUDE_CODE_DISABLE_FEEDBACK_SURVEY": "1",
     "CLAUDE_CODE_MAX_SUBAGENT_SPAWN_DEPTH": "2",
     "CLAUDE_CODE_THRIFTY_SONIC": "0",
@@ -56,6 +57,18 @@
   },
   "forceLoginMethod": "claudeai",
   "hooks": {
+    "PreToolUse": [
+      {
+        "hooks": [
+          {
+            "command": "~/.claude/hooks/nested-agents.sh",
+            "timeout": 10,
+            "type": "command"
+          }
+        ],
+        "matcher": "Agent"
+      }
+    ],
     "SessionStart": [
       {
         "hooks": [
@@ -73,6 +86,10 @@
   "modelSettings": {
     "claude-fable-5-1": {
       "effortLevel": "xhigh"
+    },
+    "claude-haiku-5-5": {
+      "autoCompactWindow": 100000,
+      "effortLevel": "high"
     },
     "claude-opus-5-5": {
       "effortLevel": "xhigh"

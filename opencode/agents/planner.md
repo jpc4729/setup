@@ -4,7 +4,6 @@ description: >
 mode: subagent
 model: opencode-go/glm-5.3
 variant: high
-steps: 25
 # Rules are appended after opencode.jsonc's, and the last match wins.
 permission:
   edit: deny
@@ -40,6 +39,7 @@ Guidelines:
 - For ambiguities: settle them from evidence in the repo, in three `Decisions` lines at most. Return `DECIDE:` with two options and your pick only when a wrong reading voids a step.
 - For a revision of a blocked plan: read it first, keep every finished step as written, change only open steps, and set `Next:` to the first open one.
 - For the result: return the plan only in your final message, in the shape below, not as a plan file, to-do item, hook, scheduled task or separate chat.
+- Your turn ends at your first message without a tool call, and that message is your report. Never end a turn with a status note or with the next step you plan; take that step, and keep calling tools until the report is ready.
 
 Report format (return exactly this shape, 50 lines at most):
 

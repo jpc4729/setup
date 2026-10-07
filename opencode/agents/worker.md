@@ -4,7 +4,6 @@ description: >
 mode: subagent
 model: opencode-go/glm-5.3
 variant: high
-steps: 60
 # Rules are appended after opencode.jsonc's, and the last match wins.
 permission:
   task: deny

@@ -1,6 +1,6 @@
 ---
 description: >
-  Does the work you delegate: research, a code search, a multi-step task, or a code change carried to a passing check. Brief it with the goal and why, what done looks like, what you already know, and the decisions made; for one part of a split change, name the files it owns. Not for a map before Align (`scout`), a review of finished work (`verifier`) or a commit.
+  Does the work you delegate instead of `general`: research, a code search, a multi-step task, or a code change carried to a passing check. Brief it with the goal and why, what done looks like, what you already know, and the decisions made; for one part of a split change, name the files it owns. Not for a map before Align (`scout`), a review of finished work (`verifier`) or a commit.
 mode: subagent
 model: opencode-go/glm-5.3
 variant: high

@@ -1,28 +1,7 @@
+# Expanded by install.sh and installed as the com.openai.codex managed
+# preference on macOS. Codex runs no hook: the git rule lives in
+# rules/git.rules and AGENTS.md, as in the other homes. With no managed hook,
+# this setting stops a hook in any other config from running.
 allow_managed_hooks_only = true
 # Interactive sessions use on-request; explicitly requested unattended work can use never.
 allowed_approval_policies = ["on-request", "never"]
-
-[features]
-hooks = true
-
-# Expanded by install.sh and installed as the com.openai.codex managed
-# preference on macOS. With
-# allow_managed_hooks_only above, this is the hook Codex actually runs; the
-# identical block in codex/config.toml is the fallback for a host with no
-# managed preference. The command is spelled out because a managed preference
-# is read with no shell to expand $HOME or ~.
-#
-# timeout is 10 rather than 5 because a hook that times out is Failed, not
-# Blocked — Codex lets the command through — so the guard fails open and the
-# generous bound is the safe one.
-[hooks]
-managed_dir = "@HOME@/.codex/hooks"
-
-[[hooks.PreToolUse]]
-matcher = "^Bash$"
-
-[[hooks.PreToolUse.hooks]]
-command = "@HOME@/.codex/hooks/block-dangerous-git.sh"
-statusMessage = "Checking git command safety"
-timeout = 10
-type = "command"

@@ -12,34 +12,28 @@
 # Full Access for ordinary work; explicit prompt rules still require approval.
 approval_policy = "on-request"
 model = "gpt-6.1-sol"
-model_reasoning_effort = "max"
+model_reasoning_effort = "xhigh"
 sandbox_mode = "danger-full-access"
 service_tier = "default"
 personality = "pragmatic"
 
-# Bounded delegation: ordinary agents use Sol/xhigh; planner.toml selects Sol/max.
+# 7/10 quality profile: Sol/xhigh for the main session, Sol/high for ordinary
+# agents, Sol/medium for scouting, and Astra/medium for planning and verification.
 [agents]
 enabled = true
 default_subagent_model = "gpt-6.1-sol"
-default_subagent_reasoning_effort = "xhigh"
+default_subagent_reasoning_effort = "high"
 max_concurrent_threads_per_session = 3
 
-[features]
-hooks = true
+# Off, as in Claude's skillOverrides. Codex 0.153 matches `name`; its docs show
+# only `path`, which would pin a home directory.
+[[skills.config]]
+name = "bet"
+enabled = false
 
-# macOS uses the managed hook in requirements.toml; this is the user-hook
-# fallback on other hosts and must pass Codex's hook trust review.
-# timeout is 10 rather than 5 because a hook that times out is Failed, not
-# Blocked: Codex lets the command through, so the guard fails open and the
-# generous bound is the safe one.
-[[hooks.PreToolUse]]
-matcher = "^Bash$"
-
-[[hooks.PreToolUse.hooks]]
-command = '"${CODEX_HOME:-$HOME/.codex}/hooks/block-dangerous-git.sh"'
-statusMessage = "Checking git command safety"
-timeout = 10
-type = "command"
+[[skills.config]]
+name = "thermo-nuclear-code-quality-review"
+enabled = false
 
 # Remote streamable-HTTP endpoint: no local npx/node process per session, and
 # sidesteps codex's stdio MCP process leak (openai/codex#26984).

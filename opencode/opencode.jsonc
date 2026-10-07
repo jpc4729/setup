@@ -74,20 +74,24 @@
     "external_directory": {
       "*": "ask"
     },
-    // Skills you start by name: the model can't load them, and `/name` still
-    // runs them. Same names as the `user-invocable-only` entries of Claude's
-    // skillOverrides.
+    // The model can't load these skills, and `/name` still runs them. The
+    // first five are the `user-invocable-only` entries of Claude's
+    // skillOverrides; `bet` and `thermo-nuclear-code-quality-review` are its
+    // `off` entries, which opencode can't hide from `/`.
     "skill": {
       "grilling": "deny",
       "ponytail": "deny",
       "ponytail-audit": "deny",
       "ponytail-debt": "deny",
-      "ponytail-review": "deny"
+      "ponytail-review": "deny",
+      "bet": "deny",
+      "thermo-nuclear-code-quality-review": "deny"
     },
 
-    // opencode has no PreToolUse hook a shell script can register, so unlike
-    // Claude, Codex and Grok this list is the whole of its enforcement. It is
-    // matched against each command of a compound line, not just the line.
+    // This list is the whole of opencode's git enforcement; no home runs a
+    // git hook. It is matched against each command of a compound line, not
+    // just the line. `*` also matches nothing, so `git commit *--amend*`
+    // covers `git commit --amend`.
     "bash": {
       "*": "ask",
       "git status": "allow",
@@ -130,8 +134,8 @@
       "git -* bisect*": "deny",
       "git rebase*": "deny",
       "git -* rebase*": "deny",
-      "git commit --amend*": "deny",
-      "git -* commit --amend*": "deny",
+      "git commit *--amend*": "deny",
+      "git -* commit *--amend*": "deny",
       "git rm*": "deny",
       "git -* rm*": "deny",
       "git gc*": "deny",
@@ -150,6 +154,26 @@
       "git -* worktree remove*": "deny",
       "git worktree prune*": "deny",
       "git -* worktree prune*": "deny",
+      "git push *--force*": "deny",
+      "git -* push *--force*": "deny",
+      "git push -f*": "deny",
+      "git -* push -f*": "deny",
+      "git push * -f*": "deny",
+      "git -* push * -f*": "deny",
+      "git push * +*": "deny",
+      "git -* push * +*": "deny",
+      "git push *--delete*": "deny",
+      "git -* push *--delete*": "deny",
+      "git push -d*": "deny",
+      "git -* push -d*": "deny",
+      "git push * -d*": "deny",
+      "git -* push * -d*": "deny",
+      "git push *--mirror*": "deny",
+      "git -* push *--mirror*": "deny",
+      "git push *--prune*": "deny",
+      "git -* push *--prune*": "deny",
+      "git push * :*": "deny",
+      "git -* push * :*": "deny",
       "wt switch*": "deny",
       "wt remove*": "deny",
       "wt merge*": "deny",

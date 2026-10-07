@@ -56,28 +56,6 @@
   },
   "forceLoginMethod": "claudeai",
   "hooks": {
-    "PreToolUse": [
-      {
-        "hooks": [
-          {
-            "command": "~/.claude/hooks/block-dangerous-git.sh",
-            "timeout": 10,
-            "type": "command"
-          }
-        ],
-        "matcher": "Bash"
-      },
-      {
-        "hooks": [
-          {
-            "command": "~/.claude/hooks/block-worktree.sh",
-            "timeout": 10,
-            "type": "command"
-          }
-        ],
-        "matcher": "Agent|Task|Workflow"
-      }
-    ],
     "SessionStart": [
       {
         "hooks": [
@@ -127,32 +105,85 @@
       "CronCreate",
       "CronDelete",
       "Bash(git reset *)",
+      "Bash(git -* reset *)",
+      "Bash(git -* reset)",
       "Bash(git clean -*f*)",
+      "Bash(git -* clean -*f*)",
       "Bash(git branch -d *)",
+      "Bash(git -* branch -d *)",
       "Bash(git branch -D *)",
+      "Bash(git -* branch -D *)",
       "Bash(git branch -m *)",
+      "Bash(git -* branch -m *)",
       "Bash(git branch -M *)",
+      "Bash(git -* branch -M *)",
       "Bash(git branch -f *)",
+      "Bash(git -* branch -f *)",
       "Bash(git branch --delete*)",
+      "Bash(git -* branch --delete*)",
       "Bash(git branch --move*)",
+      "Bash(git -* branch --move*)",
       "Bash(git branch --force*)",
+      "Bash(git -* branch --force*)",
       "Bash(git checkout *)",
+      "Bash(git -* checkout *)",
       "Bash(git restore*)",
+      "Bash(git -* restore*)",
       "Bash(git stash*)",
+      "Bash(git -* stash*)",
       "Bash(git switch *)",
+      "Bash(git -* switch *)",
       "Bash(git bisect *)",
+      "Bash(git -* bisect *)",
       "Bash(git rebase*)",
-      "Bash(git commit --amend*)",
+      "Bash(git -* rebase*)",
+      "Bash(git commit *--amend*)",
+      "Bash(git -* commit *--amend*)",
       "Bash(git rm *)",
+      "Bash(git -* rm *)",
       "Bash(git gc*)",
+      "Bash(git -* gc*)",
       "Bash(git prune*)",
+      "Bash(git -* prune*)",
       "Bash(git reflog expire*)",
+      "Bash(git -* reflog expire*)",
       "Bash(git update-ref*)",
+      "Bash(git -* update-ref*)",
       "Bash(git worktree remove*)",
+      "Bash(git -* worktree remove*)",
       "Bash(git worktree prune*)",
+      "Bash(git -* worktree prune*)",
       "Bash(git worktree add *)",
+      "Bash(git -* worktree add *)",
+      "Bash(git worktree move*)",
+      "Bash(git -* worktree move*)",
+      "Bash(git push *--force*)",
+      "Bash(git -* push *--force*)",
+      "Bash(git push -f*)",
+      "Bash(git -* push -f*)",
+      "Bash(git push * -f*)",
+      "Bash(git -* push * -f*)",
+      "Bash(git push * +*)",
+      "Bash(git -* push * +*)",
+      "Bash(git push *--delete*)",
+      "Bash(git -* push *--delete*)",
+      "Bash(git push -d*)",
+      "Bash(git -* push -d*)",
+      "Bash(git push * -d*)",
+      "Bash(git -* push * -d*)",
+      "Bash(git push *--mirror*)",
+      "Bash(git -* push *--mirror*)",
+      "Bash(git push *--prune*)",
+      "Bash(git -* push *--prune*)",
       "Bash(gh pr checkout *)",
-      "Bash(wt switch *)"
+      "Bash(gh pr co *)",
+      "Bash(gh pr merge*)",
+      "Bash(gh repo sync*)",
+      "Bash(wt switch *)",
+      "Bash(wt remove*)",
+      "Bash(wt merge*)",
+      "Bash(wt step*)",
+      "Bash(wt hook*)"
     ]
   },
   "pluginConfigs": {
@@ -168,6 +199,7 @@
     "artifact-capabilities": "off",
     "artifact-diagramming": "off",
     "batch": "off",
+    "bet": "off",
     "claude-in-chrome": "off",
     "dataviz": "off",
     "design": "off",
@@ -181,6 +213,7 @@
     "ponytail-debt": "user-invocable-only",
     "ponytail-review": "user-invocable-only",
     "slides": "off",
+    "thermo-nuclear-code-quality-review": "off",
     "update-config": "off",
     "workflow-authoring": "off"
   },

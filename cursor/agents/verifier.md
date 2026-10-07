@@ -1,6 +1,6 @@
 ---
 name: verifier
-description: Tries to refute finished work in a fresh context, such as a code change, an analysis, a recommendation or a document. Reads first and runs only what reading cannot settle. Brief it with the request, the work and the claims to prove. It does not fix.
+description: Tries to refute finished work in a fresh context: a code change, an analysis, a recommendation or a document. Reads first and runs only what reading cannot settle. Brief it with the request, the work and the claims to prove. It does not fix.
 model: claude-opus-5-5
 ---
 

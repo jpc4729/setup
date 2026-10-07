@@ -13,8 +13,6 @@ repo="$(cd "$(dirname "$0")" && pwd)"
 dry=""
 [[ "${1:-}" == "-n" ]] && dry="-nv"
 
-# jq also lets the Claude worktree hook read a call; the git hooks need only
-# bash and awk.
 for tool in jq yq rsync; do
   command -v "$tool" > /dev/null || {
     echo "install.sh: $tool is missing" >&2
@@ -32,7 +30,7 @@ copy() {
   for f in $merged; do
     [[ "${f%/*}" == "$1" ]] && excludes+=(--exclude "/${f##*/}")
   done
-  # The managed policy contains @HOME@ paths and is expanded separately.
+  # The managed policy is installed separately.
   [[ "$1" != codex ]] || excludes+=(--exclude "/requirements.toml")
   [[ -n "$dry" ]] || mkdir -p "$2"
   # A folder's README.md documents the repo, not the home.
@@ -41,7 +39,7 @@ copy() {
 }
 
 # Codex reads the managed macOS preference, not the user requirements file.
-# Keep the expanded file for inspection and use the config hook on other hosts.
+# Keep the expanded file for inspection.
 codex_requirements() {
   local live="$HOME/.codex/requirements.toml" tmp encoded
   if [[ -n "$dry" ]]; then

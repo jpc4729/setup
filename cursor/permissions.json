@@ -10,7 +10,7 @@
       "Never run `git switch`: Changes the branch or checkout this session works in. Every agent and subagent stays on the branch and checkout the session started in, plans included; only the user changes branches or worktrees. Give the user the exact command instead.",
       "Never run `git bisect`: Changes the branch or checkout this session works in. Every agent and subagent stays on the branch and checkout the session started in, plans included; only the user changes branches or worktrees. Give the user the exact command instead.",
       "Never run `git rebase`: Rewrites history that may already be shared.",
-      "Never run `git commit --amend`: Rewrites the last commit; a plain commit stays allowed.",
+      "Never run `git commit( +[^ ]+)* +--amend`: Rewrites the last commit, in any flag order; a plain commit stays allowed.",
       "Never run `git rm`: Removes tracked files from the worktree, not just the index.",
       "Never run `git gc`: Prunes unreachable objects that are the recovery path for a bad reset.",
       "Never run `git prune`: Same recovery-path destruction as gc.",
@@ -18,8 +18,10 @@
       "Never run `git update-ref`: Moves refs beneath the porcelain, bypassing every other guard.",
       "Never run `git worktree (add|move)`: Changes the branch or checkout this session works in. Every agent and subagent stays on the branch and checkout the session started in, plans included; only the user changes branches or worktrees. Give the user the exact command instead.",
       "Never run `git worktree (remove|prune)`: Deletes a checkout that may hold uncommitted work, or the admin data that finds one. Only `list` is a read; `add` and `move` are git writes, which agents leave to the user.",
+      "Never run `git push( +[^ ]+)* +(-[A-Za-z]*[fd]|--(force|delete|mirror|prune)|\\+|:)`: Force-pushes, or deletes or prunes refs on the remote, which others may already have pulled. A plain push, `-u`, `--follow-tags` and a `HEAD:refs/heads/<branch>` refspec stay allowed.",
       "Never run `wt (switch|remove|merge|step|hook)`: Changes the branch or checkout this session works in. Every agent and subagent stays on the branch and checkout the session started in, plans included; only the user changes branches or worktrees. Give the user the exact command instead. `wt list` is a read.",
       "Never run `gh pr (checkout|co|merge)` or `gh repo sync`: Changes the branch or checkout this session works in. Every agent and subagent stays on the branch and checkout the session started in, plans included; only the user changes branches or worktrees. Give the user the exact command instead.",
+      "Each rule above also holds after a global option, as in `git -C <dir> reset` or `git -c <key>=<value> push --force`.",
       "Agents read git, and add, commit and push once asked. Never run another git write; give the user the commands instead."
     ]
   }

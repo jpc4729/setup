@@ -54,13 +54,12 @@ timeout_secs = 120.0
 permission_mode = "ask"
 
 # Decouple from Claude Code AND Cursor — Grok scans only its own native sources.
-# Skills come from ~/.agents/skills/, which Grok finds on its own; the
-# git-safety hook from ~/.grok/hooks/, and rules from ~/.grok/AGENTS.md; the
-# [permission] block carries the git denies. The one remaining ~/.claude read is
-# the shared plugin cache, which has no compat cell (see [plugins] below). All
-# compat cells default true.
+# Skills come from ~/.agents/skills/, which Grok finds on its own, and rules
+# from ~/.grok/AGENTS.md; the [permission] block carries the git denies. Two
+# ~/.claude reads have no compat cell: the shared plugin cache (see [plugins]
+# below) and the settings.json permission rules. All compat cells default true.
 #
-# Project `.claude/settings.json` permission rules still merge with no toggle
+# Home and project `.claude/settings.json` permission rules merge with Grok's
 # (Skill() prefixes skip). Generic top-level CLAUDE.md still loads; home
 # ~/.claude/Claude.md does not, because agents is false.
 [compat.claude]
@@ -106,42 +105,102 @@ url = "http://127.0.0.1:29979/mcp"
 disabled = []
 enabled = []
 
-# Native git-safety: deny wins over allow (deny > ask > allow) regardless of
-# source and holds under always-approve; the ~/.grok/hooks/ PreToolUse hook is
-# the belt-and-suspenders layer that runs first. Claude-tool denies
-# (SendMessage, EnterPlanMode, …) are meaningless in Grok and stay out.
+# The skills Claude's skillOverrides turn off. Grok lists them as [disabled].
+[skills]
+disabled = ["bet", "thermo-nuclear-code-quality-review"]
+
+# The git rule in code: deny wins over allow (deny > ask > allow) regardless of
+# source and holds under always-approve. The Bash entries of Claude's
+# permissions.deny, with two Grok changes. `git reset*` also refuses a bare
+# `git reset`, which Grok's `git reset *` glob would not match. The two
+# `:?*` rules refuse a `:ref` delete push. Claude has none: it reads a trailing
+# `:*` as a plain prefix, as Grok does, and Grok's `?` avoids that ending.
+# Grok skips EnterWorktree and Agent(isolation:worktree) as unknown tools, so
+# AGENTS.md alone binds worktree isolation.
 [permission]
 deny = [
   "Bash(git reset*)",
+  "Bash(git -* reset *)",
+  "Bash(git -* reset)",
   "Bash(git clean -*f*)",
+  "Bash(git -* clean -*f*)",
   "Bash(git branch -d *)",
+  "Bash(git -* branch -d *)",
   "Bash(git branch -D *)",
+  "Bash(git -* branch -D *)",
   "Bash(git branch -m *)",
+  "Bash(git -* branch -m *)",
   "Bash(git branch -M *)",
+  "Bash(git -* branch -M *)",
   "Bash(git branch -f *)",
+  "Bash(git -* branch -f *)",
   "Bash(git branch --delete*)",
+  "Bash(git -* branch --delete*)",
   "Bash(git branch --move*)",
+  "Bash(git -* branch --move*)",
   "Bash(git branch --force*)",
-  "Bash(git checkout -- *)",
-  "Bash(git checkout * -- *)",
-  "Bash(git checkout -f*)",
-  "Bash(git checkout -B *)",
-  "Bash(git checkout --force*)",
+  "Bash(git -* branch --force*)",
+  "Bash(git checkout *)",
+  "Bash(git -* checkout *)",
   "Bash(git restore*)",
+  "Bash(git -* restore*)",
   "Bash(git stash*)",
-  "Bash(git switch -f*)",
-  "Bash(git switch -C *)",
-  "Bash(git switch --force*)",
-  "Bash(git switch --discard-changes*)",
+  "Bash(git -* stash*)",
+  "Bash(git switch *)",
+  "Bash(git -* switch *)",
+  "Bash(git bisect *)",
+  "Bash(git -* bisect *)",
   "Bash(git rebase*)",
-  "Bash(git commit --amend*)",
-  "Bash(git rm*)",
+  "Bash(git -* rebase*)",
+  "Bash(git commit *--amend*)",
+  "Bash(git -* commit *--amend*)",
+  "Bash(git rm *)",
+  "Bash(git -* rm *)",
   "Bash(git gc*)",
+  "Bash(git -* gc*)",
   "Bash(git prune*)",
+  "Bash(git -* prune*)",
   "Bash(git reflog expire*)",
+  "Bash(git -* reflog expire*)",
   "Bash(git update-ref*)",
+  "Bash(git -* update-ref*)",
   "Bash(git worktree remove*)",
+  "Bash(git -* worktree remove*)",
   "Bash(git worktree prune*)",
+  "Bash(git -* worktree prune*)",
+  "Bash(git worktree add *)",
+  "Bash(git -* worktree add *)",
+  "Bash(git worktree move*)",
+  "Bash(git -* worktree move*)",
+  "Bash(git push *--force*)",
+  "Bash(git -* push *--force*)",
+  "Bash(git push -f*)",
+  "Bash(git -* push -f*)",
+  "Bash(git push * -f*)",
+  "Bash(git -* push * -f*)",
+  "Bash(git push * +*)",
+  "Bash(git -* push * +*)",
+  "Bash(git push *--delete*)",
+  "Bash(git -* push *--delete*)",
+  "Bash(git push -d*)",
+  "Bash(git -* push -d*)",
+  "Bash(git push * -d*)",
+  "Bash(git -* push * -d*)",
+  "Bash(git push *--mirror*)",
+  "Bash(git -* push *--mirror*)",
+  "Bash(git push *--prune*)",
+  "Bash(git -* push *--prune*)",
+  "Bash(git push* :?*)",
+  "Bash(git -* push* :?*)",
+  "Bash(gh pr checkout *)",
+  "Bash(gh pr co *)",
+  "Bash(gh pr merge*)",
+  "Bash(gh repo sync*)",
+  "Bash(wt switch *)",
+  "Bash(wt remove*)",
+  "Bash(wt merge*)",
+  "Bash(wt step*)",
+  "Bash(wt hook*)",
 ]
 allow = [
   "Bash(git status)",

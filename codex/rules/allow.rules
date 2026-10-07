@@ -20,17 +20,9 @@ prefix_rule(
 prefix_rule(
     pattern = ["git", ["status", "diff", "log", "show", "blame", "grep", "rev-parse", "rev-list", "ls-files", "ls-tree", "show-ref", "for-each-ref", "merge-base"]],
     decision = "allow",
-    justification = "Read-only git inspection; the Bash hook still rejects known write options.",
+    justification = "Read-only git inspection. AGENTS.md binds a write option such as --output.",
     match = ["git status --short", "git diff --stat", "git log --oneline -5"],
     not_match = ["git add file", "git switch main"],
-)
-
-prefix_rule(
-    pattern = ["git", "stash", ["list", "show"]],
-    decision = "allow",
-    justification = "Stash listing and inspection do not move work.",
-    match = ["git stash list", "git stash show -p"],
-    not_match = ["git stash", "git stash pop"],
 )
 
 prefix_rule(

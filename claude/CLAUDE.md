@@ -23,4 +23,4 @@ The work can be code, a product decision, an analysis, a document, a config or a
 
 # Git
 
-Read anything. Run `add`, `commit` and `push` only after I ask; one ask covers a run of work. Write commits as Conventional Commits, `type(scope): summary`. For any other git write, give me the exact command, even if I ask you to run it. Stay on the branch and checkout this session started in, and don't suggest a new branch, worktree or PR. A hook enforces this; when it blocks you, follow its message.
+Read anything. Run `add`, `commit` and `push` only after I ask; one ask covers a run of work. Write commits as Conventional Commits, `type(scope): summary`. For any other git write, give me the exact command, even if I ask you to run it. You and every subagent stay on the branch and checkout this session started in; never start a subagent or workflow agent with worktree isolation, and don't suggest a new branch, worktree or PR. A deny list refuses the destructive forms, and these rules bind the rest. When it refuses, try no other spelling.

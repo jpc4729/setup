@@ -2,7 +2,7 @@
 
 Claude Code's home. `./install.sh` copies this folder into `~/.claude` and merges `settings.json`. This README stays in the repo.
 
-**The idea:** fast by default. Heavy checks run only when a mistake costs much. Hard rules live in code (hooks, deny rules), not in more text.
+**The idea:** fast by default. Heavy checks run only when a mistake costs much. Hard rules live in code (deny rules), not in more text.
 
 ## TL;DR
 
@@ -18,7 +18,7 @@ Claude Code's home. `./install.sh` copies this folder into `~/.claude` and merge
 | `CLAUDE.md`                    | Rules for the main session                            | One short core. Less text, better adherence.                                                                              |
 | `settings.json`                | Merged into `~/.claude/settings.json` by `install.sh` | Repo keys win. Claude Code keeps the keys it writes.                                                                      |
 | `agents/`                      | `scout`, `verifier`, `worker`, `planner`              | A fresh context for a wide read, a refutation, delegated work or a long plan.                                             |
-| `hooks/`                       | Git guard, worktree guard, session plans              | A rule in code always runs. A rule in text is only advice.                                                                |
+| `hooks/`                       | Session plans                                         | A plan survives compaction and resume. Claude's git rules are deny rules.                                                 |
 | `statusline-command.sh`        | The status line                                       | Profile, folder, branch, model, tokens, rate limits and prompt cache (dim until they need you), diff and age in one line. |
 | [`../bin/quiet`](../bin/quiet) | `quiet <command>`, installed in `~/.local/bin`        | One line on a pass, the full output on a failure. Saves context.                                                          |
 
@@ -58,10 +58,10 @@ Claude Code's home. `./install.sh` copies this folder into `~/.claude` and merge
 
 ## Settings, grouped
 
-- **Few prompts:** `acceptEdits`, plus an allow list for git reads, `git add`, `shellcheck`, `shfmt` and `zsh -n`. Other commands ask first. The deny list and the hooks block the risky git writes.
+- **Few prompts:** `acceptEdits`, plus an allow list for git reads, `git add`, `shellcheck`, `shfmt` and `zsh -n`. Other commands ask first. The deny list blocks the risky git writes.
 - **Models:** only Fable 5.1, Opus 5.5 and Sonnet 5.5 (`enforceAvailableModels`). Default `claude-opus-5-5[1m]`, effort `xhigh` on each.
 - **Context:** auto-compaction at 400K of the 1M window. Unused bundled skills are off (`skillOverrides`), so their descriptions use no context. `ponytail`, its `-review`, `-audit` and `-debt` skills, and `grilling` are `user-invocable-only`: they run only when you type their name. `workflowSizeGuideline: small`.
-- **Git:** the deny list blocks resets, branch switches, rebases, amends, stashes and worktrees. `GIT_EDITOR=true`, so git never waits for an editor. `includeGitInstructions: false`, because `CLAUDE.md` holds the git rules. Empty `attribution`: no Claude trailer.
+- **Git:** the deny list blocks resets, branch switches, rebases, amends, stashes, worktrees, force and delete pushes, and the `wt` and `gh` commands that change a branch, also after a global option such as `git -C`. Not caught: combined short flags such as `-uf`, a delete push written `origin :branch` and abbreviated options such as `--amen`. With a global option first, a commit message or path that holds a denied subcommand word is refused too. `GIT_EDITOR=true`, so git never waits for an editor. `includeGitInstructions: false`, because `CLAUDE.md` holds the git rules. Empty `attribution`: no Claude trailer.
 - **Quiet and private:** Concise output style. No spinner tips, feedback survey or error reports. No claude.ai connectors or skill sync, no Gmail, Calendar or Drive MCP, no remote control. Auto memory is off: what Claude knows lives in files you can read.
 - **Long history:** `cleanupPeriodDays: 3650`, so `/resume` finds old sessions.
 - **Real edits:** `CLAUDE_CODE_THRIFTY_SONIC=0`, so Claude edits with Edit and Write, not `sed`.

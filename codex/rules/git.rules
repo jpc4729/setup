@@ -5,10 +5,10 @@
 # add, commit and plain push remains in AGENTS.md.
 
 prefix_rule(
-    pattern = ["git", ["am", "apply", "bisect", "checkout", "cherry-pick", "clone", "fetch", "gc", "init", "merge", "mv", "prune", "prune-packed", "pull", "rebase", "replace", "reset", "restore", "revert", "rm", "switch", "update-index", "update-ref"]],
+    pattern = ["git", ["am", "apply", "bisect", "checkout", "checkout-index", "cherry-pick", "clone", "fetch", "filter-branch", "filter-repo", "gc", "init", "merge", "mv", "prune", "prune-packed", "pull", "read-tree", "rebase", "replace", "reset", "restore", "revert", "rm", "sparse-checkout", "switch", "update-index", "update-ref"]],
     decision = "forbidden",
     justification = "The user leaves git writes other than add, commit and plain push to themselves. Give the user the exact command and continue on this checkout.",
-    match = ["git reset --hard HEAD~1", "git switch main", "git checkout -b feature", "git fetch origin"],
+    match = ["git reset --hard HEAD~1", "git switch main", "git checkout -b feature", "git fetch origin", "git filter-repo --path src", "git checkout-index -a -f", "git sparse-checkout set docs"],
     not_match = ["git status", "git branch -a", "git stash list", "git add file", "git commit -m message", "git push"],
 )
 
@@ -77,6 +77,14 @@ prefix_rule(
 )
 
 prefix_rule(
+    pattern = ["git", "symbolic-ref", ["-d", "--delete"]],
+    decision = "forbidden",
+    justification = "Only the user deletes or moves a symbolic ref such as HEAD. Give them the command.",
+    match = ["git symbolic-ref -d refs/remotes/origin/HEAD", "git symbolic-ref --delete HEAD"],
+    not_match = ["git symbolic-ref HEAD", "git symbolic-ref --short HEAD", "git symbolic-ref refs/remotes/origin/HEAD", "git symbolic-ref --short refs/remotes/origin/HEAD"],
+)
+
+prefix_rule(
     pattern = ["git", "commit", "--amend"],
     decision = "forbidden",
     justification = "Only new commits are permitted after the user asks. Give the user the amend command.",
@@ -101,6 +109,14 @@ prefix_rule(
 )
 
 prefix_rule(
+    pattern = ["wt", ["-y", "--yes", "-v", "-vv", "--verbose"], ["switch", "remove", "merge", "step", "hook"]],
+    decision = "forbidden",
+    justification = "A global option does not change what the command does. Only the user changes branches or worktrees. Give them the command and continue in the session's original checkout.",
+    match = ["wt -y remove", "wt -v switch feature", "wt --yes merge main"],
+    not_match = ["wt -y list", "wt -v config show"],
+)
+
+prefix_rule(
     pattern = ["gh", "pr", ["checkout", "co", "merge"]],
     decision = "forbidden",
     justification = "Checking out or merging a pull request changes a branch, which only the user does. Give them the command and continue on this checkout.",
@@ -114,4 +130,44 @@ prefix_rule(
     justification = "Syncing a repository moves a branch, which only the user does. Give them the command.",
     match = ["gh repo sync", "gh repo sync owner/fork"],
     not_match = ["gh repo view", "gh repo list"],
+)
+
+prefix_rule(
+    pattern = ["gh", "pr", "close", ["-d", "--delete-branch"]],
+    decision = "forbidden",
+    justification = "This deletes the local and remote branch of the pull request, which only the user does. Give them the command.",
+    match = ["gh pr close -d 12", "gh pr close --delete-branch 12"],
+    not_match = ["gh pr close 12", "gh pr create --fill"],
+)
+
+prefix_rule(
+    pattern = ["gh", "repo", ["delete", "archive", "rename"]],
+    decision = "forbidden",
+    justification = "Deleting, archiving or renaming a repository changes it for every user. Give the user the command.",
+    match = ["gh repo delete owner/repo --yes", "gh repo archive", "gh repo rename new-name"],
+    not_match = ["gh repo view", "gh repo list"],
+)
+
+prefix_rule(
+    pattern = ["gh", "release", ["delete", "delete-asset"]],
+    decision = "forbidden",
+    justification = "Only the user deletes a release or its files. Give them the command.",
+    match = ["gh release delete v1.0.0", "gh release delete-asset v1.0.0 app.zip"],
+    not_match = ["gh release view v1.0.0", "gh release list"],
+)
+
+prefix_rule(
+    pattern = ["gh", "api", ["-X", "--method"], "DELETE"],
+    decision = "forbidden",
+    justification = "A DELETE request deletes data on GitHub, such as a branch, a tag or a release. Give the user the command.",
+    match = ["gh api -X DELETE repos/owner/repo/git/refs/heads/old", "gh api --method DELETE repos/owner/repo/releases/1"],
+    not_match = ["gh api repos/owner/repo", "gh api -X GET repos/owner/repo"],
+)
+
+prefix_rule(
+    pattern = ["gh", "api", ["-XDELETE", "--method=DELETE"]],
+    decision = "forbidden",
+    justification = "A DELETE request deletes data on GitHub, such as a branch, a tag or a release. Give the user the command.",
+    match = ["gh api -XDELETE repos/owner/repo/git/refs/heads/old", "gh api --method=DELETE repos/owner/repo/releases/1"],
+    not_match = ["gh api -XGET repos/owner/repo", "gh api --method=GET repos/owner/repo"],
 )

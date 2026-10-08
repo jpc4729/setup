@@ -70,9 +70,10 @@ Each task goes on one or more of three paths:
 
 Git:
 
-- Git reads run freely. `add`, `commit` and `push` run only when you ask.
+- Git reads run freely. `add`, `commit`, `push` and a new pull request run only when you ask.
 - Each other git write comes to you as the exact command.
-- No agent or subagent leaves the branch or checkout that its session started in.
+- Many agents can work in the folder where a session started, so no agent changes the branch there.
+- Work that needs its own branch goes in a separate folder, a worktree, with its own branch and pull request. In Claude, a subagent or workflow agent with worktree isolation does that work. In the other tools, only you make a worktree.
 
 What a tool can start on its own:
 
@@ -137,10 +138,11 @@ All but Claude:
 ## Safety
 
 - No tool runs a git hook.
-- Claude's deny list is the source. It refuses resets, branch switches, rebases, amends, stashes, worktrees, force and delete pushes, and the `wt` and `gh` commands that change a branch, also after a global option such as `git -C`.
+- Claude's deny list is the source. It refuses resets, branch switches, rebases, amends, stashes, worktree commands, history rewrites, tag and ref deletes, force and delete pushes, forced fetches, and the `wt` and `gh` commands that change or delete a branch, a repo or a release, also after a global option such as `git -C`.
 - Grok, Cursor and opencode copy that list in their own syntax. Codex's prefix rules refuse the forms that begin a command.
-- Each tool's rules cover the rest, and `add`, `commit` and `push` still need your request.
-- Claude also denies subagents with worktree isolation.
+- Each tool's rules cover the rest, and `add`, `commit`, `push` and a new pull request still need your request.
+- Claude allows a subagent with worktree isolation, which Claude Code keeps in its own folder under `.claude/worktrees/`. It denies `EnterWorktree` and subagents with cloud isolation.
+- Add `.claude/worktrees/` to your global gitignore, so git and search tools in the main folder skip the worktrees.
 - Codex uses Full Access with `on-request` approvals. Ordinary local work runs directly. Rules ask first for deletion, credential tools, direct package publishing and named recipes that write outside the repo.
 - Unattended Codex work that you ask for can select `never`. Prefix rules are a backstop, not a full command parser.
 

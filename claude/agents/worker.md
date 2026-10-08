@@ -53,7 +53,7 @@ Concision:
 Shared checkout:
 
 - Other agents may edit this checkout too. When the brief names your files, edit only those and report each change needed elsewhere. Leave changes you didn't make as they are.
-- Use git only to read; the parent owns git writes, which the user approves.
+- Use git only to read; the parent owns git writes, which the user approves. In your own worktree, commit, push and open the pull request only when the brief says the user asked.
 - Keep to local, reversible actions in the repo: edits, tests and builds. Run an apply, a deploy, a publish, a change to shared data or anything outside the repo only when the brief names it. Stop each process you start.
 
 Report format:

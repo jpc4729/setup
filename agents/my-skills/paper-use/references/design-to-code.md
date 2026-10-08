@@ -23,11 +23,11 @@ Before writing anything new, look for what the project already has: a component 
 
 Earlier sources override later ones.
 
-1. **A token reference.** `find_nodes` on a value reports token-bound usages as `var(--token)`. In a mirrored file, `get_tokens({ fileId, format: "json" })` returns each token's description, and its `code: <path>#<name>` line names the project's own token; use that name. Without the line, match by value.
-2. **The layer name.** Names in this file are roles in domain words (L4), so `Total row` names the component you should be reaching for, not a div to invent. A clone carries its sheet cell's name, so `Button · primary · lg` is `<Button variant="primary" size="lg">` (`components.md`).
-3. **The canonical copy on the components page** — or, on a `Proto` page, that initiative's forked copy. If the node is a clone, the canonical one is the definition — read that, and implement it once.
-4. **Computed styles.** Exact values, for everything the three above did not settle.
-5. **Raw literals.** A literal where the file has a token for that value is a defect in the design (audit C9), not a licence to hardcode. Fix it on a design-owned page; on a code-owned page, record it for the re-mirror.
+1. A token reference. `find_nodes` on a value reports token-bound usages as `var(--token)`. In a mirrored file, `get_tokens({ fileId, format: "json" })` returns each token's description, and its `code: <path>#<name>` line names the project's own token; use that name. Without the line, match by value.
+2. The layer name. Names in this file are roles in domain words (L4), so `Total row` names the component you should be reaching for, not a div to invent. A clone carries its sheet cell's name, so `Button · primary · lg` is `<Button variant="primary" size="lg">` (`components.md`).
+3. The canonical copy on the components page — or, on a `Proto` page, that initiative's forked copy. If the node is a clone, the canonical one is the definition — read that, and implement it once.
+4. Computed styles. Exact values, for everything the three above did not settle.
+5. Raw literals. A literal where the file has a token for that value is a defect in the design (audit C9), not a licence to hardcode. Fix it on a design-owned page; on a code-owned page, record it for the re-mirror.
 
 ## Sizing intent
 
@@ -45,8 +45,8 @@ The board says whether each container fills, hugs or is fixed (`css-to-paper.md`
 
 Paper stores no link between a design node and the code component it stands for. The link is carried by two things and no others:
 
-- **Names.** The layer and artboard names are the only in-file evidence of what a node is. This is why L4 is not a tidiness rule.
-- **The manifest.** Source path to node id, kept in the repo. Without it, the second person to open the file cannot tell which component produced which board.
+- Names. The layer and artboard names are the only in-file evidence of what a node is. This is why L4 is not a tidiness rule.
+- The manifest. Source path to node id, kept in the repo. Without it, the second person to open the file cannot tell which component produced which board.
 
 Treat both as load-bearing. In Paper they are the whole mapping layer.
 

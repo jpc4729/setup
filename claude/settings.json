@@ -1,5 +1,6 @@
 {
   "$schema": "https://json.schemastore.org/claude-code-settings.json",
+  "advisorModel": "claude-opus-5-5",
   "attribution": {
     "commit": "",
     "pr": ""
@@ -13,7 +14,6 @@
     "claude-opus-5-5",
     "claude-sonnet-5-5"
   ],
-  "cleanupPeriodDays": 3650,
   "deniedMcpServers": [
     {
       "serverUrl": "https://gmailmcp.googleapis.com/mcp/*"
@@ -95,7 +95,7 @@
       "effortLevel": "xhigh"
     },
     "claude-sonnet-5-5": {
-      "effortLevel": "xhigh"
+      "effortLevel": "high"
     }
   },
   "outputStyle": "Concise",

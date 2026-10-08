@@ -4,7 +4,7 @@ For authoring a board from a product that runs. Read the rendered UI, translate 
 
 ## 1 · Read the rendered UI, never the source
 
-**Web.** Open the route at the board's viewport in a headless browser, and evaluate the snippet below with the screen's root selector. It returns the page's CSS variables and, for every visible element: its box relative to the root, its non-default layout and paint styles, its text with its text style, its `::before` and `::after` content, and inline SVG. Computed values arrive resolved: `rem`, `em`, `calc()` and `var()` come back as px and colours, grid tracks as px. _Tested._
+Web. Open the route at the board's viewport in a headless browser, and evaluate the snippet below with the screen's root selector. It returns the page's CSS variables and, for every visible element: its box relative to the root, its non-default layout and paint styles, its text with its text style, its `::before` and `::after` content, and inline SVG. Computed values arrive resolved: `rem`, `em`, `calc()` and `var()` come back as px and colours, grid tracks as px. _Tested._
 
 ```js
 (() => {
@@ -99,7 +99,7 @@ For authoring a board from a product that runs. Read the rendered UI, translate 
 - Values come from the output, never from a screenshot. The box gives the geometry; the style gives the values.
 - A real screen returns a lot. Run it per section — header, list, dock — and author that section.
 
-**Native.** There is no DOM, so the two halves come from two places.
+Native. There is no DOM, so the two halves come from two places.
 
 - Styles and spacing come from the theme and the view code: asset catalogs and `Color`/`Font` extensions in Swift, `MaterialTheme` and modifiers in Compose, `StyleSheet` and theme objects in React Native.
 - Frames come from the platform's inspector: `adb shell uiautomator dump` lists every Android view's bounds in pixels (divide by the density for dp); on iOS, the Xcode view debugger or an XCUITest element's `frame`.
@@ -128,10 +128,10 @@ For authoring a board from a product that runs. Read the rendered UI, translate 
 
 A board read back into code gives exactly the sizes it was written with. Write the intent, not the pixels.
 
-- **Fill** — `flex: 1` along the parent's axis, `align-self: stretch` across it, or `width: 100%`. A page's content column, a list row, a field.
-- **Hug** — no width; the content sizes it. A button, a chip, a label.
-- **Fixed** — `width` and `height` in px with `flex-shrink: 0`. Only where the product is fixed: an icon, an avatar, a control with a set size, the artboard itself.
-- **Limits** — `min-width` and `max-width` wherever the code has them. A page column capped at 1200px carries `max-width: 1200px`.
+- Fill — `flex: 1` along the parent's axis, `align-self: stretch` across it, or `width: 100%`. A page's content column, a list row, a field.
+- Hug — no width; the content sizes it. A button, a chip, a label.
+- Fixed — `width` and `height` in px with `flex-shrink: 0`. Only where the product is fixed: an icon, an avatar, a control with a set size, the artboard itself.
+- Limits — `min-width` and `max-width` wherever the code has them. A page column capped at 1200px carries `max-width: 1200px`.
 - Read the intent from the snippet's `flexGrow`, `alignSelf` and `maxWidth`, or from the code's CSS. Never from the box: it reports every size as resolved pixels.
 
 ## 4 · Values to tokens

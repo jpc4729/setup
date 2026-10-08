@@ -41,5 +41,5 @@ Decisions: <at most three evidence-backed choices or assumptions, each with the 
 DECIDE: <two options and your pick, or none>
 Remaining: <requested work beyond this plan or none>
 Next: <first unfinished step>
-Final gate: <repository's existing full gate or its available checks>
+Final check: <checks for the changed files; a repo-wide check only when the change can break code outside them, with the reason>
 ```

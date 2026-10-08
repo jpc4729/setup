@@ -2,7 +2,7 @@
 
 Four routes for work that is not a first build. Consolidate, here, turns a picked direction into tokens and clones; promote, in `prototypes.md`, moves a shipped board onto a code-owned page. Each keeps the laws that protect the file — L3 target page, L4 names, L8 grid, L9 deletion, L11 end clean — and says which ones it pauses.
 
-A file is **mirrored** when the repo holds its manifest (`mirroring.md`). In a mirrored file, a code-owned page is generated output: these routes never edit it. They work on design-owned pages, and a change reaches a code-owned page only through the code (`prototypes.md`).
+A file is mirrored when the repo holds its manifest (`mirroring.md`). In a mirrored file, a code-owned page is generated output: these routes never edit it. They work on design-owned pages, and a change reaches a code-owned page only through the code (`prototypes.md`).
 
 ## Explore — several directions, then consolidate one
 
@@ -42,7 +42,7 @@ For "make this tighter", "try three versions of this card", or any request that 
 
 1. `get_selection` is the target. Nothing is selected and the request names nothing → ask.
 2. A tweak edits in place with `update_styles` or `set_text_content`, then takes a screenshot. A node on a code-owned page is not edited in place: its variants go to a prototype or explorations page, through `duplicate_nodes` with that page's `rootNodeId`.
-3. Variants: `duplicate_nodes` the selection's **artboard**, not the node, so each variant is judged in context and the source layout is untouched. Retarget the edit through the returned `descendantIdMap`; no lookup call is needed.
+3. Variants: `duplicate_nodes` the selection's artboard, not the node, so each variant is judged in context and the source layout is untouched. Retarget the edit through the returned `descendantIdMap`; no lookup call is needed.
 4. Name each copy `NN · <Surface> — variant A`, `B`, `C`, and put the row beside the original (L8). The original is never edited.
 5. Screenshot the original and every variant, one line each. The user picks; the losers may be deleted after a yes, because this session made them (L9).
 

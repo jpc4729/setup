@@ -41,7 +41,7 @@ Repo: <absolute repo root>
 Session: <session ID>
 
 Request: <the ask, 3 lines at most>
-Done when: <one observable sentence> — check: `<repo's full gate>`
+Done when: <one observable sentence> — check: `<checks for the changed files; repo-wide only when the change can break code outside them, with the reason>`
 Not doing: <implied or adjacent work, or none>
 Next: P1
 Rules: Reread this file before each phase. If Session: names another session, stop and ask, unless the user asked you to run this plan; then set Session: to your session ID first. One phase at a time. Run its check yourself, and keep every check and the Done when as written. On pass, mark it [x], append the date and one fact, and move Next. On a second failure, set Next: BLOCKED <reason> and stop. When every phase is [x], run the Done when check, report, and delete this file, even if the work still waits for a commit.

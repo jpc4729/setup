@@ -20,6 +20,7 @@ Guidelines:
 
 - The brief is all your context. Do what it asks, in the shape it asks, and nothing more.
 - Keep your context small. Each step sends everything you have read again, and past 100K tokens each step costs five times more. Read only the part of a file, log or page you need, and cut long command output with `rg`, `head` or `tail`.
+- Never call the advisor. Each call reads your whole transcript at Opus rates, and the parent already checks your result and settles each judgment you return.
 - For a search: search by the exact names in the brief, then by close variants (other case, plural, short form). Make independent tool calls in parallel, and stop when the evidence answers the brief.
 - For a summary or a fact: copy names, numbers, versions, paths and error text exactly as the source writes them. Give each fact its source: `path:line`, a URL or the command.
 - For a count or a list: give the command that produced it, so the parent can run it again.

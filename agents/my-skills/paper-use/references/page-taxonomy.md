@@ -30,10 +30,10 @@ Create only the pages the project has. `00 · Index` earns its place from the mo
 
 A flow is the set of screens a user moves through for one job: sign-in, checkout, settings. It is the right unit for a page — not one screen, and not the whole product.
 
-- **Not one page per screen.** No tool reorders or deletes a page, so every page an agent makes is permanent until someone removes it by hand. A hundred screen pages are a hundred manual cleanups.
-- **Not one page for everything.** `get_basic_info` returns every artboard of the page on each call. Automatic placement fills one ever-larger canvas, and two purposes share one list.
-- **What a flow page buys through the MCP.** `get_basic_info` stays small. `find_nodes`, `list_comment_threads`, `list_comment_thread_authors` and `export` all take a `pageId`, so "the raw colours in checkout" or "the open comments on sign-in" is one call. New and duplicated boards land in a small canvas. Agents can work one page each, in parallel, without meeting on the canvas.
-- **Split** a page when it holds two flows, or when it passes about forty artboards. Split by sub-flow, never by state.
+- Not one page per screen. No tool reorders or deletes a page, so every page an agent makes is permanent until someone removes it by hand. A hundred screen pages are a hundred manual cleanups.
+- Not one page for everything. `get_basic_info` returns every artboard of the page on each call. Automatic placement fills one ever-larger canvas, and two purposes share one list.
+- What a flow page buys through the MCP. `get_basic_info` stays small. `find_nodes`, `list_comment_threads`, `list_comment_thread_authors` and `export` all take a `pageId`, so "the raw colours in checkout" or "the open comments on sign-in" is one call. New and duplicated boards land in a small canvas. Agents can work one page each, in parallel, without meeting on the canvas.
+- Split a page when it holds two flows, or when it passes about forty artboards. Split by sub-flow, never by state.
 
 Screenshots work on a page the user is not viewing. What does not work there is measurement: a size or position that layout decides reads as null, so the grid check (L8) runs while the user views the page, or before boards switch to `fit-content`.
 
@@ -41,9 +41,9 @@ Screenshots work on a page the user is not viewing. What does not work there is 
 
 In a file that mirrors a shipped product, every page but the Archive has exactly one owner (L2).
 
-- **Code-owned** — Foundations, Components and every flow page once it is mirrored. Written only by a re-mirror from the running product (`mirroring.md`).
-- **Design-owned** — `Proto` pages, Explorations and the Index. Edited freely; the re-mirror writes only the Index's release line, copied from the manifest.
-- **Nobody** — Archive. Things arrive; nothing is edited.
+- Code-owned — Foundations, Components and every flow page once it is mirrored. Written only by a re-mirror from the running product (`mirroring.md`).
+- Design-owned — `Proto` pages, Explorations and the Index. Edited freely; the re-mirror writes only the Index's release line, copied from the manifest.
+- Nobody — Archive. Things arrive; nothing is edited.
 
 The Index says which is which. A new flow in a mirrored file is designed on its `Proto` page like any other change; its flow page is created by the re-mirror that promotes it. A file with no shipped product has no owners: every page is design-led.
 

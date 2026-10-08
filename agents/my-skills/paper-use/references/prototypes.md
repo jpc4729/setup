@@ -4,9 +4,9 @@ A mirrored file shows what ships. A prototype shows what is proposed. Both live 
 
 ## The model
 
-- **Code-owned pages** show the product as of one release. Only a re-mirror from the running product writes them (`mirroring.md`, `code-to-design.md`).
-- **Design-owned pages** hold proposals. Agents and designers edit them freely.
-- **The code is the only bridge.** A proposal reaches a code-owned page by shipping in the code and coming back through a re-mirror. Nothing is merged across by hand.
+- Code-owned pages show the product as of one release. Only a re-mirror from the running product writes them (`mirroring.md`, `code-to-design.md`).
+- Design-owned pages hold proposals. Agents and designers edit them freely.
+- The code is the only bridge. A proposal reaches a code-owned page by shipping in the code and coming back through a re-mirror. Nothing is merged across by hand.
 
 So a prototype can never make the code-owned pages wrong: it never writes them. They go stale only when the code changes, and the manifest's commit column lists exactly which boards that affects.
 
@@ -22,16 +22,16 @@ No tool deletes a page, so create a prototype page only after a yes (L10).
 
 ## Lifecycle
 
-1. **Open.** Post the brief and the structural plan: which boards it forks, which tokens it adds, and the page it needs. Wait for a yes (L10). Then `create_page({ fileId, name })`, keep the `pageId`, and confirm it with `get_basic_info({ fileId, pageId })`.
-2. **Fork, never draw from blank.** `duplicate_nodes` each code-owned board the initiative changes, with `parentId` set to the prototype page's `rootNodeId`. The copy lands in an empty spot on that page, and `descendantIdMap` maps every source node to its copy. Record the fork in the manifest: initiative, slug, page, source board, copy, and the commit the source was mirrored from.
-3. **Fork the components too.** A changed component's sheet is forked like a board. Its cells on the prototype page are the canonical copies for that initiative; clone from them there, and push later changes with the propagate procedure (`components.md`). The components page is code-owned and is never edited.
-4. **Design.** A redesign of a flow follows the review layout: evidence, numbered issues and notes, with each redesign under the screen it replaces (`review.md`). Explore, Tweak and Revise all apply (`iterate.md`). Names, grid and review checkpoints apply as on any page.
-5. **Hand off.** Implementation reads the prototype page (`design-to-code.md`). The ledger lists each board and the code it should become.
-6. **Close.** The code lands, then the re-mirror runs. For each prototype board:
+1. Open. Post the brief and the structural plan: which boards it forks, which tokens it adds, and the page it needs. Wait for a yes (L10). Then `create_page({ fileId, name })`, keep the `pageId`, and confirm it with `get_basic_info({ fileId, pageId })`.
+2. Fork, never draw from blank. `duplicate_nodes` each code-owned board the initiative changes, with `parentId` set to the prototype page's `rootNodeId`. The copy lands in an empty spot on that page, and `descendantIdMap` maps every source node to its copy. Record the fork in the manifest: initiative, slug, page, source board, copy, and the commit the source was mirrored from.
+3. Fork the components too. A changed component's sheet is forked like a board. Its cells on the prototype page are the canonical copies for that initiative; clone from them there, and push later changes with the propagate procedure (`components.md`). The components page is code-owned and is never edited.
+4. Design. A redesign of a flow follows the review layout: evidence, numbered issues and notes, with each redesign under the screen it replaces (`review.md`). Explore, Tweak and Revise all apply (`iterate.md`). Names, grid and review checkpoints apply as on any page.
+5. Hand off. Implementation reads the prototype page (`design-to-code.md`). The ledger lists each board and the code it should become.
+6. Close. The code lands, then the re-mirror runs. For each prototype board:
    - It matches the running UI — the implementation check band shows no differences (`review.md`) → promote it. First swap its prototype tokens for the ones the re-mirror created: `find_nodes({ fileId, nodeId, filters: [{ styleValue: "*-proto-<slug>-*" }] })` (_tested_), then `update_styles` to the real token. Re-point its clones: each clone of a forked cell is regenerated from the matching components-page cell (`components.md`, Propagate, scoped to the board), and the manifest's Canonical names those cells. Then `move_nodes` onto its code-owned page, IDs kept, and re-grid (L8), because a move keeps the world position. The mirrored board it replaces moves to the archive, dated.
    - It does not match → re-author from the code as usual, and move the prototype board to the archive, dated.
    - The user's ask for the re-mirror covers these moves, and the ledger lists each one. The manifest takes the new node ids and the shipping commit.
-7. **Retire.** After a yes that names the boards, move what is left — losing directions, unshipped boards — to the archive, dated (L9). The page is then empty: tell the user to delete it in the app; no tool can.
+7. Retire. After a yes that names the boards, move what is left — losing directions, unshipped boards — to the archive, dated (L9). The page is then empty: tell the user to delete it in the app; no tool can.
 
 ## Tokens: the one trap
 

@@ -65,7 +65,7 @@ Every tool gets the same rules core, in short sentences and plain words.
 Each task goes on one or more of three paths:
 
 - Fast is the default.
-- Verify is for a mistake that is costly or hard to see. The `verifier` subagent tries to refute the work. When you ask for two models, Claude, Codex, Cursor and Grok also send the same brief to a second `verifier` on another model.
+- Verify is for a mistake that is costly or hard to see. The `verifier` subagent checks the work claim by claim. When you ask for two models, Claude, Codex, Cursor and Grok also send the same brief to a second `verifier` on another model.
 - Align is for a request that reads two ways, or a choice that is yours. The agent gives you 10 lines at most, with a pick.
 
 Git:
@@ -88,7 +88,8 @@ Every tool defines `planner`, `scout`, `verifier` and `worker`, each in its own 
 
 - `planner` runs only when you name it.
 - `scout` is read-only. It maps what exists and the open decisions before Align.
-- `verifier` tries to refute finished work. It reads first, runs only what reading cannot settle, and reports each part of the request that is missing, extra or wrong.
+- `verifier` checks finished work claim by claim, quickly, the same way each run and with no bias to find problems. It reads first, runs only what reading cannot settle, and reports each part of the request that is missing, extra or wrong.
+- `verifier` numbers the brief's claims, adds a claim of its own only for a defect it saw while it checked, and stops on a claim at the first proof that settles it. Its report is one plain line per claim, then the scope, then a verdict that follows from those lines. In Claude, a hook sends back once a report that breaks this format.
 - `worker` is a better `general-purpose` for delegated work: research, code search, multi-step tasks and code changes.
 - `worker` finds the repo's coding rules before it writes code, and runs a command that shows a bug's failure before it edits. It works to a named finish line, and reports first what it needs from the parent.
 - Each agent knows that a message without a tool call ends its turn, so it keeps working until its report is ready.

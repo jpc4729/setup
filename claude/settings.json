@@ -79,6 +79,18 @@
           }
         ]
       }
+    ],
+    "SubagentStop": [
+      {
+        "hooks": [
+          {
+            "command": "~/.claude/hooks/verifier-report.sh",
+            "timeout": 10,
+            "type": "command"
+          }
+        ],
+        "matcher": "verifier"
+      }
     ]
   },
   "includeGitInstructions": false,

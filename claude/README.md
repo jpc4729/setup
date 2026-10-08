@@ -7,7 +7,7 @@ The idea: fast by default. Heavy checks run only when a mistake costs much. Hard
 ## Use it
 
 - Ask plainly. Claude picks the path, and small work stays Fast.
-- "verify this": a `verifier` tries to refute the work. Add "with two models" for a decision that is hard to undo, and a second `verifier` runs on Fable 5.1.
+- "verify this": a `verifier` checks the work claim by claim. Add "with two models" for a decision that is hard to undo, and a second `verifier` runs on Fable 5.1.
 - "align first": Claude gives options and a pick before it does any work.
 - "use workers": Claude gives each independent part of a big change to a `worker`.
 - "use clerks": Haiku clerks summarize, count or make a change that Claude spells out, several at once, and Claude checks each result.
@@ -27,7 +27,7 @@ The idea: fast by default. Heavy checks run only when a mistake costs much. Hard
 - `CLAUDE.md`: the rules for the main session. One short core, because less text means better adherence.
 - `settings.json`: merged into `~/.claude/settings.json` by `install.sh`. Repo keys win, and Claude Code keeps the keys it writes.
 - `agents/`: `scout`, `verifier`, `worker`, `planner` and `clerk`.
-- `hooks/`: one keeps a session's plan through compaction and resume, and one lets a subagent start only a `clerk`.
+- `hooks/`: one keeps a session's plan through compaction and resume, one lets a subagent start only a `clerk`, and one sends a `verifier` report back once when it breaks the report format.
 - `statusline-command.sh`: the status line. Profile, folder, branch, model, tokens, rate limits, prompt cache, diff and age in one line. Each part stays dim until it needs you.
 - [`../bin/quiet`](../bin/quiet), installed in `~/.local/bin`: `quiet <command>` prints one line on a pass and the full output on a failure, to save context.
 
@@ -35,7 +35,7 @@ The idea: fast by default. Heavy checks run only when a mistake costs much. Hard
 
 - Exact scope, senior quality.
 - Fast is the default: the intent is clear, and a mistake is cheap to see and undo. Claude follows the closest example and runs the cheapest check.
-- Verify: a mistake is costly or hard to see, as with a schema, a rewrite of stored data, money, how users prove who they are, permissions, concurrency, an API that others use, or a number behind a decision. A `verifier` tries to refute the work, and Claude fixes what it confirms, in 3 runs at most.
+- Verify: a mistake is costly or hard to see, as with a schema, a rewrite of stored data, money, how users prove who they are, permissions, concurrency, an API that others use, or a number behind a decision. A `verifier` checks the work claim by claim, and Claude fixes what it confirms, in 3 runs at most.
 - Align: the request reads two ways, or the choice is yours. Claude gives you 10 lines at most, with a pick, and waits for you. Verify and Align can both apply.
 - Claude names the path only when it is not Fast. Say "Fast", "Verify" or "Align" to change it.
 - Claude reads the change before it runs anything. Checks run through `quiet`, only on the changed files, and on the whole repo only when the change can break code outside them.
@@ -47,7 +47,7 @@ The idea: fast by default. Heavy checks run only when a mistake costs much. Hard
 ## Agents
 
 - `scout` (Sonnet 5.5, `high`): maps what exists, and returns facts, checks, open decisions and risks, or `CLEAR:`. Read-only. Reading is cheap, so speed matters more.
-- `verifier` (Opus 5.5, `xhigh`): tries to refute finished work, such as code, an analysis, a plan or a number. It reports scope gaps as `MISSING`, `EXTRA` or `WRONG`, and has no Edit or Write tool. A missed failure costs more than tokens.
+- `verifier` (Opus 5.5, `xhigh`): checks finished work claim by claim, such as code, an analysis, a plan or a number, quickly, the same way each run and with no bias to find problems. It reports scope gaps as `MISSING`, `EXTRA` or `WRONG`, and has no Edit or Write tool. A missed failure costs more than tokens.
 - `worker` (Opus 5.5, `xhigh`): does the work that Claude delegates, in place of `general-purpose`: research, code search, multi-step tasks and code changes. It knows where to find the repo's coding rules, so a brief does not repeat them. In its own worktree, it commits, pushes and opens the pull request when the brief says that you asked.
 - `planner` (Opus 5.5, `xhigh`): writes one plan file in `~/.local/state/plans/<repo>/`, only when you ask for it by name. The file is outside the repo, so nothing commits it, and a hook points to it after compaction.
 - `clerk` (Haiku 5.5, `medium`): does one narrow task that the parent checks, such as a summary, a list, a count or a change the brief spells out. Several run at once. It costs at least 20 times less than Opus 5.5 for a prompt up to 100K tokens, and at least 4 times less above that, and it is the fastest model. It is weaker at agentic coding, so it gets no judgment, design or review. At `low`, Haiku more often skips a search or stops early. It is told never to call the advisor, which would read its whole transcript at Opus rates.

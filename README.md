@@ -1,6 +1,6 @@
 # setup
 
-My agent setup for Claude Code, Codex, Cursor, Grok and opencode: one set of rules, git deny lists and 19 skills.
+My agent setup for Claude Code, Codex, Cursor, Grok and opencode: one set of rules, git deny lists, the same subagents and 19 skills.
 
 ## Install
 
@@ -13,27 +13,20 @@ cd setup
 ./install.sh
 ```
 
-The models, login method and themes are mine. Edit `claude/settings.json`, `codex/config.toml`, `grok/config.toml` and `opencode/opencode.jsonc` before you install.
+- First, edit the models, login and themes in `claude/settings.json`, `codex/config.toml`, `grok/config.toml` and `opencode/opencode.jsonc`. They are mine.
+- Put `~/.local/bin` on your PATH. Every tool runs its checks through `quiet`.
+- Add `.claude/worktrees/` to your global gitignore, so git and search tools skip the worktrees.
+- Export `CONTEXT7_API_KEY`. For Codex, also add it as `[mcp_servers.context7.http_headers]` in `~/.codex/config.toml`.
+- Run `./install.sh` again after you pull.
 
 ## What install.sh does
 
-- It copies each tool folder into its home. A file it replaces stays beside it as `<name>.bak`.
-- It merges five settings files instead of copying them, because the apps rewrite them: `claude/settings.json`, `codex/config.toml`, `grok/config.toml`, `cursor/mcp.json` and `cursor/cli-config.json`. Keys in the repo win, and keys the app wrote stay.
-- It copies the skills into `~/.agents/skills` and `~/.cursor/skills`, and links each one into `~/.claude/skills`. It replaces a skill folder with the same name, and leaves other skills alone.
-- It copies `bin/quiet` into `~/.local/bin`. Put that folder on your PATH: every tool runs its checks through `quiet`.
-- On macOS, it also installs Codex's `requirements.toml` as the managed `com.openai.codex` preference. Codex then enforces its approval policies and runs no hook from another config.
-
-It copies files and never links them: every agent writes state into its home, and a link would carry that state back into the repo. Run `install.sh` again after you pull.
-
-## Upgrade from an older install
-
-`install.sh` never deletes. After you pull, remove by hand what the repo dropped:
-
-- Agents: in `~/.claude/agents`, `~/.codex/agents`, `~/.cursor/agents`, `~/.grok/agents` and `~/.config/opencode/agents`, keep only `planner`, `scout`, `verifier` and `worker`, and also `clerk` in `~/.claude/agents`.
-- Old files: the `~/.config/opencode/agent` folder, and `~/.agents/AGENTS.md`, which no tool reads.
-- Skills: `behaviour` is now `intent`. Delete `behaviour` from `~/.agents/skills`, `~/.cursor/skills` and `~/.claude/skills`.
-- Git hooks: no tool runs one now. Delete `block-dangerous-git.sh` and `block-worktree.sh` from `~/.claude/hooks`, `block-dangerous-git.sh` from `~/.codex/hooks`, and `block-dangerous-git.sh` and `git-safety.json` from `~/.grok/hooks`.
-- Settings: the merge keeps keys that the repo dropped. Delete `disableArtifact`, `cleanupPeriodDays`, `env.ENABLE_CLAUDEAI_MCP_SERVERS` and `env.CLAUDE_CODE_AUTO_COMPACT_WINDOW` from `~/.claude/settings.json`, and `hooks.PreToolUse` and `features.hooks` from `~/.codex/config.toml`.
+- Copies each tool folder into its home. A replaced file stays beside it as `<name>.bak`.
+- Merges the five settings files that the apps rewrite. Repo keys win, and the app's own keys stay.
+- Copies the skills into `~/.agents/skills` and `~/.cursor/skills`, and links them into `~/.claude/skills`.
+- Copies `bin/quiet` into `~/.local/bin`.
+- On macOS, installs Codex's `requirements.toml` as a managed preference.
+- Never links and never deletes. A link would carry agent state back into the repo.
 
 ## Layout
 
@@ -50,140 +43,94 @@ opencode/          → ~/.config/opencode    rules, config, four agents
 
 ## Rules
 
-Every tool gets the same rules core, in short sentences and plain words.
+Every tool gets the same short core:
 
-- Agents do exactly what you ask, at the quality a strict senior reviewer would approve. They never trade quality for speed or a smaller change.
-- While they work, they run the smallest check that covers the change.
-- When all the work is done, they run the repo's checks, such as its linter, format check and type check, only on the changed files. They check the whole repo only when the change can break code outside those files.
-- They check code by reading it first, and run checks through `quiet`.
-- They review their work before they report, and then stop.
-- They keep going unless they are blocked, or about to delete data or change something outside the repo.
-- When a run can answer a question, they run it instead of asking you.
-- They write to you in ASD-STE100 Simplified Technical English, and list each finding they can back with evidence.
-- They write Markdown with no bold.
-
-Each task goes on one or more of three paths:
-
-- Fast is the default.
-- Verify is for a mistake that is costly or hard to see. The `verifier` subagent checks the work claim by claim. When you ask for two models, Claude, Codex, Cursor and Grok also send the same brief to a second `verifier` on another model.
-- Align is for a request that reads two ways, or a choice that is yours. The agent gives you 10 lines at most, with a pick.
+- Do exactly what you ask, at the quality a strict senior reviewer would approve.
+- Check the smallest thing while working, then run the repo's checks on the changed files only.
+- Keep going until blocked, or until data or something outside the repo is at stake.
+- Reply in ASD-STE100 Simplified Technical English, with evidence and no bold.
+- Pick a path: Fast by default, Verify when a mistake is costly, Align when the choice is yours.
+- Start a workflow, loop or cloud task only when you ask, with 3 retry rounds at most.
 
 Git:
 
-- Git reads run freely. `add`, `commit`, `push` and a new pull request run only when you ask.
-- Each other git write comes to you as the exact command.
-- Many agents can work in the folder where a session started, so no agent changes the branch there.
-- Work that needs its own branch goes in a separate folder, a worktree, with its own branch and pull request. In Claude, a subagent or workflow agent with worktree isolation does that work. In the other tools, only you make a worktree.
-
-What a tool can start on its own:
-
-- Claude and Grok start a workflow only when your message contains `ultracode`, and stop its retry loops after 3 rounds.
-- Codex creates a goal, a scheduled task or a cloud task only when you ask, and marks a goal blocked after 3 turns on the same blocker.
-- Cursor starts a loop, autopilot, automation or cloud agent only when you ask, and stops a loop after 3 rounds.
-- opencode has no workflow feature, so it has no such rule.
+- Reads are free. `add`, `commit`, `push` and a pull request wait for your ask.
+- Any other git write comes to you as the exact command.
+- No agent changes the branch in the session's folder.
+- Work that needs its own branch goes in a worktree. In Claude, a subagent with worktree isolation does it. In the other tools, only you make one.
 
 ## Subagents
 
-Every tool defines `planner`, `scout`, `verifier` and `worker`, each in its own format. Each prompt follows the style of Claude Code's built-in `general-purpose` prompt. Any other subagent is the tool's built-in one.
-
-- `planner` runs only when you name it.
-- `scout` is read-only. It maps what exists and the open decisions before Align.
-- `verifier` checks finished work claim by claim, quickly, the same way each run and with no bias to find problems. It reads first, runs only what reading cannot settle, and reports each part of the request that is missing, extra or wrong.
-- `verifier` numbers the brief's claims, adds a claim of its own only for a defect it saw while it checked, and stops on a claim at the first proof that settles it. Its report is one plain line per claim, then the scope, then a verdict that follows from those lines. In Claude, a hook sends back once a report that breaks this format.
-- `worker` is a better `general-purpose` for delegated work: research, code search, multi-step tasks and code changes.
-- `worker` finds the repo's coding rules before it writes code, and runs a command that shows a bug's failure before it edits. It works to a named finish line, and reports first what it needs from the parent.
-- Each agent knows that a message without a tool call ends its turn, so it keeps working until its report is ready.
-
-Delegation, in every tool:
-
-- The agent gives a subagent a read across many files or long logs, a large change split into independent parts on separate files, or a fresh-context `verifier` review of a long run before it reports.
-- Delegated work goes to `worker`, not to the built-in general agent.
-- When the reads and edits are few, the agent works directly.
-- The agent reviews every diff that a subagent returns.
-
-Claude:
-
-- It also has `clerk`, a Haiku 5.5 agent for one narrow task that its brief spells out, such as a summary, a list, a count or a mechanical change.
-- The other four agents can start clerks, and a `PreToolUse` hook stops them from starting any other agent.
-- Its agents skip every CLAUDE.md file (`omitClaudeMd`). All but `clerk` read the repo's `AGENTS.md` and `CLAUDE.md` themselves.
-- `planner` writes session-linked plan files to `~/.local/state/plans`. A `SessionStart` hook points at the session's plans, and says to work the one you name, else the newest, and to reread it.
-- More in [claude/README.md](claude/README.md).
-
-Codex:
-
-- GPT-6.1 Sol runs the parent at xhigh, ordinary subagents at high and `scout` at medium. GPT-6 Astra runs `planner` and `verifier` at medium.
-- At most three subagents run at the same time.
-- Its `worker` replaces the built-in one. Its `planner` defaults to read-only and disables nested agents.
-
-Grok:
-
-- Its agents skip AGENTS.md (`agentsMd: false`).
-- Its `scout` and `verifier` have no edit tools, and its `planner` is read-only.
-
-opencode:
-
-- Every agent denies nested agents and git or `gh` writes. Its `scout`, `verifier` and `planner` deny edits too.
-
-All but Claude:
-
-- Codex, Cursor and opencode cannot keep their rules out of a subagent, so each agent's own instructions win over them.
-- Codex and Cursor cannot block edits, so their `verifier` reports each file it changed.
-- Their planners write nothing. Each returns two to four steps, each backed by evidence, for the parent's plan or to-do list.
-
-## Context
-
-- Claude auto-compacts in a 400K window, and Grok at 80% of its 500K window, which is the same point.
-- Claude's Haiku 5.5 compacts in a 100K window, because a Haiku prompt over 100K tokens costs 5 times more.
-- Codex uses the native compaction defaults of the selected model. Its parent keeps one native plan, and after compaction or resume it recovers the accepted steps, checks and approvals.
+- `scout`: maps what exists before Align. Read-only.
+- `worker`: does delegated work: research, search, multi-step tasks and code changes.
+- `verifier`: checks finished work claim by claim, with no bias to find problems. One line per claim, then a verdict.
+- `planner`: writes a plan, only when you name it.
+- `clerk`: Claude only. One narrow task on Haiku 5.5, such as a summary, a list or a count.
+- The parent gives subagents wide reads, big split changes and reviews, and checks each diff they return.
+- Details for Claude are in [claude/README.md](claude/README.md).
 
 ## Safety
 
+- Claude's deny list is the source. Grok, Cursor and opencode copy it in their own syntax.
+- Among others, it refuses resets, branch switches, rebases, amends, stashes, history rewrites, force and delete pushes, and branch, repo and release deletes.
+- Codex's prefix rules catch only the start of a command. Its rules text covers the rest.
 - No tool runs a git hook.
-- Claude's deny list is the source. It refuses resets, branch switches, rebases, amends, stashes, worktree commands, history rewrites, tag and ref deletes, force and delete pushes, forced fetches, and the `wt` and `gh` commands that change or delete a branch, a repo or a release, also after a global option such as `git -C`.
-- Grok, Cursor and opencode copy that list in their own syntax. Codex's prefix rules refuse the forms that begin a command.
-- Each tool's rules cover the rest, and `add`, `commit`, `push` and a new pull request still need your request.
-- Claude allows a subagent with worktree isolation, which Claude Code keeps in its own folder under `.claude/worktrees/`. It denies `EnterWorktree` and subagents with cloud isolation.
-- Add `.claude/worktrees/` to your global gitignore, so git and search tools in the main folder skip the worktrees.
-- Codex uses Full Access with `on-request` approvals. Ordinary local work runs directly. Rules ask first for deletion, credential tools, direct package publishing and named recipes that write outside the repo.
-- Unattended Codex work that you ask for can select `never`. Prefix rules are a backstop, not a full command parser.
 
-## MCP
+## Why
 
-- The servers are context7 and [Paper](https://paper.design) Desktop.
-- Export `CONTEXT7_API_KEY`.
-- For Codex, add the key by hand as `[mcp_servers.context7.http_headers]` in `~/.codex/config.toml`.
+Git and branches:
+
+- One folder has one branch, one index and one set of files. A branch change by one agent changes the files under every other agent there.
+- A worktree has its own index, so its commits and its pull request hold only its own changes.
+- In Claude, only worktree isolation makes a worktree, because Claude Code then keeps that agent out of your folder.
+- Hard limits are deny rules, not text or hooks. In Claude and Grok, a deny rule holds even when the tool approves commands on its own. A Claude hook that times out, crashes or is missing lets the command run.
+- Commits, pushes and pull requests wait for your ask, so you decide what leaves your machine.
+
+Short text:
+
+- Less text means better adherence, and each rule line costs context in every request.
+- STE and no bold: one meaning per word, and easy to scan.
+- `quiet` keeps a long passing log out of the context.
+- Fast is the default. Heavy checks run only when a mistake costs much.
+
+Subagents:
+
+- A subagent keeps the main context small: it does the wide read or the long run, and only its result comes back.
+- `scout` and `verifier` do not edit: a map does not change what it maps, and a judge does not fix what it judges.
+- `verifier` starts with a fresh context and has no quota of problems, because invented findings cost extra rounds.
+- Subagents do not follow the main session's rules, because "ask me" or "run the checks" would fight their jobs.
+- `clerk` costs at least 20 times less than Opus 5.5 for a prompt up to 100K tokens. It is weaker at judgment, so the parent checks each result.
+- The parent reviews each diff a subagent returns, because a report is a claim, not proof.
 
 ## Skills
 
 Mine, under the repo's MIT license:
 
 - `bet`: plans test coverage as a Branching Expectation Tree.
-- `context-doctor`: trims AGENTS.md, CLAUDE.md, rules and skills to what earns its tokens.
-- `diagnose`: finds a bug's cause from a command that shows the failure, tests ranked hypotheses that a run can disprove, and proves the fix with the same command.
-- `handoff`: summarizes a conversation into a handoff document and a kickoff prompt that any model, harness or tool set can continue from.
-- `intent`: writes intent trees that people align on, from epics and user stories down to acceptance criteria, then audits, checks and verifies the code against them. Its `verify` mode uses `typesafe-ai`, and `verify static` judges from the code alone.
+- `context-doctor`: trims agent context files to what earns its tokens.
+- `diagnose`: finds a bug's cause from a command that shows the failure.
+- `handoff`: turns a conversation into a handoff document and a kickoff prompt.
+- `intent`: writes intent trees, then checks the code against them.
 - `paper-use`: builds, mirrors and audits Paper design files.
 - `rate`: scores work on every axis until each is 10.
-- `retro`: turns a session's mistakes and corrections into the strongest fix, such as a check, a hook, a script, a skill edit or a rule, and asks before it edits.
-- `slim-context`: restructures a repo's agent context files. Three subagents each propose a version, from a trim of no-ops to a root file of pointers, and the repo changes only after you pick one.
+- `retro`: turns a session's mistakes into a check, hook, script or rule.
+- `slim-context`: proposes three restructurings of agent context files, and you pick one.
 - `ui-principles`: rules for clean, scannable UI layout.
-- `wayfinder`: maps the open decisions of an idea too big for one session in a local file, and resolves one decision per session until nothing is left to decide.
+- `wayfinder`: settles the open decisions of a big idea, one per session.
 
-Vendored. Each folder keeps its upstream `LICENSE`:
+Vendored, each with its upstream `LICENSE`:
 
 - `agent-browser` from [vercel-labs/agent-browser](https://github.com/vercel-labs/agent-browser), Apache-2.0.
 - `grilling` from [mattpocock/skills](https://github.com/mattpocock/skills), MIT.
 - `ponytail`, `ponytail-audit`, `ponytail-debt` and `ponytail-review` from [DietrichGebert/ponytail](https://github.com/DietrichGebert/ponytail), MIT.
 - `thermo-nuclear-code-quality-review` from [cursor/plugins](https://github.com/cursor/plugins), MIT.
 - `typesafe-ai` from [typesafe-ai/skills](https://github.com/typesafe-ai/skills), MIT.
+- Changes from upstream: a shorter `description`, a `metadata` block and a Codex `agents/openai.yaml`. `typesafe-ai` is unchanged.
 
-Changes from upstream: a shorter `description` and a `metadata` block in the `SKILL.md` frontmatter, and an `agents/openai.yaml` with the Codex display name. `typesafe-ai` is unchanged.
-
-Skills that start only by name:
+Start rules:
 
 - `grilling` and the four `ponytail` skills start only when you type their name.
-- Claude reads `skillOverrides`. The installed copies get `disable-model-invocation` for Cursor and Grok, and `allow_implicit_invocation: false` for Codex. opencode denies them to its skill tool.
-- `bet` and `thermo-nuclear-code-quality-review` are off in Claude, Codex and Grok, and opencode denies them too. Cursor has no switch for them.
+- `bet` and `thermo-nuclear-code-quality-review` are off in every tool but Cursor, which has no switch for them.
 
 ## License
 

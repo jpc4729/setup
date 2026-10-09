@@ -1,6 +1,6 @@
 # setup
 
-My agent setup for Claude Code, Codex, Cursor, Grok and opencode: one set of rules, git deny lists, the same subagents and 19 skills.
+My agent setup, Claude Code first. I build and tune it in Claude Code. Codex, Cursor, Grok and opencode get the same rules, git deny lists, subagents and 20 skills, each in its own syntax and on its analogous models.
 
 ```text
            CLAUDE CODE SUBAGENTS · OPUS 5.5 + SONNET 5.5 + HAIKU 5.5
@@ -51,6 +51,26 @@ My agent setup for Claude Code, Codex, Cursor, Grok and opencode: one set of rul
          Map with Sonnet. Read with Haiku. Write and judge with Opus.
 ```
 
+## Claude Code first
+
+- `claude/` is the reference. A change starts there, and each other tool copies it in its own syntax.
+- Claude's deny list is the source of the git deny lists in the other tools.
+- Only Claude Code has the `clerk` subagent and the advisor. The other tools have `scout`, `worker`, `verifier` and `planner`.
+- Each tool gives each role its analogous model:
+
+```text
+role       Claude Code          Codex                  Cursor       Grok               opencode
+main       Opus 5.5 · xhigh     GPT-6.1 Sol · xhigh    your pick    grok-4.6 · high    glm-5.3-flash · high
+scout      Sonnet 5.5 · high    GPT-6.1 Sol · medium   Sonnet 5.5   grok-4.6 · high    glm-5.3-flash · high
+worker     Opus 5.5 · xhigh     GPT-6.1 Sol · high     Opus 5.5     grok-4.6 · xhigh   glm-5.3 · high
+verifier   Opus 5.5 · xhigh     GPT-6 Astra · medium   Opus 5.5     grok-4.6 · xhigh   glm-5.3 · high
+planner    Opus 5.5 · xhigh     GPT-6 Astra · medium   Opus 5.5     grok-4.6 · xhigh   glm-5.3 · high
+clerk      Haiku 5.5 · medium   none                   none         none               none
+advisor    Opus 5.5             none                   none         none               none
+```
+
+- Cursor uses the main model you pick in the app. Grok's subagents use its default model and set only the effort.
+
 ## Install
 
 You need bash, rsync, [jq](https://jqlang.org) and [yq](https://github.com/mikefarah/yq).
@@ -80,14 +100,14 @@ cd setup
 ## Layout
 
 ```text
-agents/my-skills/  → ~/.agents/skills      skills I wrote
-agents/skills/     → ~/.agents/skills      vendored skills, pinned in skills-lock.json
-bin/quiet          → ~/.local/bin/quiet    one line on a pass, full output on a failure
-claude/            → ~/.claude             rules, settings, five agents, hooks, status line
+claude/            → ~/.claude             the reference: rules, settings, five agents, hooks, status line
 codex/             → ~/.codex              rules, config, four agents, policy, command rules
 cursor/            → ~/.cursor             rules, four agents, MCP, permissions
 grok/              → ~/.grok               rules, config, four agents
 opencode/          → ~/.config/opencode    rules, config, four agents
+skills/my-skills/  → ~/.agents/skills      skills I wrote or adapted
+skills/vendored/   → ~/.agents/skills      vendored skills, pinned in skills-lock.json
+bin/quiet          → ~/.local/bin/quiet    one line on a pass, full output on a failure
 ```
 
 ## Rules
@@ -153,34 +173,11 @@ Subagents:
 
 ## Skills
 
-Mine, under the repo's MIT license:
+The 20 skills are in [skills/](skills/README.md), one copy for every tool:
 
-- `bet`: plans test coverage as a Branching Expectation Tree.
-- `context-doctor`: trims agent context files to what earns its tokens.
-- `diagnose`: finds a bug's cause from a command that shows the failure.
-- `handoff`: turns a conversation into a handoff document and a kickoff prompt.
-- `intent`: writes intent trees, then checks the code against them.
-- `paper-use`: builds, mirrors and audits Paper design files.
-- `rate`: scores work on every axis until each is 10.
-- `retro`: turns a session's mistakes into a check, hook, script or rule.
-- `slim-context`: proposes three restructurings of agent context files, and you pick one.
-- `ui-principles`: rules for clean, scannable UI layout.
-- `wayfinder`: settles the open decisions of a big idea, one per session.
-
-Vendored, each with its upstream `LICENSE`:
-
-- `agent-browser` from [vercel-labs/agent-browser](https://github.com/vercel-labs/agent-browser), Apache-2.0.
-- `grilling` from [mattpocock/skills](https://github.com/mattpocock/skills), MIT.
-- `ponytail`, `ponytail-audit`, `ponytail-debt` and `ponytail-review` from [DietrichGebert/ponytail](https://github.com/DietrichGebert/ponytail), MIT.
-- `thermo-nuclear-code-quality-review` from [cursor/plugins](https://github.com/cursor/plugins), MIT.
-- `typesafe-ai` from [typesafe-ai/skills](https://github.com/typesafe-ai/skills), MIT.
-- Changes from upstream: a shorter `description`, a `metadata` block and a Codex `agents/openai.yaml`. `typesafe-ai` is unchanged.
-
-Start rules:
-
-- `grilling` and the four `ponytail` skills start only when you type their name.
-- `bet` and `thermo-nuclear-code-quality-review` are off in every tool but Cursor, which has no switch for them.
+- `skills/my-skills/`: 12 skills that I wrote, or adapted from other skills, such as `wayfinder` and `handoff` from Matt Pocock's skills.
+- `skills/vendored/`: 8 skills from upstream, each with its upstream `LICENSE`.
 
 ## License
 
-[MIT](LICENSE), except the vendored skills, which keep their own licenses.
+[MIT](LICENSE), except the vendored skills, which keep their own licenses. [skills/README.md](skills/README.md) names the source of each adapted skill.

@@ -40,6 +40,7 @@ The idea: fast by default. Heavy checks run only when a mistake costs much. Hard
 - Align: the request reads two ways, or the choice is yours. Claude gives you 10 lines at most, with a pick, and acts on the pick. It waits for you only when a wrong pick is costly and hard to undo. Verify and Align can both apply.
 - Claude names the path only when it is not Fast. Say "Fast", "Verify" or "Align" to change it.
 - Claude reads the change before it runs anything. Checks run through `quiet`, only on the changed files, and on the whole repo only when the change can break code outside them.
+- Tests follow the repo's rule, from full coverage to none. When the repo says nothing, tests are a limited resource: Claude adds one only where similar code has one and it catches a bug that no other check catches, never a dummy test. It runs only the tests for the changed code and the code it can break.
 - Claude keeps working unless data or something outside the repo is at stake. A status note goes with the next action, not in a turn of its own.
 - Replies are in STE. Findings come ranked, each with evidence.
 - Markdown has only plain sentences, headings, lists, links and code. No bold.

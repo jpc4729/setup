@@ -2,6 +2,55 @@
 
 My agent setup for Claude Code, Codex, Cursor, Grok and opencode: one set of rules, git deny lists, the same subagents and 19 skills.
 
+```text
+           CLAUDE CODE SUBAGENTS · OPUS 5.5 + SONNET 5.5 + HAIKU 5.5
+
+                               Opus 5.5 · xhigh
+                                 main session
+                                       |         Fast    closest example,
+                                       |                 cheapest check
+                                       |         Verify  verifier checks
+                                       |                 before the report
+                                       |         Align   options and a pick,
+                                       |                 acts unless costly
+                                       |         advisor Opus 5.5
+                                       |
+                             delegate to subagents
+                                       |
+         +-------------------+---------+---------+-------------------+
+         |                   |                   |                   |
+       scout              worker               clerk              planner
+         |                   |                   |                   |
+ Sonnet 5.5 · high   Opus 5.5 · xhigh   Haiku 5.5 · medium   Opus 5.5 · xhigh
+         |                   |                   |                   |
+ maps what exists     edits + checks      summary, list,       one plan file
+   before Align      research, search       count or a       multi-stage work
+     read-only       multi-step tasks    spelled-out edit     only when named
+         |                   |                   |                   |
+         +-------------------+---------+---------+-------------------+
+                                       |
+                         back to main session · xhigh
+                      reviews each diff, runs the checks
+                                       |
+                   +-------------------+-------------------+
+                   |                                       |
+             Fast or Align                              Verify
+                   |                                       |
+                   |                                   verifier
+                   |                               Opus 5.5 · xhigh
+                   |                                 fresh context
+                   |                                claim by claim
+                   |                                   read-only
+                   |                                3 runs at most
+                   |                                       |
+                   +-------------------+-------------------+
+                                       |
+                                    report
+
+  scout, worker, verifier and planner can start a clerk, and no other agent.
+         Map with Sonnet. Read with Haiku. Write and judge with Opus.
+```
+
 ## Install
 
 You need bash, rsync, [jq](https://jqlang.org) and [yq](https://github.com/mikefarah/yq).

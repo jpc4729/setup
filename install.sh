@@ -108,7 +108,7 @@ codex_requirements
 # Codex and Grok read ~/.agents/skills. Claude gets one symlink per skill into
 # it. Cursor gets real copies, because it skips a symlinked skill.
 # A skill folder of the same name is replaced; other skills are left alone.
-for dir in "$repo"/agents/skills/*/ "$repo"/agents/my-skills/*/; do
+for dir in "$repo"/skills/vendored/*/ "$repo"/skills/my-skills/*/; do
   name="$(basename "$dir")"
   for home in "$HOME/.agents/skills" "$HOME/.cursor/skills"; do
     [[ -n "$dry" ]] || mkdir -p "$home/$name"

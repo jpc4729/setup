@@ -1,6 +1,6 @@
 ---
 name: diagnose
-description: "Finds a bug's cause from a command that shows the failure, then fixes it there. Use on diagnose, a bug, a failing or flaky test, a crash or a regression."
+description: "Finds a bug's cause from a command that shows the failure, then fixes it there."
 argument-hint: "[symptom, failing command or issue]"
 disable-model-invocation: true
 metadata:
@@ -9,7 +9,7 @@ metadata:
 
 # Diagnose
 
-Find the cause of the bug the user names, fix it there, and prove the fix with the command that showed the failure. If you catch yourself reading code for a theory before that command exists, stop and build the command.
+Find the cause of the bug the user names, fix it there, and prove the fix with the command that showed the failure. If you catch yourself reading code for a theory before that command exists, stop and build the command. With no argument, take the failure this conversation last showed; when there is none, ask for the symptom and how to see it.
 
 ## The loop
 

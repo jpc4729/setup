@@ -1,6 +1,6 @@
 ---
 name: retro
-description: "Turns a session's mistakes and corrections into the strongest fix: a check, a hook, a script, a skill edit or a rule. Use on retro, retrospective, lessons learned or what went wrong."
+description: "Turns a session's mistakes and corrections into the strongest fix: a check, a hook, a script, a skill edit or a rule."
 argument-hint: "[session ID or log path; default this session]"
 disable-model-invocation: true
 metadata:
@@ -45,6 +45,6 @@ Drop a lesson when:
 
 ## Report
 
-Rank by impact, one line each: problem — evidence (a quote or a turn) — fix — rung and file. Then one line per dropped lesson with its drop reason, so the user can override it. Then stop and ask which to apply.
+Rank by impact, one line each: the problem, its evidence (a quote or a turn), the fix, and the rung and file. Then one line per dropped lesson with its drop reason, so the user can override it. Then stop and ask which to apply.
 
 For each one the user picks, edit the source of a file that chezmoi or a generator manages, not the live copy. Make the smallest edit that holds the lesson, and delete each line it replaces.

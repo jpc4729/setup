@@ -1,5 +1,0 @@
-interface:
-  display_name: "Slim context"
-  short_description: "Slim agent context files"
-policy:
-  allow_implicit_invocation: false

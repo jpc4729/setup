@@ -1,6 +1,6 @@
 ---
 name: intent
-description: "Writes, aligns, audits, checks and verifies intent trees (.tree): what a product, a contract or a function should do, at any zoom, for humans to confirm and agents to prove. Use for behaviour specs, functional requirements, user stories and their acceptance criteria, breaking a requirement into finer ones, intent reviews, consistency audits, acceptance criteria, test plans, checking code against intent, or scoring how certain a behaviour is met. Use bet for one unit's test plan."
+description: "Writes, aligns, audits, checks and verifies intent trees (.tree): what a product, a contract or a function should do, at any zoom, for humans to confirm and agents to prove. Use bet for one unit's test plan."
 argument-hint: "[map | write | align | audit | check | verify [static] | tests] [area, path or feature]"
 disable-model-invocation: true
 metadata:

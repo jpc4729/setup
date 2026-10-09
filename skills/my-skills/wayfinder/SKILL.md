@@ -23,11 +23,11 @@ Notes: <constraints, sources to read, standing preferences>
 
 ## Decisions
 
-- Q<n> <question> — <answer, one line>. Evidence: <path:line, URL, or the user and the date>
+- Q<n> <question>: <answer, one line>. Evidence: <path:line, URL, or the user and the date>
 
 ## Open
 
-- Q<n> <question> — <ask | research | try | task> — after: <Q numbers, or none>
+- Q<n> <question>: <ask | research | try | task>, after: <Q numbers, or none>
 
 ## Fog
 
@@ -35,7 +35,7 @@ Notes: <constraints, sources to read, standing preferences>
 
 ## Out of scope
 
-- <work past the goal> — <why>
+- <work past the goal>: <why>
 ```
 
 - A question goes to Open when you can state it precisely now, even if it waits on another question. Otherwise it goes to Fog, as loosely as you see it. Keep fog coarse: one patch can become several questions, or none.

@@ -3,6 +3,7 @@ name: read-only
 description: "Read and analyze only. Change nothing."
 argument-hint: "[task]"
 disable-model-invocation: true
+disallowed-tools: Edit, Write, NotebookEdit
 metadata:
   short-description: "Read and analyze only"
 ---

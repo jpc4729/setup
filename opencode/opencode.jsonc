@@ -77,7 +77,8 @@
     // The model can't load these skills, and `/name` still runs them. The
     // first five are the `user-invocable-only` entries of Claude's
     // skillOverrides; `bet` and `thermo-nuclear-code-quality-review` are its
-    // `off` entries, which opencode can't hide from `/`.
+    // `off` entries, which opencode can't hide from `/`. `read-only` is an
+    // authored skill: opencode ignores its `disable-model-invocation`.
     "skill": {
       "grilling": "deny",
       "ponytail": "deny",
@@ -85,7 +86,8 @@
       "ponytail-debt": "deny",
       "ponytail-review": "deny",
       "bet": "deny",
-      "thermo-nuclear-code-quality-review": "deny"
+      "thermo-nuclear-code-quality-review": "deny",
+      "read-only": "deny"
     },
 
     // This list is the whole of opencode's git enforcement; no home runs a

@@ -1,0 +1,5 @@
+interface:
+  display_name: "Read only"
+  short_description: "Read and analyze only"
+policy:
+  allow_implicit_invocation: false

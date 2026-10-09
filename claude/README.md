@@ -14,6 +14,7 @@ The idea: fast by default. Heavy checks run only when a mistake costs much. Hard
 - "use the planner": a plan file for work that needs more than one sitting.
 - `ultracode` in a message: many agents at once.
 - `/diagnose` for a bug. It finds a command that shows the failure before any theory.
+- `/read-only` in a prompt for a task with no changes. The agent only reads and analyzes, and puts any change it proposes in its reply.
 - `/retro` for a session that went wrong. It turns each lesson into a check, hook, script or rule, and asks which to apply.
 - `/slim-context` for agent files that grew too big. Three subagents propose three restructurings, from a trim to a root file of pointers, and you pick one.
 - `/wayfinder` for a big idea with open questions. It maps the open decisions in a local file and settles one per session.

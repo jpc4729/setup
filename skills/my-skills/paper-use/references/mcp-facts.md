@@ -1,6 +1,6 @@
 # What the Paper MCP can and cannot do
 
-The tool descriptions are the reference for parameters, defaults and formats, and this file does not repeat them. It holds what they leave out: what no tool does, what was seen live, and where the guide and the tools disagree. Checked against the tool descriptions and the guide on 2026-10-07; lines marked _exercised_ were run live in a scratch file on 2026-09-24. Every tool mechanism the laws in `SKILL.md` rely on traces to a line here or to a tool description; the owner and prototype rules are policy, not tool facts. A tool result that contradicts a line below wins; say so in the ledger.
+The tool descriptions are the reference for parameters, defaults and formats, and this file does not repeat them. It holds what they leave out: what no tool does, what was seen live, and where the guide and the tools disagree. Checked against the tool descriptions and the guide on 2026-10-09; lines marked _exercised_ were run live in a scratch file on 2026-09-24. Every tool mechanism the laws in `SKILL.md` rely on traces to a line here or to a tool description; the owner and prototype rules are policy, not tool facts. A tool result that contradicts a line below wins; say so in the ledger.
 
 ## What no tool does
 
@@ -33,7 +33,7 @@ The tool descriptions are the reference for parameters, defaults and formats, an
 
 ## CSS that write_html accepts
 
-- `write_html` stores `margin`, `display: grid` and `display: inline-flex` without an error, although the tool forbids them, and it drops or converts other production CSS silently. The tested list, with each translation, is in `css-to-paper.md`. _Exercised._
+- `write_html` stores `margin`, `display: grid` and `display: inline-flex` without an error, although the tool forbids the first two, and it drops or converts other production CSS silently. The tested list, with each translation, is in `css-to-paper.md`. _Exercised._
 
 ## Replacing a clone
 

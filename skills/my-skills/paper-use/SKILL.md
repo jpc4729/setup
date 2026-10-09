@@ -37,7 +37,7 @@ The guide, loaded in step 1 of Session start, owns the design brief format, the 
 
 ### Session start: every session, in this order, no shortcuts
 
-1. Load the guide before any other Paper tool, once per session: `get_guide({ topic: "paper-mcp-instructions" })`. Load it again once a long thread may have dropped it. Other topics on demand: `mobile-status-bar`, `image-generation`.
+1. Load the guide before any other Paper tool, once per session: `get_guide({ topic: "paper-mcp-instructions" })`. Load it again once a long thread may have dropped it. Other topics on demand: `mobile-status-bar`, `image-generation`, and `figma-import` only when a Figma MCP server is connected.
 2. `get_basic_info({ fileId?, pageId? })` reads the pages, artboards, fonts and tokens of any page, not only the one in view.
 3. `get_selection`: what the user is pointing at. With no argument or a vague request, the selection is the brief, and when nothing is selected, ask what to work on.
 4. Call `get_font_family_info` before any family not already in `fontFamilies`, as well as before the first typographic style.

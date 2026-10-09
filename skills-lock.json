@@ -11,7 +11,7 @@
       "source": "mattpocock/skills",
       "sourceType": "github",
       "skillPath": "skills/productivity/grilling/SKILL.md",
-      "computedHash": "4dd886b0196bf43729d954ae326016f2bd9f5f79d892500b407c33a753362f14"
+      "computedHash": "ef1641a2047b71b60f1942cd35efb47d3afc9d584dff5a0b01f8c7db923aaa08"
     },
     "ponytail": {
       "source": "DietrichGebert/ponytail",
@@ -23,19 +23,19 @@
       "source": "DietrichGebert/ponytail",
       "sourceType": "github",
       "skillPath": "skills/ponytail-audit/SKILL.md",
-      "computedHash": "8b8d72e6ff70b65b6c9518d470fcf29dc696eea93d28f3efa10fdcc60cbd696d"
+      "computedHash": "33a1360f2b611ec0bc3288cc27c24f0d0760ed3245b3c67c25b4d94ce842a6a1"
     },
     "ponytail-debt": {
       "source": "DietrichGebert/ponytail",
       "sourceType": "github",
       "skillPath": "skills/ponytail-debt/SKILL.md",
-      "computedHash": "0099b82174e3a4261828b4ec04d2c068b1b294fdab14f76701c2acd1f7c99539"
+      "computedHash": "1d22f90b3ebdafa8a108d64c9395ba58bdc9fd9efc292cc775a9937147314d1d"
     },
     "ponytail-review": {
       "source": "DietrichGebert/ponytail",
       "sourceType": "github",
       "skillPath": "skills/ponytail-review/SKILL.md",
-      "computedHash": "4646594fcd75455533f7ff1425f4f1c5ba0fa65f88241bf262b1c4fc275f049a"
+      "computedHash": "09c824396581b0048a4feb504e21a9b3f943c9ec06b77eec04737c0f741c6d25"
     },
     "thermo-nuclear-code-quality-review": {
       "source": "cursor/plugins",

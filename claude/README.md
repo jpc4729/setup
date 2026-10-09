@@ -36,7 +36,7 @@ The idea: fast by default. Heavy checks run only when a mistake costs much. Hard
 - Exact scope, senior quality.
 - Fast is the default: the intent is clear, and a mistake is cheap to see and undo. Claude follows the closest example and runs the cheapest check.
 - Verify: a mistake is costly or hard to see, as with a schema, a rewrite of stored data, money, how users prove who they are, permissions, concurrency, an API that others use, or a number behind a decision. A `verifier` checks the work claim by claim, and Claude fixes what it confirms, in 3 runs at most.
-- Align: the request reads two ways, or the choice is yours. Claude gives you 10 lines at most, with a pick, and waits for you. Verify and Align can both apply.
+- Align: the request reads two ways, or the choice is yours. Claude gives you 10 lines at most, with a pick, and acts on the pick. It waits for you only when a wrong pick is costly and hard to undo. Verify and Align can both apply.
 - Claude names the path only when it is not Fast. Say "Fast", "Verify" or "Align" to change it.
 - Claude reads the change before it runs anything. Checks run through `quiet`, only on the changed files, and on the whole repo only when the change can break code outside them.
 - Claude keeps working unless data or something outside the repo is at stake. A status note goes with the next action, not in a turn of its own.

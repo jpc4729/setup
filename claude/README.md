@@ -16,6 +16,7 @@ The idea: fast by default. Heavy checks run only when a mistake costs much. Hard
 - `/diagnose` for a bug. It finds a command that shows the failure before any theory.
 - `/read-only` in a prompt for a task with no changes. The agent only reads and analyzes, and puts any change it proposes in its reply.
 - `/retro` for a session that went wrong. It turns each lesson into a check, hook, script or rule, and asks which to apply.
+- `/skills-claude` to write, review or fix a skill to the standards of the native Claude Code skills.
 - `/wayfinder` for a big idea with open questions. It maps the open decisions in a local file and settles one per session.
 - `/verify` to see the real app run. Run `/run-skill-generator` once per repo first; `/verify` and `verifier` then reuse its launch recipe.
 - `/code-review` for bugs in a diff, `/simplify` for simpler code, and the `handoff` skill for a new session on the same task.

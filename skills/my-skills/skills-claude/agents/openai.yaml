@@ -1,0 +1,5 @@
+interface:
+  display_name: "Skills Claude"
+  short_description: "Write or review a skill, Claude Code style"
+policy:
+  allow_implicit_invocation: false

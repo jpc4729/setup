@@ -1,0 +1,5 @@
+interface:
+  display_name: "ADHD human"
+  short_description: "Ultra concise replies for an ADHD reader"
+policy:
+  allow_implicit_invocation: false

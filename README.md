@@ -1,6 +1,6 @@
 # setup
 
-My agent setup, Claude Code first. I build and tune it in Claude Code. Codex, Cursor, Grok and opencode get the same rules, git deny lists, subagents and 20 skills, each in its own syntax and on its analogous models.
+My agent setup, Claude Code first. I build and tune it in Claude Code. Codex, Cursor, Grok and opencode get the same rules, git deny lists, subagents and 21 skills, each in its own syntax and on its analogous models.
 
 ```text
            CLAUDE CODE SUBAGENTS · OPUS 5.5 + SONNET 5.5 + HAIKU 5.5
@@ -174,9 +174,9 @@ Subagents:
 
 ## Skills
 
-The 20 skills are in [skills/](skills/README.md), one copy for every tool:
+The 21 skills are in [skills/](skills/README.md), one copy for every tool:
 
-- `skills/my-skills/`: 12 skills that I wrote, or adapted from other skills, such as `wayfinder` and `handoff` from Matt Pocock's skills.
+- `skills/my-skills/`: 13 skills that I wrote, or adapted from other skills, such as `wayfinder` and `handoff` from Matt Pocock's skills.
 - `skills/vendored/`: 8 skills from upstream, each with its upstream `LICENSE`.
 
 ## License

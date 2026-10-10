@@ -6,6 +6,7 @@ Every skill in this setup. `./install.sh` copies each skill folder into `~/.agen
 
 Skills that I wrote, or that I adapted, changed or took ideas from another skill, vendored or public. They are under the repo's MIT license. When a skill comes from another one, its line names the source.
 
+- `adhd-human`: makes each reply ultra concise for a reader with ADHD, with the answer first and at most 20 short lines.
 - `bet`: plans test coverage as a Branching Expectation Tree.
 - `context-doctor`: trims agent context files to what earns its tokens.
 - `diagnose`: finds a bug's cause from a command that shows the failure. Inspired by [diagnosing-bugs](https://github.com/mattpocock/skills/tree/main/skills/engineering/diagnosing-bugs) from Matt Pocock's skills, MIT.
@@ -32,6 +33,6 @@ Skills from upstream, pinned in [`../skills-lock.json`](../skills-lock.json), ea
 
 ## Start rules
 
-- Each skill in `my-skills` but `ui-principles` starts only when you type its name: `disable-model-invocation: true` for Claude Code, Cursor and Grok, and `allow_implicit_invocation: false` for Codex. opencode ignores those flags, so there only `read-only` is held back, by a `deny` entry in `opencode/opencode.jsonc`.
+- Each skill in `my-skills` but `ui-principles` starts only when you type its name: `disable-model-invocation: true` for Claude Code, Cursor and Grok, and `allow_implicit_invocation: false` for Codex. opencode ignores those flags, so there only `read-only` and `adhd-human` are held back, by `deny` entries in `opencode/opencode.jsonc`.
 - `grilling` and the four `ponytail` skills start only when you type their name.
 - `bet` and `thermo-nuclear-code-quality-review` are off in every tool but Cursor, which has no switch for them.

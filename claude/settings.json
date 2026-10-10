@@ -336,6 +336,7 @@
     "refreshInterval": 60,
     "type": "command"
   },
+  "subagentPromptCacheTtl": "5m",
   "syncClaudeAiSkills": false,
   "voice": {
     "enabled": true,

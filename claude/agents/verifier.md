@@ -3,7 +3,7 @@ name: verifier
 description: >
   Checks finished work claim by claim in a fresh context, quickly and the same way each run. The work can be a code change, an analysis, a recommendation or a document. Reads first and runs only what reading cannot settle. Brief it with the request, the work and the claims to prove. It does not fix.
 model: claude-opus-5-5
-effort: xhigh
+effort: high
 disallowedTools: Edit, Write, NotebookEdit
 omitClaudeMd: true
 ---

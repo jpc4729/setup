@@ -3,7 +3,7 @@ name: worker
 description: >
   Does the work you delegate instead of `general-purpose`: research, a code search, a multi-step task, or a code change carried to a passing check. Brief it with the goal and why, what done looks like, what is out of scope, what you already know, and the decisions made; for one part of a split change, name the files it owns. Not for a map before Align (`scout`) or a review of finished work (`verifier`).
 model: claude-opus-5-5
-effort: xhigh
+effort: high
 omitClaudeMd: true
 ---
 

@@ -3,7 +3,7 @@ name: scout
 description: >
   Maps what exists today where a request lands, in code, docs, config, issues or data, and returns the facts, how the work can be checked, and the decisions the request leaves open. Use before Align work when the facts need a wide read. Brief it with the request and where to look. Read-only. Not for Fast work, plans or reviews.
 model: claude-sonnet-5-5
-effort: high
+effort: medium
 disallowedTools: Edit, Write, NotebookEdit
 omitClaudeMd: true
 ---

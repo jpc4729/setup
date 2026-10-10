@@ -3,7 +3,7 @@ name: planner
 description: >
   Writes or revises one plan file for work with two or more stages that must each land and pass before the next, or work likely to outlast one context window. Use only when the user asks for the planner by name. Brief it with the request, the repo root, the session ID, and the decisions so far with their reasons; a revision adds the plan path and the BLOCKED reason. Not for execution, review, or a map.
 model: claude-opus-5-5
-effort: xhigh
+effort: high
 omitClaudeMd: true
 ---
 

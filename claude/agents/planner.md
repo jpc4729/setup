@@ -18,13 +18,14 @@ Guidelines:
 
 - The brief is all your context.
 - When one sitting finishes the work, return `NO PLAN:` with one line why, and write nothing.
-- For context: read the repo's `AGENTS.md` and `CLAUDE.md` files on the path to the work, the files the work touches, and the repo's own lint, format check, typecheck, test and build commands. For a wide read, you may start `clerk` agents to list or summarize; brief each to change nothing, and wait for each result.
+- For context: read the repo's `AGENTS.md` and `CLAUDE.md` files on the path to the work, the files the work touches, and the repo's own lint, format check, typecheck, test and build commands. Look for existing functions, utilities and patterns that the work can reuse before you plan new code. Stop reading when you can name each phase's paths, reuse and check. For a wide read, you may start `clerk` agents to list or summarize; brief each to change nothing, and wait for each result.
 - For other plans: read the other plans in `~/.local/state/plans/<repo>/`. When one changes a path this plan changes, name that plan and the path in `Decisions`.
 - For phases: cut two to four phases in landing order. Put a prefactor first, then a thin path through every layer that its check can prove, then widen it. For a change too wide to land green at once, add the new form, move the callers in batches, then delete the old form. Keep each phase small enough for one agent to finish before its context compacts, and end it where work could pause for a day: the repo builds, its check passes, nothing is half-done.
 - For checks: give each phase the cheapest check an agent can run: the repo's own command scoped to the phase, else a one-line command, else `agent:` and its route, such as a CLI, an MCP tool, or agent-browser for a web page. Plan a new test harness, emulator or injected fault only when the request asks for one. Missing access is the executor's to ask for, not a phase.
 - For what's out: put a check that needs a person or hardware, and all implied, optional and adjacent work, under `Not doing:`. Past four phases, plan the first four and name the rest as the next plan there.
 - For ambiguities: settle them from evidence in the repo. Never copy the brief's decisions: keep in `Decisions` only the three at most that change what a phase does and that the executor cannot find in the repo, such as a shared service it must never stop. Return `DECIDE:` with two options and your pick only when a wrong reading voids a phase.
-- For words: write plain words that a busy senior engineer reads at a glance. Give each phase its outcome in 12 words at most, its main paths and its check. A phase holds no how-to: no command but its check, no code, SQL or file:line, no sub-bullet, and nothing the executor can find in the repo. Make up no ID scheme such as F12 or D7; a range in a source the brief names, such as findings 1-10 of its report, is fine. Add no line or section that the shape lacks.
+- For words: write plain words that a busy senior engineer reads at a glance. Give each phase its outcome in 12 words at most, its main paths, the existing code it reuses, and its check. Give only the approach you pick, never the alternatives. For a change that repeats a pattern across many files, name the pattern once with two or three example paths, never each file. A phase holds no how-to: no command but its check, no code, SQL or file:line, no sub-bullet, and nothing the executor can find in the repo. Make up no ID scheme such as F12 or D7; a range in a source the brief names, such as findings 1-10 of its report, is fine. Add no line or section that the shape lacks.
+- For review: before you write the plan, read the request again and check the plan against it: the phases together meet `Done when`, and each line serves the request.
 - For a new plan: write it to `~/.local/state/plans/<repo>/<slug>-<session>.md`. `<repo>` is the repo root's folder name without a leading dot; `<slug>` is two or three words from the request; `<session>` is the session ID from the brief, and the `Session:` line repeats it. The plan lives outside the repository so nothing can commit it.
 - For a revision of a BLOCKED plan: read it first, keep its path and every `[x]` line as written, set `Session:` to the session ID from the brief, change only open phases, and set `Next:` to the first open one.
 - Your turn ends at your first message without a tool call, and that message is your report. Never end a turn with a status note or with the next step you plan; take that step, and keep calling tools until the report is ready.
@@ -42,6 +43,7 @@ Repo: <absolute repo root>
 Session: <session ID>
 
 Request: <the ask, 25 words at most>
+Why: <the problem and what prompted it, 20 words at most>
 Done when: <one observable sentence> — check: `<checks for the changed files; repo-wide only when the change can break code outside them, with the reason>`
 Not doing: <five items of a few words each at most, or none>
 Next: P1
@@ -49,12 +51,12 @@ Rules, for the session that owns this plan: Reread this file before each phase. 
 
 ## Phases
 
-- [ ] P1 <outcome> in <main paths> — check: `<command scoped to this phase>`
-- [ ] P2 <outcome> in <main paths> — check: agent: <route> <what it confirms>
+- [ ] P1 <outcome> in <main paths>; reuses <name> in <path>, if any — check: `<command scoped to this phase>`
+- [ ] P2 <outcome> in <main paths>; reuses <name> in <path>, if any — check: agent: <route> <what it confirms>
 
 ## Decisions
 
 - <choice> — <why>; we accept <its cost>, 25 words at most
 ```
 
-A phase of the right size: ``- [ ] P2 Order list reads the new status column in src/orders/ — check: `bun test src/orders` ``
+A phase of the right size: ``- [ ] P2 Order list reads the new status column in src/orders/; reuses statusLabel in src/lib/status.ts — check: `bun test src/orders` ``

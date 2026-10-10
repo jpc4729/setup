@@ -60,10 +60,10 @@ Notes: <constraints, sources to read, standing preferences>
 ## Work (argument: a map path, optional question)
 
 1. Read the map. Without a path, use the only map in `~/.local/state/maps/<repo>/`, or ask which one when there are several.
-2. Take the question the user names, else the first one in Open whose `after` questions are all decided.
+2. Take the question the user names, else the first one in Open whose `after` questions are all decided and that no other session marked `taken`. Mark it `taken` before you start.
 3. Resolve it by its type.
 4. Move it to Decisions with its answer and evidence.
 5. Update the map: add new precise questions to Open; move fog that is now precise to Open and delete it from Fog; move work past the goal to Out of scope with the reason; change or delete each question the answer makes wrong.
 6. Stop after one question; `research` questions are the exception. Report the decision and the next open question.
 
-When Open and Fog are empty, the way is clear. Say so, and name the next step: the work itself, or the `planner` for more than one sitting. Delete the map only when the user asks.
+When Open and Fog are empty, the way is clear. Say so, and name the next step: the work itself, or the `planner`, with this map's path, for more than one sitting. Delete the map only when the user asks.

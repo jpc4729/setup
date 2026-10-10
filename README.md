@@ -116,7 +116,7 @@ Every tool gets the same short core:
 
 - Do exactly what you ask, at the quality a strict senior reviewer would approve.
 - Check the smallest thing while working, then run the repo's checks on the changed files only.
-- Follow the repo's test rule. When it has none, decide if a test is worth it, from similar code and the repo's standards, with no dummy tests.
+- Follow the repo's test rule. When it has none, decide if a test is worth it, from similar code and the repo's standards, through the public interface by default, with no dummy tests.
 - Do each step, also outside the repo, and stop only at a critical step: data that nothing can bring back, money, a production or shared system, something sent as you, credentials or access, or what only you have.
 - Reply in ASD-STE100 Simplified Technical English, with evidence and no bold.
 - Pick a path: Fast by default, Verify when a mistake is costly, Align when the choice is yours.

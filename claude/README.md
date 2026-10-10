@@ -41,7 +41,7 @@ The idea: fast by default. Heavy checks run only when a mistake costs much. Hard
 - Claude names the path only when it is not Fast. Say "Fast", "Verify" or "Align" to change it.
 - Claude reads the change before it runs anything. Checks run through `quiet`, only on the changed files, and on the whole repo only when the change can break code outside them.
 - Tests follow the repo's rule, from full coverage to none. When the repo says nothing, Claude decides if a test is worth it and treats tests as a limited resource. It weighs what similar code in the repo does, the repo's standards, and if the test catches a bug that no other check catches. It never adds a dummy test, and runs only the tests for the changed code and the code it can break.
-- Claude keeps working unless data or something outside the repo is at stake. A status note goes with the next action, not in a turn of its own.
+- Claude does each step itself, also outside the repo, and stops for you only at a critical step: data that nothing can bring back, money, a production or shared system, something sent as you, credentials or access, or what only you have, such as a password or a 2FA code. It runs what a `verifier` marks `BLOCKED` itself. A status note goes with the next action, not in a turn of its own.
 - Replies are in STE. Findings come ranked, each with evidence.
 - Markdown has only plain sentences, headings, lists, links and code. No bold.
 - Git: reads are free. `add`, `commit`, `push` and a new pull request run only when you ask. For any other git write, Claude gives you the command. Claude never changes the branch in the session's folder. Work that needs its own branch goes to a subagent with worktree isolation.

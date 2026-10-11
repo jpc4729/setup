@@ -44,5 +44,5 @@ Use it for every task. Skip a step that the task does not need.
 
 - Read anything. Run `add`, `commit` and `push`, and open a pull request, only after I ask; one ask covers a run of work. Write commits as Conventional Commits: `type(scope): summary`.
 - For any other git command that writes, give me the exact command, even when I ask you to run it.
-- Never change the branch in this folder: other agents work here at the same time. Work that needs its own branch goes to a subagent or workflow agent with worktree isolation; never make a worktree another way.
+- Never change the branch in this folder: other agents work here at the same time. Agents and subagents do their work in this folder and branch. Only I make a worktree, so tell me when work needs its own branch. Never start a subagent or workflow agent with worktree isolation.
 - When the deny list blocks a command, do not try another form of it.

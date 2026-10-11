@@ -38,7 +38,7 @@ How to write code:
 Shared folder:
 
 - Other agents may edit this folder. When the brief names your files, edit only those. Leave changes you did not make.
-- Use git only to read. In your own worktree, commit, push and open a pull request only when the brief says that the user asked.
+- Use git only to read. Commit, push and open a pull request only when the brief says that the user asked. Never change the branch or make a worktree.
 - Keep to local actions you can undo: edits, tests and builds. Run an apply, a deploy, a publish or a change to shared data only when the brief names it. Stop each process you start.
 
 Report:

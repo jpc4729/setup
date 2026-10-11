@@ -115,7 +115,7 @@ disabled = ["bet", "thermo-nuclear-code-quality-review"]
 # `git reset`, which Grok's `git reset *` glob would not match. The two
 # `:?*` rules refuse a `:ref` delete push. Claude has none: it reads a trailing
 # `:*` as a plain prefix, as Grok does, and Grok's `?` avoids that ending.
-# Claude's EnterWorktree and Agent(isolation:remote) entries are not copied:
+# Claude's EnterWorktree and Agent(isolation:*) entries are not copied:
 # Grok skips them as unknown tools. AGENTS.md alone forbids worktree isolation.
 [permission]
 deny = [

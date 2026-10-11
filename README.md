@@ -61,7 +61,6 @@ cd setup
 
 - First, edit the models, login and themes in `claude/settings.json`, `codex/config.toml`, `grok/config.toml` and `opencode/opencode.jsonc`. They are mine.
 - Put `~/.local/bin` on your PATH. Every tool runs its checks through `quiet`.
-- Add `.claude/worktrees/` to your global gitignore, so git and search tools skip the worktrees.
 - Export `CONTEXT7_API_KEY`. For Codex, also add it as `[mcp_servers.context7.http_headers]` in `~/.codex/config.toml`.
 - Run `./install.sh` again after you pull.
 
@@ -104,7 +103,7 @@ Git:
 - Reads are free. `add`, `commit`, `push` and a pull request wait for your ask.
 - Any other git write comes to you as the exact command.
 - No agent changes the branch in the session's folder.
-- Work that needs its own branch goes in a worktree. In Claude, a subagent with worktree isolation does it. In the other tools, only you make one.
+- Agents and subagents work in the session's folder and branch. Only you make a worktree, and an agent tells you when work needs its own branch. Claude also denies worktree isolation.
 
 ## Subagents
 
@@ -129,7 +128,7 @@ Git and branches:
 
 - One folder has one branch, one index and one set of files. A branch change by one agent changes the files under every other agent there.
 - A worktree has its own index, so its commits and its pull request hold only its own changes.
-- In Claude, only worktree isolation makes a worktree, because Claude Code then keeps that agent out of your folder.
+- Agents work in your folder and branch, so you see each change where you work. You decide when work gets its own worktree.
 - Hard limits are deny rules, not text or hooks. In Claude and Grok, a deny rule holds even when the tool approves commands on its own. A Claude hook that times out, crashes or is missing lets the command run.
 - Commits, pushes and pull requests wait for your ask, so you decide what leaves your machine.
 

@@ -102,6 +102,7 @@
     "deny": [
       "EnterPlanMode",
       "EnterWorktree",
+      "Agent(isolation:worktree)",
       "Agent(isolation:remote)",
       "DesignSync",
       "PushNotification",

@@ -24,6 +24,14 @@ done
 # the keys here win, and every key the app wrote survives.
 merged="claude/settings.json codex/config.toml grok/config.toml cursor/mcp.json cursor/cli-config.json"
 
+# A merge never deletes a key, so this jq filter deletes what claude/settings.json
+# set before and has dropped: the advisor, and the hooks that ran deleted scripts.
+# Hook entries of your own stay.
+claude_drop='del(.advisorModel)
+  | if .hooks then .hooks |= with_entries(
+      .value |= map(select(any(.hooks[]?; (.command // "") | test("/(session-plans|verifier-report)\\.sh$")) | not))
+      | select(.value | length > 0)) else . end'
+
 # copy <repo dir> <home dir>
 copy() {
   local excludes=() f
@@ -33,9 +41,9 @@ copy() {
   # The managed policy is installed separately.
   [[ "$1" != codex ]] || excludes+=(--exclude "/requirements.toml")
   [[ -n "$dry" ]] || mkdir -p "$2"
-  # A folder's README.md documents the repo, not the home.
+  # A folder's README.md and WORKFLOWS.md document the repo, not the home.
   rsync -a ${dry:+"$dry"} --backup --suffix=.bak --exclude .DS_Store \
-    --exclude /README.md ${excludes[@]+"${excludes[@]}"} "$repo/$1/" "$2/"
+    --exclude /README.md --exclude /WORKFLOWS.md ${excludes[@]+"${excludes[@]}"} "$repo/$1/" "$2/"
 }
 
 # Codex reads the managed macOS preference, not the user requirements file.
@@ -77,6 +85,7 @@ merge() {
   # shellcheck disable=SC2016  # $f is a yq variable
   case "$live" in
     *.toml) yq -p toml -o toml eval-all '. as $f ireduce ({}; . * $f)' "$live" "$tmp" ;;
+    */.claude/settings.json) jq -s ".[0] * .[1] | $claude_drop" "$live" "$tmp" ;;
     *) jq -s '.[0] * .[1]' "$live" "$tmp" ;;
   esac > "$tmp.out" || echo "install.sh: $live does not parse; left alone" >&2
   # cat, not mv: keeps the live file's mode.

@@ -1,6 +1,5 @@
 {
   "$schema": "https://json.schemastore.org/claude-code-settings.json",
-  "advisorModel": "claude-opus-5-5",
   "attribution": {
     "commit": "",
     "pr": ""
@@ -67,29 +66,6 @@
           }
         ],
         "matcher": "Agent"
-      }
-    ],
-    "SessionStart": [
-      {
-        "hooks": [
-          {
-            "command": "~/.claude/hooks/session-plans.sh",
-            "timeout": 10,
-            "type": "command"
-          }
-        ]
-      }
-    ],
-    "SubagentStop": [
-      {
-        "hooks": [
-          {
-            "command": "~/.claude/hooks/verifier-report.sh",
-            "timeout": 10,
-            "type": "command"
-          }
-        ],
-        "matcher": "verifier"
       }
     ]
   },

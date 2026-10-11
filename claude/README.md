@@ -1,17 +1,18 @@
 # claude
 
-Claude Code's home. `./install.sh` copies this folder into `~/.claude` and merges `settings.json`. This README stays in the repo. Edit here, never in `~/.claude`, then run `./install.sh` again.
+Claude Code's home. `./install.sh` copies this folder into `~/.claude` and merges `settings.json`. This README and `WORKFLOWS.md` stay in the repo. Edit here, never in `~/.claude`, then run `./install.sh` again.
 
 The idea: fast by default. Heavy checks run only when a mistake costs much. Hard limits live in settings, such as deny rules, not in more text.
 
 ## Use it
 
-- Ask plainly. Claude picks the path, and small work stays Fast.
+- [`WORKFLOWS.md`](WORKFLOWS.md): the day-to-day flows and the prompts to type.
+- Ask plainly. Claude runs one flow for every task and skips the steps a small task does not need.
 - "verify this": a `verifier` checks the work claim by claim. Add "with two models" for a decision that is hard to undo, and a second `verifier` runs on Fable 5.1.
-- "align first": Claude gives options and a pick before it does any work.
+- "ask first": Claude gives options and a pick before it does any work.
+- "plan only": Claude stops after the plan.
 - "use workers": Claude gives each independent part of a big change to a `worker`.
 - "use clerks": Haiku clerks summarize, count or make a change that Claude spells out, several at once, and Claude checks each result.
-- "use the planner": a plan file for work that needs more than one sitting.
 - `ultracode` in a message: many agents at once.
 - `/diagnose` for a bug. It finds a command that shows the failure before any theory.
 - `/read-only` in a prompt for a task with no changes. The agent only reads and analyzes, and puts any change it proposes in its reply.
@@ -28,20 +29,19 @@ The idea: fast by default. Heavy checks run only when a mistake costs much. Hard
 - `CLAUDE.md`: the rules for the main session. One short core, because less text means better adherence.
 - `settings.json`: merged into `~/.claude/settings.json` by `install.sh`. Repo keys win, and Claude Code keeps the keys it writes.
 - `agents/`: `scout`, `verifier`, `worker`, `planner` and `clerk`.
-- `hooks/`: one keeps a session's plan through compaction and resume, one lets a subagent start only a `clerk`, and one sends a `verifier` report back once when it breaks the report format.
+- `hooks/`: one hook lets a subagent start only a `clerk`.
 - `statusline-command.sh`: the status line. Profile, folder, branch, model, tokens, rate limits, prompt cache, diff and age in one line. Each part stays dim until it needs you.
 - [`../bin/quiet`](../bin/quiet), installed in `~/.local/bin`: `quiet <command>` prints one line on a pass and the full output on a failure, to save context.
 
 ## The rules, in short
 
-- Exact scope, senior quality.
-- Fast is the default: the intent is clear, and a mistake is cheap to see and undo. Claude follows the closest example and runs the cheapest check.
-- Verify: a mistake is costly or hard to see, as with a schema, a rewrite of stored data, money, how users prove who they are, permissions, concurrency, an API that others use, or a number behind a decision. A `verifier` checks the work claim by claim, and Claude fixes what it confirms, in 3 runs at most.
-- Align: the request reads two ways, or the choice is yours. Claude gives you 10 lines at most, with a pick, and acts on the pick. It waits for you only when a wrong pick is costly and hard to undo. Verify and Align can both apply.
-- Claude names the path only when it is not Fast. Say "Fast", "Verify" or "Align" to change it.
+- Senior quality in the fewest steps: correct first, then fast.
+- One flow for every task: understand, plan, build, check, review once, report. A small task skips the plan, and Claude builds it itself. With a plan, a fresh `worker` builds each ticket, and two `verifier` agents review the whole diff once.
+- Claude asks only what the facts cannot settle, in one round with its picks, and goes on. It waits only when a wrong pick is costly and hard to undo.
+- One review and one fix round, never a score or a loop. One task a session: Claude tells you to `/clear` between unrelated tasks, and to `/handoff` near 300k tokens.
 - Claude reads the change before it runs anything. Checks run through `quiet`, only on the changed files, and on the whole repo only when the change can break code outside them.
-- Tests follow the repo's rule, from full coverage to none. When the repo says nothing, Claude decides if a test is worth it and treats tests as a limited resource. It weighs what similar code in the repo does, the repo's standards, and if the test catches a bug that no other check catches. By default, a test goes through the public interface and mocks only what the repo does not own. It never adds a dummy test, and runs only the tests for the changed code and the code it can break.
-- Claude does each step itself, also outside the repo, and stops for you only at a critical step: data that nothing can bring back, money, a production or shared system, something sent as you, credentials or access, or what only you have, such as a password or a 2FA code. It runs what a `verifier` marks `BLOCKED` itself. A status note goes with the next action, not in a turn of its own.
+- Tests follow the repo's rule. When the repo has none, Claude adds a test only when it catches a bug that no other check catches, and runs only the tests for the changed code.
+- Claude does each step itself, also outside the repo, and stops for you only at a critical step: data that nothing can bring back, money, a production or shared system, something sent as you, credentials or access, or what only you have, such as a password or a 2FA code. A status note goes with the next action, not in a turn of its own.
 - Replies are in STE. Findings come ranked, each with evidence.
 - Markdown has only plain sentences, headings, lists, links and code. No bold.
 - Git: reads are free. `add`, `commit`, `push` and a new pull request run only when you ask. For any other git write, Claude gives you the command. Claude never changes the branch in the session's folder. Work that needs its own branch goes to a subagent with worktree isolation.
@@ -49,14 +49,14 @@ The idea: fast by default. Heavy checks run only when a mistake costs much. Hard
 ## Agents
 
 - `scout` (Sonnet 5.5, `medium`): maps what exists, and returns facts, checks, open decisions and risks, or `CLEAR:`. Read-only. Reading is cheap, so speed matters more.
-- `verifier` (Opus 5.5, `high`): checks finished work claim by claim, such as code, an analysis, a plan or a number, quickly, the same way each run and with no bias to find problems. It reports scope gaps as `MISSING`, `EXTRA` or `WRONG`, and a broken repo rule, but no style choice that no rule sets. It has no Edit or Write tool. A missed failure costs more than tokens.
+- `verifier` (Opus 5.5, `high`): checks finished work claim by claim, such as code, an analysis, a plan or a number, quickly, the same way each run and with no bias to find problems. It reports scope gaps as `MISSING`, `EXTRA` or `WRONG`, and has no Edit or Write tool. A missed failure costs more than tokens.
 - `worker` (Opus 5.5, `high`): does the work that Claude delegates, in place of `general-purpose`: research, code search, multi-step tasks and code changes. It knows where to find the repo's coding rules, so a brief does not repeat them. In its own worktree, it commits, pushes and opens the pull request when the brief says that you asked.
-- `planner` (Opus 5.5, `high`): writes one plan file in `~/.local/state/plans/<repo>/`, only when you ask for it by name. The file is outside the repo, so nothing commits it, and a hook points to it after compaction. The session runs each phase in a new `worker`, which never edits the plan, and runs the phase check itself.
-- `clerk` (Haiku 5.5, `medium`): does one narrow task that the parent checks, such as a summary, a list, a count or a change the brief spells out. Several run at once. It costs at least 20 times less than Opus 5.5 for a prompt up to 100K tokens, and at least 4 times less above that, and it is the fastest model. It is weaker at agentic coding, so it gets no judgment, design or review. At `low`, Haiku more often skips a search or stops early. It is told never to call the advisor, which would read its whole transcript at Opus rates.
+- `planner` (Opus 5.5, `high`): writes or revises one plan of tickets in `~/.local/state/plans/<repo>/`, when the work needs more than one ticket. A fresh `worker` builds each ticket. The file is outside the repo, so nothing commits it. Each ticket fits one fresh session, so the plan has no session owner.
+- `clerk` (Haiku 5.5, `medium`): does one narrow task that the parent checks, such as a summary, a list, a count or a change the brief spells out. Several run at once. It costs at least 20 times less than Opus 5.5 for a prompt up to 100K tokens, and at least 4 times less above that, and it is the fastest model. It is weaker at agentic coding, so it gets no judgment, design or review. At `low`, Haiku more often skips a search or stops early.
 
 How they work together:
 
-- All five set `omitClaudeMd: true`, because main-session rules such as "run the checks" or "ask me" would fight their jobs. Each reads the repo's `AGENTS.md` and `CLAUDE.md` itself, except `clerk`, whose brief is all its context. `scout`, `worker` and `verifier` also read its coding standards files.
+- All five set `omitClaudeMd: true`, because main-session rules such as "run the checks" or "ask me" would fight their jobs. Each reads the repo's `AGENTS.md` and `CLAUDE.md` itself, except `clerk`, whose brief is all its context.
 - None sets `maxTurns`, so each runs until its task is done.
 - `scout`, `worker`, `verifier` and `planner` can start a `clerk` with no round trip to the main session. `hooks/nested-agents.sh` refuses any other agent type and any `model` override from them, because Claude Code ignores the type list in `Agent(...)` in subagent frontmatter. A `clerk` starts nothing, and `CLAUDE_CODE_MAX_SUBAGENT_SPAWN_DEPTH=2` stops a deeper chain.
 - `scout` and `verifier` have no Edit or Write tool, and tell their clerks to change nothing: `scout` maps before you choose, and `verifier` must not fix what it judges.
@@ -68,7 +68,7 @@ How they work together:
 - Models: only Fable 5.1, Opus 5.5, Sonnet 5.5 and Haiku 5.5 (`enforceAvailableModels`). The default is `claude-opus-5-5[1m]`.
 - Effort: `high` on Opus 5.5 and Fable 5.1, and `medium` on Sonnet 5.5 and Haiku 5.5, one level below the earlier setup, to cut time and cost. On Anthropic's SWE-bench Pro run, Opus 5.5 at `xhigh` scored about 1.4 points above `high`, at 2.5 times the cost. At `xhigh`, Sonnet can start its own review rounds, sometimes with reviewer subagents, and Haiku can end a turn with no visible text.
 - Refusals: a request that a safety classifier flags ends with a refusal. Its fallback models (Opus 4.8, Opus 5 and Sonnet 5) are not in the list, so Claude Code does not switch.
-- Advisor: Opus 5.5 (`advisorModel`). Claude can consult it at decision points with the full transcript, uncached, so each call costs a full read at Opus rates. Subagents inherit it, and `clerk` is told never to call it. A Fable 5.1 session has no advisor, because only Fable 5.1 can advise Fable 5.1. The advisor's effort has no setting.
+- Advisor: off. With Opus 5.5 as the main model it was Opus advising Opus: no stronger model, but 18 to 30% of model time, at about 2 minutes a call.
 - Context: compaction in a 400K window of the 1M (`autoCompactWindow`). Haiku 5.5 gets a 100K window and compacts near 67K, so its requests mostly stay under 100K tokens. Above that, every Haiku price is 5 times higher.
 - Skills: unused bundled skills are off (`skillOverrides`), so their descriptions use no context. `ponytail`, its `-review`, `-audit` and `-debt` skills, and `grilling` run only when you type their name. `workflowSizeGuideline: small`.
 - Git: the deny list blocks resets, branch switches, rebases, amends, stashes, worktree commands, history rewrites, tag and ref deletes, force and delete pushes, forced fetches, and the `wt` and `gh` commands that change or delete a branch, a repo or a release, also after a global option such as `git -C`. A subagent or workflow agent with worktree isolation gets its own folder and branch under `.claude/worktrees/`, and Claude Code blocks its edits, commands and git redirects into your folder. `EnterWorktree` and cloud isolation are denied. It does not catch combined short flags such as `-uf`, a delete push written `origin :branch`, or shortened options such as `--amen`. With a global option first, a commit message or path that contains a denied word is refused too. `GIT_EDITOR=true`, so git never waits for an editor. `includeGitInstructions: false`, because `CLAUDE.md` holds the git rules. `attribution` is empty, so commits get no Claude trailer.
@@ -81,5 +81,5 @@ How they work together:
 ## Change it
 
 1. Edit the files here. Run `./install.sh -n` to see what changes, then `./install.sh`.
-2. A key you delete from `settings.json` stays in the live file. Delete it there too.
-3. `install.sh` never deletes. Remove a file the repo dropped by hand.
+2. A key you delete from `settings.json` stays in the live file. Delete it there too. `install.sh` deletes only the keys this repo dropped, such as `advisorModel` and its old hooks.
+3. `install.sh` never deletes a file. Remove a file the repo dropped by hand, such as `~/.claude/hooks/session-plans.sh` and `~/.claude/hooks/verifier-report.sh`.

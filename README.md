@@ -3,59 +3,37 @@
 My agent setup, Claude Code first. I build and tune it in Claude Code. Codex, Cursor, Grok and opencode get the same rules, git deny lists, subagents and 21 skills, each in its own syntax and on its analogous models.
 
 ```text
-           CLAUDE CODE SUBAGENTS · OPUS 5.5 + SONNET 5.5 + HAIKU 5.5
+              CLAUDE CODE SUBAGENTS · OPUS 5.5 + SONNET 5.5 + HAIKU 5.5
 
-                                Opus 5.5 · high
-                                 main session
-                                       |         Fast    closest example,
-                                       |                 cheapest check
-                                       |         Verify  verifier checks
-                                       |                 before the report
-                                       |         Align   options and a pick,
-                                       |                 acts unless costly
-                                       |         advisor Opus 5.5
-                                       |
-                             delegate to subagents
-                                       |
-         +-------------------+---------+---------+-------------------+
-         |                   |                   |                   |
-       scout              worker               clerk              planner
-         |                   |                   |                   |
-Sonnet 5.5 · medium   Opus 5.5 · high   Haiku 5.5 · medium    Opus 5.5 · high
-         |                   |                   |                   |
- maps what exists     edits + checks      summary, list,       one plan file
-   before Align      research, search       count or a       multi-stage work
-     read-only       multi-step tasks    spelled-out edit     only when named
-         |                   |                   |                   |
-         +-------------------+---------+---------+-------------------+
-                                       |
-                          back to main session · high
-                      reviews each diff, runs the checks
-                                       |
-                   +-------------------+-------------------+
-                   |                                       |
-             Fast or Align                              Verify
-                   |                                       |
-                   |                                   verifier
-                   |                                Opus 5.5 · high
-                   |                                 fresh context
-                   |                                claim by claim
-                   |                                   read-only
-                   |                                3 runs at most
-                   |                                       |
-                   +-------------------+-------------------+
-                                       |
-                                    report
+                        Opus 5.5 · high · main session
+                                      |
+        one flow for every task: understand, plan, build, check, review once,
+                    report. A small task skips the plan.
+                                      |
+          +-------------------+-------+-----------+-------------------+
+          |                   |                   |                   |
+        scout              planner              worker             verifier
+          |                   |                   |                   |
+ Sonnet 5.5 · medium   Opus 5.5 · high     Opus 5.5 · high     Opus 5.5 · high
+          |                   |                   |                   |
+   facts before a       1-5 tickets for     builds a ticket     reviews once:
+  question to you      work with 2+ parts    or a task         correctness and
+     read-only                                                 design, read-only
+          |                   |                   |                   |
+          +-------------------+-------+-----------+-------------------+
+                                      |
+                 main session runs the checks, one fix round,
+                         a report, and never a score
 
-  scout, worker, verifier and planner can start a clerk, and no other agent.
-         Map with Sonnet. Read with Haiku. Write and judge with Opus.
+ scout, worker, verifier and planner can start a Haiku 5.5 clerk, and no other agent.
+          Map with Sonnet. Read with Haiku. Write and judge with Opus.
 ```
 
 ## Claude Code first
 
 - `claude/` is the reference. A change starts there, and each other tool copies it in its own syntax.
 - Claude's deny list is the source of the git deny lists in the other tools.
-- Only Claude Code has the `clerk` subagent and the advisor. The other tools have `scout`, `worker`, `verifier` and `planner`.
+- Only Claude Code has the `clerk` subagent and the one flow below. The other tools have `scout`, `worker`, `verifier` and `planner`, and keep the Fast, Verify and Align paths.
 - Each tool gives each role its analogous model:
 
 ```text
@@ -66,7 +44,6 @@ worker     Opus 5.5 · high      GPT-6.1 Sol · high     Opus 5.5     grok-4.6 �
 verifier   Opus 5.5 · high      GPT-6 Astra · medium   Opus 5.5     grok-4.6 · xhigh   glm-5.3 · high
 planner    Opus 5.5 · high      GPT-6 Astra · medium   Opus 5.5     grok-4.6 · xhigh   glm-5.3 · high
 clerk      Haiku 5.5 · medium   none                   none         none               none
-advisor    Opus 5.5             none                   none         none               none
 ```
 
 - Cursor uses the main model you pick in the app. Grok's subagents use its default model and set only the effort.
@@ -119,7 +96,7 @@ Every tool gets the same short core:
 - Follow the repo's test rule. When it has none, decide if a test is worth it, from similar code and the repo's standards, through the public interface by default, with no dummy tests.
 - Do each step, also outside the repo, and stop only at a critical step: data that nothing can bring back, money, a production or shared system, something sent as you, credentials or access, or what only you have.
 - Reply in ASD-STE100 Simplified Technical English, with evidence and no bold.
-- Pick a path: Fast by default, Verify when a mistake is costly, Align when the choice is yours.
+- Claude Code runs one flow for every task: understand, plan, build, check, review once, report. The other tools pick a path: Fast by default, Verify when a mistake is costly, Align when the choice is yours.
 - Start a workflow, loop or cloud task only when you ask, with 3 retry rounds at most.
 
 Git:
@@ -131,12 +108,12 @@ Git:
 
 ## Subagents
 
-- `scout`: maps what exists before Align. Read-only.
+- `scout`: finds the facts before a question to you. Read-only.
 - `worker`: does delegated work: research, search, multi-step tasks and code changes.
 - `verifier`: checks finished work claim by claim, with no bias to find problems. One line per claim, then a verdict.
-- `planner`: writes a plan, only when you name it.
+- `planner`: in Claude Code, writes 1 to 5 tickets when the work has two or more parts, and a fresh `worker` builds each one. In the other tools, it writes a plan only when you name it.
 - `clerk`: Claude only. One narrow task on Haiku 5.5, such as a summary, a list or a count.
-- The parent gives subagents wide reads, big split changes and reviews, and checks each diff they return.
+- The parent gives subagents wide reads, big split changes and reviews, and checks each diff they return. In Claude Code, the final review reads the diffs of plan tickets.
 - Details for Claude are in [claude/README.md](claude/README.md).
 
 ## Safety
@@ -161,7 +138,7 @@ Short text:
 - Less text means better adherence, and each rule line costs context in every request.
 - STE and no bold: one meaning per word, and easy to scan.
 - `quiet` keeps a long passing log out of the context.
-- Fast is the default. Heavy checks run only when a mistake costs much.
+- One review round and one fix round, never a score: loops of review cost the most time.
 
 Subagents:
 

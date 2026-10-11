@@ -33,7 +33,7 @@ My agent setup, Claude Code first. I build and tune it in Claude Code. Codex, Cu
 
 - `claude/` is the reference. A change starts there, and each other tool copies it in its own syntax.
 - Claude's deny list is the source of the git deny lists in the other tools.
-- Only Claude Code has the `clerk` subagent and the one flow below. The other tools have `scout`, `worker`, `verifier` and `planner`, and keep the Fast, Verify and Align paths.
+- Only Claude Code has the `clerk` subagent. The other tools have `scout`, `worker`, `verifier` and `planner`, and run the same flow.
 - Each tool gives each role its analogous model:
 
 ```text
@@ -96,7 +96,7 @@ Every tool gets the same short core:
 - Follow the repo's test rule. When it has none, decide if a test is worth it, from similar code and the repo's standards, through the public interface by default, with no dummy tests.
 - Do each step, also outside the repo, and stop only at a critical step: data that nothing can bring back, money, a production or shared system, something sent as you, credentials or access, or what only you have.
 - Reply in ASD-STE100 Simplified Technical English, with evidence and no bold.
-- Claude Code runs one flow for every task: understand, plan, build, check, review once, report. The other tools pick a path: Fast by default, Verify when a mistake is costly, Align when the choice is yours.
+- Run one flow for every task: understand, plan, build, check, review once, report. A small task skips the plan.
 - Start a workflow, loop or cloud task only when you ask, with 3 retry rounds at most.
 
 Git:
@@ -111,9 +111,9 @@ Git:
 - `scout`: finds the facts before a question to you. Read-only.
 - `worker`: does delegated work: research, search, multi-step tasks and code changes.
 - `verifier`: checks finished work claim by claim, with no bias to find problems. One line per claim, then a verdict.
-- `planner`: in Claude Code, writes 1 to 5 tickets when the work has two or more parts, and a fresh `worker` builds each one. In the other tools, it writes a plan only when you name it.
+- `planner`: writes 1 to 5 tickets when the work has two or more parts, and a fresh `worker` builds each one. Where the planner is read-only, as in Codex, Grok and opencode, it returns the plan and the main session saves it.
 - `clerk`: Claude only. One narrow task on Haiku 5.5, such as a summary, a list or a count.
-- The parent gives subagents wide reads, big split changes and reviews, and checks each diff they return. In Claude Code, the final review reads the diffs of plan tickets.
+- The parent gives subagents wide reads, big split changes and reviews, and checks each diff they return. The final review reads the diffs of plan tickets.
 - Details for Claude are in [claude/README.md](claude/README.md).
 
 ## Safety

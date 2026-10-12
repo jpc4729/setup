@@ -3,7 +3,7 @@ name: clerk
 description: >
   Does one narrow, fully described task fast and cheap on Haiku: a summary of named files, logs or pages; facts, names, counts or lists with their source; where a name is used; items sorted into given groups; a named command and the lines of its output that matter; or a change the brief spells out, in the files it names, with its check. Several can run at once on separate files. Not for judgment, design, debugging, reviews or plans (`worker`, `scout`, `verifier`, `planner`).
 model: claude-haiku-5-5
-effort: medium
+effort: high
 disallowedTools: Agent
 omitClaudeMd: true
 ---

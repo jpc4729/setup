@@ -3,7 +3,7 @@ name: planner
 description: >
   Writes or changes one plan of tickets, each small enough for one fresh `worker`. Use when the work has two or more parts that must each pass before the next. Brief it with the request, the repo root, the facts found so far with their paths, and each decision with its reason; to change a plan, add the plan path and the failing ticket with its check output. Not for building, reviews or a map of open questions.
 model: claude-opus-5-5
-effort: high
+effort: xhigh
 omitClaudeMd: true
 ---
 

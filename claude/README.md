@@ -33,11 +33,11 @@ The idea: fast by default. Heavy checks run only when a mistake costs much. Hard
 
 ## Agents
 
-- `scout` (Sonnet 5.5, `medium`): maps what exists, and returns facts, checks, open decisions and risks, or `CLEAR:`. Read-only. Reading is cheap, so speed matters more.
-- `verifier` (Opus 5.5, `high`): checks finished work claim by claim, such as code, an analysis, a plan or a number, quickly, the same way each run and with no bias to find problems. It reports scope gaps as `MISSING`, `EXTRA` or `WRONG`, and has no Edit or Write tool. A missed failure costs more than tokens.
-- `worker` (Opus 5.5, `high`): does the work that Claude delegates, in place of `general-purpose`: research, code search, multi-step tasks and code changes. It knows where to find the repo's coding rules, so a brief does not repeat them. It commits, pushes and opens the pull request when the brief says that you asked.
-- `planner` (Opus 5.5, `high`): writes or revises one plan of tickets in `~/.local/state/plans/<repo>/`, when the work needs more than one ticket. A fresh `worker` builds each ticket. The file is outside the repo, so nothing commits it. Each ticket fits one fresh session, so the plan has no session owner.
-- `clerk` (Haiku 5.5, `medium`): does one narrow task that the parent checks, such as a summary, a list, a count or a change the brief spells out. Several run at once. It costs at least 20 times less than Opus 5.5 for a prompt up to 100K tokens, and at least 4 times less above that, and it is the fastest model. It is weaker at agentic coding, so it gets no judgment, design or review. At `low`, Haiku more often skips a search or stops early.
+- `scout` (Sonnet 5.5, `high`): maps what exists, and returns facts, checks, open decisions and risks, or `CLEAR:`. Read-only. Reading is cheap, so speed matters more.
+- `verifier` (Opus 5.5, `xhigh`): checks finished work claim by claim, such as code, an analysis, a plan or a number, quickly, the same way each run and with no bias to find problems. It reports scope gaps as `MISSING`, `EXTRA` or `WRONG`, and has no Edit or Write tool. A missed failure costs more than tokens.
+- `worker` (Opus 5.5, `xhigh`): does the work that Claude delegates, in place of `general-purpose`: research, code search, multi-step tasks and code changes. It knows where to find the repo's coding rules, so a brief does not repeat them. It commits, pushes and opens the pull request when the brief says that you asked.
+- `planner` (Opus 5.5, `xhigh`): writes or revises one plan of tickets in `~/.local/state/plans/<repo>/`, when the work needs more than one ticket. A fresh `worker` builds each ticket. The file is outside the repo, so nothing commits it. Each ticket fits one fresh session, so the plan has no session owner.
+- `clerk` (Haiku 5.5, `high`): does one narrow task that the parent checks, such as a summary, a list, a count or a change the brief spells out. Several run at once. It costs at least 20 times less than Opus 5.5 for a prompt up to 100K tokens, and at least 4 times less above that, and it is the fastest model. It is weaker at agentic coding, so it gets no judgment, design or review. At `low`, Haiku more often skips a search or stops early.
 
 How they work together:
 
@@ -51,7 +51,7 @@ How they work together:
 
 - Permissions: `acceptEdits`, plus an allow list for git reads, `git add`, `shellcheck`, `shfmt` and `zsh -n`. Other commands ask first. The deny list blocks the risky git writes.
 - Models: only Fable 5.1, Opus 5.5, Sonnet 5.5 and Haiku 5.5 (`enforceAvailableModels`). The default is `claude-opus-5-5[1m]`.
-- Effort: `high` on Opus 5.5 and Fable 5.1, and `medium` on Sonnet 5.5 and Haiku 5.5, one level below the earlier setup, to cut time and cost. On Anthropic's SWE-bench Pro run, Opus 5.5 at `xhigh` scored about 1.4 points above `high`, at 2.5 times the cost. At `xhigh`, Sonnet can start its own review rounds, sometimes with reviewer subagents, and Haiku can end a turn with no visible text.
+- Effort: `xhigh` on Opus 5.5 and Fable 5.1, and `high` on Sonnet 5.5 and Haiku 5.5. On Anthropic's SWE-bench Pro run, Opus 5.5 at `xhigh` scored about 1.4 points above `high`, at 2.5 times the cost. At `xhigh`, Sonnet can start its own review rounds, sometimes with reviewer subagents, and Haiku can end a turn with no visible text.
 - Refusals: a request that a safety classifier flags ends with a refusal. Its fallback models (Opus 4.8, Opus 5 and Sonnet 5) are not in the list, so Claude Code does not switch.
 - Advisor: off. With Opus 5.5 as the main model it was Opus advising Opus: no stronger model, but 18 to 30% of model time, at about 2 minutes a call.
 - Context: compaction in a 400K window of the 1M (`autoCompactWindow`). Haiku 5.5 gets a 100K window and compacts near 67K, so its requests mostly stay under 100K tokens. Above that, every Haiku price is 5 times higher.

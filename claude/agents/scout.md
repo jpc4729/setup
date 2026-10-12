@@ -3,7 +3,7 @@ name: scout
 description: >
   Takes a first look at what exists where a request lands, in code, docs, config, issues or data, and returns the facts, how the work can be checked, and the choices the request leaves open. Use before a choice when the facts need a wide read. Brief it with the request and where to look. Read-only. Not for small tasks, plans or reviews.
 model: claude-sonnet-5-5
-effort: medium
+effort: high
 disallowedTools: Edit, Write, NotebookEdit
 omitClaudeMd: true
 ---

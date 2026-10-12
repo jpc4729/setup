@@ -315,6 +315,7 @@
   },
   "subagentPromptCacheTtl": "5m",
   "syncClaudeAiSkills": false,
+  "tui": "fullscreen",
   "voice": {
     "enabled": true,
     "mode": "hold"

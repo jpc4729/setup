@@ -2,8 +2,7 @@
 # Claude Code Status Line
 # Format: profile | dir | branch | model effort | used/total tokens | limits | cache | +lines/-lines | age
 
-# The config dir name, read at runtime so one file serves every profile that
-# CLAUDE_CONFIG_DIR selects.
+# Every profile runs this one file, so the profile comes from the config dir at runtime.
 PROFILE="$(basename "${CLAUDE_CONFIG_DIR:-$HOME/.claude}")"
 PROFILE="${PROFILE#.}"
 PROFILE="${PROFILE//[[:cntrl:]]/}"

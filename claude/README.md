@@ -6,22 +6,7 @@ The idea: fast by default. Heavy checks run only when a mistake costs much. Hard
 
 ## Use it
 
-- [`WORKFLOWS.md`](WORKFLOWS.md): the day-to-day flows and the prompts to type.
-- Ask plainly. Claude runs one flow for every task and skips the steps a small task does not need.
-- "verify this": a `verifier` checks the work claim by claim. Add "with two models" for a decision that is hard to undo, and a second `verifier` runs on Fable 5.1.
-- "ask first": Claude gives options and a pick before it does any work.
-- "plan only": Claude stops after the plan.
-- "use workers": Claude gives each independent part of a big change to a `worker`.
-- "use clerks": Haiku clerks summarize, count or make a change that Claude spells out, several at once, and Claude checks each result.
-- `ultracode` in a message: many agents at once.
-- `/diagnose` for a bug. It finds a command that shows the failure before any theory.
-- `/read-only` in a prompt for a task with no changes. The agent only reads and analyzes, and puts any change it proposes in its reply.
-- `/retro` for a session that went wrong. It turns each lesson into a check, hook, script or rule, and asks which to apply.
-- `/skills-claude` to write, review or fix a skill to the standards of the native Claude Code skills.
-- `/wayfinder` for a big idea with open questions. It maps the open decisions in a local file and settles one per session.
-- `/verify` to see the real app run. Run `/run-skill-generator` once per repo first; `/verify` and `verifier` then reuse its launch recipe.
-- `/code-review` for bugs in a diff, `/simplify` for simpler code, and the `handoff` skill for a new session on the same task.
-- `/doctor prompt-audit` after you edit the rules. It finds conflicts.
+- [`WORKFLOWS.md`](WORKFLOWS.md): the flow, the words and commands to type, and prompts to copy. Ask plainly; Claude runs one flow for every task and skips the steps a small task does not need.
 - Choose the model when the session starts. A model switch sends the whole conversation again at the cache-write price; an `/effort` change does not. When the status line shows `cache expired`, the next message does the same.
 
 ## Files

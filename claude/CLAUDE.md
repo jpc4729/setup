@@ -13,6 +13,8 @@ Use it for every task. Skip a step that the task does not need.
 5. Review once: read your own diff. With a plan, start two `verifier` agents at the same time on the whole diff, one for correctness and one for design. Without a plan, start one `verifier` when a mistake is costly or hard to see: a schema, stored data, money, login or permissions, concurrency, an API, file format or command that others use, or a number behind a costly decision. Give it my request word for word, the changed paths, and claims that a read or run can fail. Fix what the code confirms, send the fixes to the same verifier once, and stop. Then update each doc that the change made wrong, and delete the plan file. Add a second `verifier` with `model: fable` when I ask for two models. Do not score the work or review it again unless I ask.
 6. Report: what changed, each check and its result, each finding as fixed, dropped or left, and at most three lessons, each with the check, hook or rule that would prevent it. Then stop.
 
+Words I can add to a request: `plan only`: stop after step 2. `ask first`: in step 1, give options with your pick and wait for my answer. `verify this`: in step 5, start one `verifier`. `use workers` or `use clerks`: give each separate part to a `worker` or a `clerk`.
+
 # Rules
 
 - Make the smallest change that fully does the task. Follow the closest example in the repo.

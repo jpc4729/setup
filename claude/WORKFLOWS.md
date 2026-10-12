@@ -11,8 +11,8 @@ The same flow for every task. A small task skips the plan.
         |
         v
 +----------------+   facts, then 1 round of questions
-| 1. Understand  |   with Claude's picks; it goes on
-+----------------+
+| 1. Understand  |   with Claude's picks; it goes on,
++----------------+   or waits if a wrong pick is costly
         |
         v
 +----------------+   only for 2+ parts: planner writes
@@ -50,12 +50,22 @@ a list of fixes               paste it: "Fix these, in order:"
 stop after the plan           add "plan only"
 options before any work       add "ask first"
 proof for risky work          add "verify this"
+proof from two models         add "verify this with two models"
+parts built in parallel       add "use workers"
+cheap summaries or counts     add "use clerks"
 a second review               "review again"
 a bug                         /diagnose <symptom>
 a big, unclear idea           /wayfinder <idea>
 a question, no changes        /read-only <question>
-many agents at once           add "ultracode"
+see the app run               /run
+bugs in a diff                /code-review
+simpler code                  /simplify
+write or fix a skill          /skills-claude
+conflicts after a rule edit   /doctor prompt-audit
+a workflow of agents          add "ultracode"
 ```
+
+A workflow stays small, under about 5 agents (`workflowSizeGuideline`), unless the prompt asks for more.
 
 ## Prompts to copy
 
@@ -97,6 +107,8 @@ Plan only: <work>. Show me the tickets and stop.
 ```text
 Build the plan in <plan path>.
 ```
+
+Plans are in `~/.local/state/plans/<repo>/`.
 
 Answer a question, change nothing:
 

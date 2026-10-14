@@ -42,7 +42,7 @@ enabled = false
 # [mcp_servers.context7.http_headers], untracked, and the merge leaves it alone.
 #
 # Do not also install a context7 plugin or stdio MCP — this is the only Codex
-# registration. Claude, Cursor and Grok use their own (not this file).
+# registration. Claude/Cursor/Grok use their plugins instead (not this file).
 [mcp_servers.context7]
 url = "https://mcp.context7.com/mcp"
 
@@ -51,9 +51,10 @@ url = "https://mcp.context7.com/mcp"
 url = "https://mcp.sentry.dev/mcp"
 
 # Paper Desktop MCP: plugin only — never also [mcp_servers.paper].
-# Install it with `codex plugin install paper-desktop@paper`. Declaring the
-# plugin here would enforce one half of a pair whose other half, the
-# downloaded package, this repo does not ship.
+# MCP URL is http://127.0.0.1:29979/mcp (Paper Desktop must have a file open).
+# Declare no [marketplaces.*] / [plugins.*] here: that would enforce half a pair
+# whose package this repo does not ship. Install Paper with
+# `codex plugin install paper-desktop@paper`.
 
 # ChatGPT Apps connectors (the built-in codex_apps server); github stays on.
 [apps.google_drive]
@@ -68,8 +69,8 @@ appearanceLightCodeThemeId = "vscode-plus"
 
 [desktop.appearanceDarkChromeTheme]
 accent = "#ff79c6"
-# What Codex writes for a hand-picked accent. Without it a fresh machine gets
-# the theme's own accent instead of this one.
+# What Codex writes for a hand-picked accent; without it a fresh machine gets the
+# theme's own accent.
 accentSource = "custom"
 contrast = 60
 ink = "#f8f8f2"

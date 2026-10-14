@@ -7,12 +7,7 @@
   "autoCompactWindow": 400000,
   "autoInstallIdeExtension": false,
   "autoMemoryEnabled": false,
-  "availableModels": [
-    "claude-fable-5-1",
-    "claude-haiku-5-5",
-    "claude-opus-5-5",
-    "claude-sonnet-5-5"
-  ],
+  "availableModels": ["claude-fable-5-1", "claude-haiku-5-5", "claude-opus-5-5", "claude-sonnet-5-5"],
   "deniedMcpServers": [
     {
       "serverUrl": "https://gmailmcp.googleapis.com/mcp/*"

@@ -1,0 +1,359 @@
+#!/usr/bin/env -S python3 -I
+"""Measure the speed and quality balance of Claude Code from local transcripts.
+
+Reads ~/.claude and every ~/.claude-* home. Read-only, standard library only.
+
+Usage: agent-stats [DAYS | YYYY-MM-DD]
+  DAYS        window of the last DAYS days, default 7
+  YYYY-MM-DD  window from local midnight of that date to now
+"""
+
+import glob
+import json
+import math
+import os
+import re
+import statistics
+import subprocess
+import sys
+import time
+from collections import Counter, defaultdict
+from concurrent.futures import ProcessPoolExecutor
+from datetime import datetime, timedelta, timezone
+
+USAGE = "agent-stats [DAYS | YYYY-MM-DD]"
+CORRECTION = re.compile(
+    r"\b(wrong|revert|undo|not what i asked|you didn'?t|you didn’t|why did you|that is not)\b",
+    re.IGNORECASE,
+)
+VERDICT = re.compile(r"VERDICT:\s*(not ready|ready)", re.IGNORECASE)
+FIX = re.compile(r"fix(e[sd])?\b", re.IGNORECASE)
+FEAT = re.compile(r"feat(ure)?\b", re.IGNORECASE)
+AGENT_ROWS = 12
+REPO_ROWS = 8
+
+
+def iso(dt):
+    """The transcript timestamp format, so window checks compare strings."""
+    return dt.astimezone(timezone.utc).strftime("%Y-%m-%dT%H:%M:%S.000Z")
+
+
+def parse_ts(ts):
+    return datetime.fromisoformat(ts.replace("Z", "+00:00"))
+
+
+def human_text(msg):
+    """The prompt text of a user message typed by a person, else None."""
+    content = msg.get("content")
+    if isinstance(content, str):
+        text = content
+    elif isinstance(content, list) and content:
+        if any(not isinstance(b, dict) or b.get("type") != "text" for b in content):
+            return None
+        text = "\n".join(b.get("text", "") for b in content)
+    else:
+        return None
+    text = text.lstrip()
+    if not text or text.startswith("<"):
+        return None
+    return text
+
+
+def scan(path, main, start):
+    """Summarise one transcript, counting only lines at or after start."""
+    first = last = None
+    requests = {}
+    prompts = {}
+    cwds = set()
+    spawned_verifier = False
+    verdict = None
+    with open(path, encoding="utf-8", errors="replace") as f:
+        for line in f:
+            try:
+                o = json.loads(line)
+            except ValueError:
+                continue
+            ts = o.get("timestamp")
+            if not isinstance(ts, str) or ts < start:
+                continue
+            if first is None or ts < first:
+                first = ts
+            if last is None or ts > last:
+                last = ts
+            kind = o.get("type")
+            msg = o.get("message")
+            if not isinstance(msg, dict):
+                continue
+            if kind == "assistant":
+                model = msg.get("model")
+                rid = o.get("requestId") or msg.get("id")
+                if rid and model and model != "<synthetic>":
+                    requests[rid] = (model, o.get("effort") or "none")
+                for block in msg.get("content") or []:
+                    if not isinstance(block, dict):
+                        continue
+                    if block.get("type") == "tool_use" and block.get("name") in (
+                        "Agent",
+                        "Task",
+                    ):
+                        if (block.get("input") or {}).get(
+                            "subagent_type"
+                        ) == "verifier":
+                            spawned_verifier = True
+                    elif verdict is None and block.get("type") == "text":
+                        m = VERDICT.search(block.get("text") or "")
+                        if m:
+                            verdict = m.group(1).lower()
+            elif main and kind == "user":
+                if isinstance(o.get("cwd"), str):
+                    cwds.add(o["cwd"])
+                if o.get("isMeta") or o.get("isCompactSummary"):
+                    continue
+                text = human_text(msg)
+                if text is not None:
+                    prompts[o.get("uuid") or ts] = bool(CORRECTION.search(text))
+    return {
+        "first": first,
+        "last": last,
+        "requests": requests,
+        "prompts": prompts,
+        "cwds": cwds,
+        "spawned_verifier": spawned_verifier,
+        "verdict": verdict,
+    }
+
+
+def collect(start_dt):
+    """Transcript paths touched since start: (path, is_main, session key, agent type)."""
+    cutoff = start_dt.timestamp()
+    homes = [os.path.expanduser("~/.claude")] + sorted(
+        glob.glob(os.path.expanduser("~/.claude-*"))
+    )
+    jobs = []
+    for home in homes:
+        projects = os.path.join(home, "projects")
+        for path in glob.iglob(os.path.join(projects, "*", "*.jsonl")):
+            if os.path.getmtime(path) >= cutoff:
+                jobs.append((path, True, path[: -len(".jsonl")], None))
+        pattern = os.path.join(projects, "*", "*", "subagents", "**", "agent-*.jsonl")
+        for path in glob.iglob(pattern, recursive=True):
+            if os.path.getmtime(path) < cutoff:
+                continue
+            session = path.split(os.sep + "subagents" + os.sep)[0]
+            agent_type = "unknown"
+            try:
+                with open(path[: -len(".jsonl")] + ".meta.json", encoding="utf-8") as f:
+                    agent_type = json.load(f).get("agentType") or "unknown"
+            except (OSError, ValueError):
+                pass
+            jobs.append((path, False, session, agent_type))
+    return jobs
+
+
+def pct(part, whole):
+    if not whole:
+        return "n/a"
+    share = 100 * part / whole
+    return "<1%" if 0 < share < 0.5 else f"{share:.0f}%"
+
+
+def dist(counter, strip=""):
+    """Values by frequency; shares only when there is more than one."""
+    total = sum(counter.values())
+    items = counter.most_common()
+    if len(items) == 1:
+        return items[0][0].removeprefix(strip)
+    return ", ".join(f"{k.removeprefix(strip)} {pct(v, total)}" for k, v in items)
+
+
+def p90(values):
+    ordered = sorted(values)
+    return ordered[max(0, math.ceil(0.9 * len(ordered)) - 1)]
+
+
+def git(args):
+    try:
+        out = subprocess.run(
+            ["git", *args], capture_output=True, text=True, timeout=30, check=False
+        )
+    except (OSError, subprocess.TimeoutExpired):
+        return None
+    return out.stdout if out.returncode == 0 else None
+
+
+def fix_after_feat(cwds, start_dt):
+    """Per repo: (fix commits within 48h after a feat commit, feat commits), in the window."""
+    repos = {}
+    for cwd in sorted(cwds):
+        if not os.path.isdir(cwd):
+            continue
+        common = git(
+            ["-C", cwd, "rev-parse", "--path-format=absolute", "--git-common-dir"]
+        )
+        if common:
+            common = os.path.realpath(common.strip())
+            name = os.path.basename(
+                os.path.dirname(common) if common.endswith(".git") else common
+            )
+            repos[common] = name
+    start = int(start_dt.timestamp())
+    since = f"@{start - 48 * 3600}"
+    rows = []
+    for common, name in repos.items():
+        log = git(
+            [
+                "--git-dir",
+                common,
+                "log",
+                "--branches",
+                f"--since={since}",
+                "--format=%ct%x09%s",
+            ]
+        )
+        if log is None:
+            continue
+        feats, fixes = [], []
+        for entry in log.splitlines():
+            stamp, _, subject = entry.partition("\t")
+            if FEAT.match(subject):
+                feats.append(int(stamp))
+            elif FIX.match(subject):
+                fixes.append(int(stamp))
+        late_fixes = sum(
+            1
+            for t in fixes
+            if t >= start and any(0 <= t - f <= 48 * 3600 for f in feats)
+        )
+        window_feats = sum(1 for t in feats if t >= start)
+        if late_fixes or window_feats:
+            rows.append((name, late_fixes, window_feats))
+    return rows
+
+
+def window_start(arg):
+    if re.fullmatch(r"\d+", arg):
+        return datetime.now(timezone.utc) - timedelta(days=int(arg))
+    try:
+        return datetime.strptime(arg, "%Y-%m-%d").astimezone()
+    except ValueError:
+        sys.exit(f"usage: {USAGE}")
+
+
+def main():
+    if len(sys.argv) > 2:
+        sys.exit(f"usage: {USAGE}")
+    began = time.monotonic()
+    start_dt = window_start(sys.argv[1] if len(sys.argv) == 2 else "7")
+    start = iso(start_dt)
+    jobs = collect(start_dt)
+    # Largest first, so one big file does not finish last on an idle pool.
+    jobs.sort(key=lambda j: os.path.getsize(j[0]), reverse=True)
+    with ProcessPoolExecutor() as pool:
+        results = list(
+            pool.map(
+                scan,
+                [j[0] for j in jobs],
+                [j[1] for j in jobs],
+                [start] * len(jobs),
+                chunksize=4,
+            )
+        )
+
+    sessions = set()
+    prompts = {}
+    cwds = set()
+    main_requests = {}
+    verifier_sessions = set()
+    runs = defaultdict(list)
+    agent_models = defaultdict(Counter)
+    agent_efforts = defaultdict(Counter)
+    verdicts = Counter()
+    for (path, is_main, session, agent_type), r in zip(jobs, results):
+        if r["first"] is None:
+            continue
+        if r["spawned_verifier"]:
+            verifier_sessions.add(session)
+        if is_main:
+            sessions.add(session)
+            prompts.update(r["prompts"])
+            cwds |= r["cwds"]
+            main_requests.update(r["requests"])
+            continue
+        minutes = (parse_ts(r["last"]) - parse_ts(r["first"])).total_seconds() / 60
+        runs[agent_type].append(minutes)
+        for model, effort in r["requests"].values():
+            agent_models[agent_type][model] += 1
+            agent_efforts[agent_type][effort] += 1
+        if agent_type == "verifier":
+            verdicts[r["verdict"] or "no verdict"] += 1
+
+    now = datetime.now().astimezone()
+    days = (now - start_dt).total_seconds() / 86400
+    out = [
+        (
+            f"Window {start_dt.astimezone():%Y-%m-%d %H:%M} to {now:%Y-%m-%d %H:%M} ({days:.1f} days), "
+            f"{len(jobs)} files in {time.monotonic() - began:.0f}s"
+        )
+    ]
+    n_prompts = len(prompts)
+    per = f"{n_prompts / len(sessions):.1f}" if sessions else "n/a"
+    out.append(
+        f"1. Sessions {len(sessions)}, human prompts {n_prompts} ({per} per session)"
+    )
+
+    out.append(
+        f"2. {'agent':<20} {'runs':>5} {'med_m':>6} {'p90_m':>6} {'hours':>6}  models | efforts"
+    )
+    ranked = sorted(runs, key=lambda t: len(runs[t]), reverse=True)
+    for agent_type in ranked[:AGENT_ROWS]:
+        mins = runs[agent_type]
+        out.append(
+            f"   {agent_type[:20]:<20} {len(mins):>5} {statistics.median(mins):>6.1f} {p90(mins):>6.1f} "
+            f"{sum(mins) / 60:>6.1f}  {dist(agent_models[agent_type], 'claude-')} | "
+            f"{dist(agent_efforts[agent_type])}"
+        )
+    rest = ranked[AGENT_ROWS:]
+    if rest:
+        n_rest = sum(len(runs[t]) for t in rest)
+        hours = sum(sum(runs[t]) for t in rest) / 60
+        out.append(f"   {len(rest)} more types: {n_rest} runs, {hours:.1f} hours")
+
+    efforts = Counter(e for _, e in main_requests.values())
+    models = Counter(m for m, _ in main_requests.values())
+    out.append(f"3. Main session requests {len(main_requests)}")
+    out.append(f"   effort: {dist(efforts) if efforts else 'n/a'}")
+    out.append(f"   model: {dist(models, 'claude-') if models else 'n/a'}")
+
+    v_hours = sum(runs.get("verifier", [])) / 60
+    w_hours = sum(runs.get("worker", [])) / 60
+    ratio = f"{v_hours / w_hours:.2f}" if w_hours else "n/a"
+    with_verifier = len(verifier_sessions & sessions)
+    out.append(
+        f"4. Verifier/worker hours {ratio} ({v_hours:.1f}h / {w_hours:.1f}h); "
+        f"sessions that started a verifier {with_verifier}/{len(sessions)} ({pct(with_verifier, len(sessions))})"
+    )
+
+    n_verdicts = sum(verdicts.values())
+    out.append(
+        f"5a. Verifier first verdict of {n_verdicts}: not ready {pct(verdicts['not ready'], n_verdicts)} "
+        f"({verdicts['not ready']}), ready {pct(verdicts['ready'], n_verdicts)} ({verdicts['ready']}), "
+        f"none {verdicts['no verdict']}"
+    )
+    corrections = sum(prompts.values())
+    out.append(
+        f"5b. Correction prompts {corrections}/{n_prompts} ({pct(corrections, n_prompts)})"
+    )
+    rows = sorted(fix_after_feat(cwds, start_dt), key=lambda r: (-r[1], -r[2], r[0]))
+    out.append(
+        f"5c. fix within 48h after a feat / feat commits: {sum(r[1] for r in rows)} / {sum(r[2] for r in rows)} "
+        f"in {len(rows)} repos"
+    )
+    for name, fixes, feats in rows[:REPO_ROWS]:
+        out.append(f"   {name[:28]:<28} {fixes:>4} / {feats}")
+    if len(rows) > REPO_ROWS:
+        out.append(f"   {len(rows) - REPO_ROWS} more repos")
+    print("\n".join(out))
+
+
+if __name__ == "__main__":
+    main()

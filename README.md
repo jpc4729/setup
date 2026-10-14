@@ -76,7 +76,7 @@ cd setup
 - Copies each tool folder into its home. A replaced file stays beside it as `<name>.bak`.
 - Merges the five settings files that the apps rewrite. Repo keys win, and the app's own keys stay.
 - Copies the skills into `~/.agents/skills` and `~/.cursor/skills`, and links them into `~/.claude/skills`.
-- Copies `bin/quiet` into `~/.local/bin`.
+- Copies `bin/quiet` and `bin/agent-stats` into `~/.local/bin`.
 - On macOS, installs Codex's `requirements.toml` as a managed preference.
 - Never links and never deletes. A link would carry agent state back into the repo.
 
@@ -91,6 +91,8 @@ opencode/          → ~/.config/opencode    rules, config, seven agents
 skills/my-skills/  → ~/.agents/skills      skills I wrote or adapted
 skills/vendored/   → ~/.agents/skills      vendored skills, pinned in skills-lock.json
 bin/quiet          → ~/.local/bin/quiet    one line on a pass, full output on a failure
+bin/agent-stats    → ~/.local/bin/         Claude Code agent runs, minutes, efforts and quality guards
+AGENTS.md                                  rules for an agent that edits this repo
 ```
 
 ## Rules

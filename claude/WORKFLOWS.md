@@ -58,7 +58,8 @@ a bug                         /diagnose <symptom>
 a big, unclear idea           /wayfinder <idea>
 a question, no changes        /read-only <question>
 see the app run               /run
-bugs in a diff                /code-review
+bugs in a diff or an area     "find bugs in <diff or path>"
+a deeper bug review           /code-review
 simpler code                  /simplify
 write or fix a skill          /skills-claude
 conflicts after a rule edit   /doctor prompt-audit
@@ -94,7 +95,7 @@ Find and fix a bug:
 Review a branch before a pull request:
 
 ```text
-Review this branch against main for bugs, missing error paths and drift from <goal>.
+Review this branch against main for bugs and missing error paths.
 Fix what the code confirms, then update the docs the change made wrong.
 ```
 

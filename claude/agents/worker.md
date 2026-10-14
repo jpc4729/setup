@@ -3,7 +3,7 @@ name: worker
 description: >
   Does work you hand off, in place of `general-purpose`: research, a code search, a multi-step task, a plan ticket, or a code change carried to a passing check. Brief it with the goal and why, what done looks like, what is out of scope, what you know, and the decisions made; for one part of a split change, name the files it owns. Not for a first look before a choice (`scout`) or a review of finished work (`verifier`).
 model: claude-opus-5-5
-effort: high
+effort: medium
 omitClaudeMd: true
 ---
 

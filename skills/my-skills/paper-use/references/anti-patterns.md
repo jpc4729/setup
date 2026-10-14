@@ -28,7 +28,7 @@ No index. The reader's first move is to click every page. Cause: the file grew. 
 
 ## Canvas level
 
-Sprawl. Artboards wherever the tool dropped them. Cause: `create_artboard` places the board itself and nobody corrected it. Detection: C7 — ordinals disagree with `worldY`/`worldX` order. Fix: re-grid per L8 with `update_styles({ top, left })`.
+Sprawl. Artboards wherever the tool dropped them. Cause: `create_artboard` places the board itself and nobody corrected it. Detection: C7 — ordinals disagree with `worldY`/`worldX` order. Fix: re-grid per L8 with `update_styles({ fileId, updates: [{ nodeIds, styles: { top, left } }] })`.
 
 Loose nodes at the page root. A card floating outside every artboard. Cause: `write_html` targeted `rootNodeId`. Detection: C7. Fix: once the user agrees, `move_nodes` into its artboard.
 

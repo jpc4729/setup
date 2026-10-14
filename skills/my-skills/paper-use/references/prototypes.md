@@ -22,7 +22,7 @@ No tool deletes a page, so create a prototype page only after a yes (L10).
 
 ## Lifecycle
 
-1. Open. Post the brief and the structural plan: which boards it forks, which tokens it adds, and the page it needs. Wait for a yes (L10). Then `create_page({ fileId, name })`, keep the `pageId`, and confirm it with `get_basic_info({ fileId, pageId })`.
+1. Open. Post the brief and the structural plan: which boards it forks, which tokens it adds, and the page it needs. Wait for a yes (L10). Then `create_page({ fileId, name })`, keep the `pageId`, move the page to its place in the list with `arrange_pages` (`page-taxonomy.md`), and confirm it with `get_basic_info({ fileId, pageId })`.
 2. Fork, never draw from blank. `duplicate_nodes` each code-owned board the initiative changes, with `parentId` set to the prototype page's `rootNodeId`. The copy lands in an empty spot on that page, and `descendantIdMap` maps every source node to its copy. Record the fork in the manifest: initiative, slug, page, source board, copy, and the commit the source was mirrored from.
 3. Fork the components too. A changed component's sheet is forked like a board. Its cells on the prototype page are the canonical copies for that initiative; clone from them there, and push later changes with the propagate procedure (`components.md`). The components page is code-owned and is never edited.
 4. Design. A redesign of a flow follows the review layout: evidence, numbered issues and notes, with each redesign under the screen it replaces (`review.md`). Explore, Tweak and Revise all apply (`iterate.md`). Names, grid and review checkpoints apply as on any page.
@@ -40,7 +40,7 @@ Tokens are file-wide and live. A prototype that edits `--color-primary` restyles
 - A prototype adds tokens and never edits one it did not create. The one family it adds without `proto-` is `--color-annotation-*`, for markers, captions and notes (`naming.md`).
 - New tokens carry `proto-` and the initiative's slug after the namespace (`naming.md`): `--color-proto-checkout-accent`, `--spacing-proto-checkout-gutter`. A `description` names the initiative. `get_tokens({ fileId, namePattern: "*-proto-checkout-*" })` lists them, and nothing else matches.
 - Where the prototype only renames a role, alias the existing token: `var(--color-primary)`.
-- On close, the code defines the real tokens, the re-mirror creates them, and the prototype's tokens are deleted with `set_tokens({ delete: true })` once no node uses them (`find_nodes` on the token).
+- On close, the code defines the real tokens, the re-mirror creates them, and the prototype's tokens are deleted with `set_tokens({ fileId, tokens: [{ name, delete: true }] })` once no node uses them (`find_nodes` on the token).
 
 ## The token redesign file
 

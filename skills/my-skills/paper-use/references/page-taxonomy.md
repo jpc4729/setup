@@ -30,7 +30,7 @@ Create only the pages the project has. `00 · Index` earns its place from the mo
 
 A flow is the set of screens a user moves through for one job: sign-in, checkout, settings. It is the right unit for a page — not one screen, and not the whole product.
 
-- Not one page per screen. No tool reorders or deletes a page, so every page an agent makes is permanent until someone removes it by hand. A hundred screen pages are a hundred manual cleanups.
+- Not one page per screen. No tool deletes a page, so every page an agent makes is permanent until someone removes it by hand. A hundred screen pages are a hundred manual cleanups.
 - Not one page for everything. `get_basic_info` returns every artboard of the page on each call. Automatic placement fills one ever-larger canvas, and two purposes share one list.
 - What a flow page buys through the MCP. `get_basic_info` stays small. `find_nodes`, `list_comment_threads`, `list_comment_thread_authors` and `export` all take a `pageId`, so "the raw colours in checkout" or "the open comments on sign-in" is one call. New and duplicated boards land in a small canvas. Agents can work one page each, in parallel, without meeting on the canvas.
 - Split a page when it holds two flows, or when it passes about forty artboards. Split by sub-flow, never by state.
@@ -70,11 +70,23 @@ A new page needs one of these, and nothing else does.
 
 Not justified: a variant of a screen (that is an artboard), a screen (that is an artboard on its flow's page), a platform of the same layout (that is an ordinal band), a person, a sprint, a date, "v2", or "scratch".
 
+The guide invites a page for each distinct body of work. Here, a body of work gets a page only when it is one of the four above.
+
 ## Numeric prefixes
 
-Pages cannot be reordered through the MCP, so a numeric prefix is the only ordering an agent can impose. Use one when the file has more than five pages, or when the user already uses one. Once one page carries a prefix, every page carries one; `rename_pages` adds it to the existing pages in one batch, after a yes (L10). Leave gaps of ten between bands so a flow can be inserted without renumbering the file.
+A numeric prefix gives each page its place in the list and in every reference to it. Use one when the file has more than five pages, or when the user already uses one. Once one page carries a prefix, every page carries one; `update_pages` adds it to the existing pages in one batch, after a yes (L10). Leave gaps of ten between bands so a flow can be inserted without renumbering the file.
+
+The page list runs in the order of the canonical set, which the prefixes spell out. `create_page` adds a page after the one the user is viewing, so `arrange_pages` then moves it to its place in the list. A page this session created moves freely; a move of any other page waits for the same yes as a rename (L10).
 
 With five pages or fewer, plain purpose names are cleaner and are fully compliant.
+
+## Dividers and icons
+
+Both decorate the page list; neither changes what a page holds.
+
+- A divider may separate the bands of a prefixed file: the file-wide pages, the flows, the `Proto` pages, and Explorations with the Archive. Add dividers only as part of a page map the user said yes to.
+- Icons follow the file. A file with none gets at most `paper` on the archive page, the meaning the tool gives that icon.
+- Neither carries owner or status. The Index says the owner, and the artboard name says the status.
 
 ## What a page must not hold
 

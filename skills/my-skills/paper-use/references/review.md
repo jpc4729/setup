@@ -29,7 +29,7 @@ C1 v2     C3 v2                    version 2, under the same columns
 - Rows. Each row starts 80px below the lowest board above it. A second state of a screen stacks under its first, in the same column.
 - Versions. Iteration on the same screens adds a notes board for the new version and a redesign row below the band's lowest board. Earlier versions stay where they are.
 - Flows. A second flow gets its own band, 80px to the right or below, with its own ordinals and its own letter.
-- Placing boards. `create_artboard` and `duplicate_nodes` choose their own spot, so move each board to its column with `update_styles({ top, left })`. Heights of `fit-content` boards read null on a page the user is not viewing: place the boards while the user views the page, or keep fixed heights until they are placed (L8).
+- Placing boards. `create_artboard` and `duplicate_nodes` choose their own spot, so move each board to its column with `update_styles({ fileId, updates: [{ nodeIds, styles: { top, left } }] })`. Heights of `fit-content` boards read null on a page the user is not viewing: place the boards while the user views the page, or keep fixed heights until they are placed (L8).
 - Export. `export_combined_pdf` pages row by row across the whole page. Export one band at a time to keep each PDF in reading order.
 
 ## Evidence: where the screenshots come from

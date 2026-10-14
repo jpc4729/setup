@@ -49,7 +49,7 @@ Within a page:
 
 - Author the richest state of a screen once. Derive loading, empty and error with `duplicate_nodes`, then `set_text_content` and `update_styles` through the returned `descendantIdMap`. That is cheaper than a fresh `write_html` per state, and the states cannot drift apart.
 - Batch size. The guide's one-visual-group rule serves a user watching the canvas. A wave 2 agent writes on a page nobody is viewing: one section per `write_html` call — a header, a list, a dock — up to about 60 lines of HTML. On a page the user is viewing, the guide's rule holds.
-- A new page, after the yes of step 2 → `create_page`, keep the returned `pageId`, pass it to `create_artboard`, and confirm with `get_basic_info({ pageId })` before the first write of every batch (L3).
+- A new page, after the yes of step 2 → `create_page`, keep the returned `pageId`, move the page to its place in the list with `arrange_pages` (`page-taxonomy.md`), pass the `pageId` to `create_artboard`, and confirm with `get_basic_info({ pageId })` before the first write of every batch (L3).
 
 These pages are code-owned from here on. A change on top of them is a prototype (`prototypes.md`).
 

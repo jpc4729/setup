@@ -1,10 +1,12 @@
 # What the Paper MCP can and cannot do
 
-The tool descriptions are the reference for parameters, defaults and formats, and this file does not repeat them. It holds what they leave out: what no tool does, what was seen live, and where the guide and the tools disagree. Checked against the tool descriptions and the guide on 2026-10-09; lines marked _exercised_ were run live in a scratch file on 2026-09-24. Every tool mechanism the laws in `SKILL.md` rely on traces to a line here or to a tool description; the owner and prototype rules are policy, not tool facts. A tool result that contradicts a line below wins; say so in the ledger.
+The tool descriptions are the reference for parameters, defaults and formats, and this file does not repeat them. It holds what they leave out: what no tool does, what was seen live, and where the guide and the tools disagree. Checked against the tool descriptions and the guide on 2026-10-14; lines marked _exercised_ were run live in a scratch file on 2026-09-24. Every tool mechanism the laws in `SKILL.md` rely on traces to a line here or to a tool description; the owner and prototype rules are policy, not tool facts. A tool result that contradicts a line below wins; say so in the ledger.
+
+On 2026-10-14 the server listed 37 tools: `arrange_pages`, `create_artboard`, `create_file`, `create_page`, `create_tokens`, `delete_nodes`, `duplicate_nodes`, `export`, `export_combined_pdf`, `find_nodes`, `finish_working_on_nodes`, `get_basic_info`, `get_children`, `get_comment_thread`, `get_computed_styles`, `get_fill_image`, `get_font_family_info`, `get_guide`, `get_jsx`, `get_node_info`, `get_screenshot`, `get_selection`, `get_tokens`, `get_tree_summary`, `list_comment_thread_authors`, `list_comment_threads`, `list_resources`, `move_nodes`, `open_file`, `rename_nodes`, `rename_resource`, `set_comment_thread_status`, `set_text_content`, `set_tokens`, `update_pages`, `update_styles`, `write_html`. A tool the server lists that is not here, or a name here that it no longer lists, means this skill is behind: check the tool descriptions before relying on a line below.
 
 ## What no tool does
 
-- Reorder or delete a page. Page order is the user's; a numeric prefix is the only order an agent controls.
+- Delete a page. `arrange_pages` reorders the page list and adds or removes dividers, but it never deletes a page.
 - Change the page the user is viewing. `open_file` applies its `pageId` only when the file was not open yet.
 - `open_file` on a file that is not open yet opens it and makes it the active file: the user's view moves there. _Exercised._
 - Delete a file.
@@ -49,10 +51,10 @@ The tool descriptions are the reference for parameters, defaults and formats, an
 
 ## Reading
 
-- `get_jsx` output carries neither node ids nor layer names, although the guide says each element has an id. Read names and ids from `get_tree_summary`, and match its elements by order and text. _Exercised._
+- `get_jsx` output carries neither node ids nor layer names, although the guide says each element has an id. Read names and ids from `get_tree_summary`, and match its elements by order and text. _Exercised_, again on 2026-10-14.
 - A family Paper applied is stored first in the stack: `"Geist", system-ui, sans-serif`. A bare `system-ui, sans-serif` means it fell back. _Exercised._
 
 ## Search
 
 - `find_nodes` results do not name the page. Use one file-wide call for counts and existence, and a `pageId`-scoped call when a report needs locations.
-- A wildcard token query finds every node bound to a token family: `styleValue: "*-proto-<slug>-*"` returns only the nodes using that prototype's tokens, and `get_tokens({ namePattern: "*-proto-<slug>-*" })` lists the tokens. _Exercised._
+- A wildcard token query finds every node bound to a token family: `styleValue: "*-proto-<slug>-*"` returns only the nodes using that prototype's tokens, and `get_tokens({ fileId, namePattern: "*-proto-<slug>-*" })` lists the tokens. _Exercised._

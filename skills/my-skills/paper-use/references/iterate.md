@@ -8,7 +8,7 @@ A file is mirrored when the repo holds its manifest (`mirroring.md`). In a mirro
 
 For "try three directions", "explore", or a redesign that is not decided yet.
 
-1. Work on the explorations page, or on the initiative's prototype page when one exists (`page-taxonomy.md`). Neither exists yet → create one only after a yes (L10), because no tool deletes a page.
+1. Work on the explorations page, or on the initiative's prototype page when one exists (`page-taxonomy.md`). Neither exists yet → create one only after a yes (L10), because no tool deletes a page, and move it to its place in the list with `arrange_pages` (`page-taxonomy.md`).
 2. One brief per direction, posted before its first mutation. The guide requires directions that differ in point of view, not in one colour.
 3. One row of artboards per direction, named `NN · <Surface> — <direction>`, 80px apart (L8). When a direction changes the look but not the content, start from `duplicate_nodes` of the existing board, not from blank HTML.
 4. L5 and L6 pause here: literals and one-off elements are allowed while nothing is decided. L4, L8 and L9 do not pause.

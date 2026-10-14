@@ -22,7 +22,7 @@ No tool deletes a page, so create a prototype page only after a yes (L10).
 
 ## Lifecycle
 
-1. Open. Post the brief and the structural plan: which boards it forks, which tokens it adds, and the page it needs. Wait for a yes (L10). Then `create_page({ fileId, name })`, keep the `pageId`, move the page to its place in the list with `arrange_pages` (`page-taxonomy.md`), and confirm it with `get_basic_info({ fileId, pageId })`.
+1. Open. Post the brief and the structural plan: which boards it forks, which tokens it adds, and the page it needs. Wait for a yes (L10). Then `create_page({ fileId, name, icon: "blueprint" })`, keep the `pageId`, move the page to its place in the list with `arrange_pages`, with a divider when it is the first `Proto` page (`page-taxonomy.md`), and confirm it with `get_basic_info({ fileId, pageId })`.
 2. Fork, never draw from blank. `duplicate_nodes` each code-owned board the initiative changes, with `parentId` set to the prototype page's `rootNodeId`. The copy lands in an empty spot on that page, and `descendantIdMap` maps every source node to its copy. Record the fork in the manifest: initiative, slug, page, source board, copy, and the commit the source was mirrored from.
 3. Fork the components too. A changed component's sheet is forked like a board. Its cells on the prototype page are the canonical copies for that initiative; clone from them there, and push later changes with the propagate procedure (`components.md`). The components page is code-owned and is never edited.
 4. Design. A redesign of a flow follows the review layout: evidence, numbered issues and notes, with each redesign under the screen it replaces (`review.md`). Explore, Tweak and Revise all apply (`iterate.md`). Names, grid and review checkpoints apply as on any page.
@@ -31,7 +31,7 @@ No tool deletes a page, so create a prototype page only after a yes (L10).
    - It matches the running UI — the implementation check band shows no differences (`review.md`) → promote it. First swap its prototype tokens for the ones the re-mirror created: `find_nodes({ fileId, nodeId, filters: [{ styleValue: "*-proto-<slug>-*" }] })` (_tested_), then `update_styles` to the real token. Re-point its clones: each clone of a forked cell is regenerated from the matching components-page cell (`components.md`, Propagate, scoped to the board), and the manifest's Canonical names those cells. Then `move_nodes` onto its code-owned page, IDs kept, and re-grid (L8), because a move keeps the world position. The mirrored board it replaces moves to the archive, dated.
    - It does not match → re-author from the code as usual, and move the prototype board to the archive, dated.
    - The user's ask for the re-mirror covers these moves, and the ledger lists each one. The manifest takes the new node ids and the shipping commit.
-7. Retire. After a yes that names the boards, move what is left — losing directions, unshipped boards — to the archive, dated (L9). The page is then empty: tell the user to delete it in the app; no tool can.
+7. Retire. After a yes that names the boards, move what is left — losing directions, unshipped boards — to the archive, dated (L9). The page is then empty: tell the user to delete it in the app; no tool can. When it was the last `Proto` page, drop the divider of its band with `arrange_pages` once the page is gone.
 
 ## Tokens: the one trap
 

@@ -24,6 +24,8 @@ Page-per-variant. A page for each state or screen of one flow, or for each width
 
 The one-page file. Every flow, audit and proposal on one canvas. Cause: the file started small and nobody split it. Detection: one page holding several flows, or about forty artboards. Paper-specific: every `get_basic_info` returns every board, placement fills one ever-larger canvas, and no `pageId` can scope a search, a comment list or an export. Fix: one page per flow; with a yes, `move_nodes` each board to its page, then re-grid each page.
 
+The shuffled page list. `Page 1`, `80 · Explorations`, `11 · Home`, `10 · Article`, `02 · Components`, `00 · Index`. Cause: `create_page` puts each new page after the page in view, and nobody moved it. Detection: C3, prefixes out of order in `get_basic_info.pages[]`. Fix: after a yes (L10), one `arrange_pages` call with the whole list in prefix order and a divider at each band boundary (`page-taxonomy.md`).
+
 No index. The reader's first move is to click every page. Cause: the file grew. Detection: two or more pages and no index page. Fix: `00 · Index`, one artboard, page map plus links out.
 
 ## Canvas level

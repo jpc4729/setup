@@ -14,15 +14,21 @@ No project needs every page below. Start from the smallest shape that fits, and 
 ## The canonical set
 
 ```text
-00 · Index                 what the file is, the page map with each page's owner, the release shown, links out
-01 · Foundations           token specimens — colour ramps, type scale, spacing, radii, elevation
-02 · Components            one sheet per component; each cell is a canonical copy (L5)
-10 · <Flow>                one page per flow; its artboards are that flow's screens and states
-11 · <Flow>                …
-50 · Proto — <Initiative>  one per live initiative — a review, a redesign — deleted by hand when it ships
-80 · Explorations          dated, throwaway, referenced by nothing
-90 · Archive               superseded work, dated
+page                       icon       holds
+00 · Index                 info       what the file is, the page map with each page's owner, the release shown, links out
+01 · Foundations           swatches   token specimens — colour ramps, type scale, spacing, radii, elevation
+02 · Components            design     one sheet per component; each cell is a canonical copy (L5)
+── divider
+10 · <Flow>                           one page per flow; its artboards are that flow's screens and states
+11 · <Flow>                           …
+── divider
+50 · Proto — <Initiative>  blueprint  one per live initiative — a review, a redesign — deleted by hand when it ships
+── divider
+80 · Explorations                     dated, throwaway, referenced by nothing
+90 · Archive               paper      superseded work, dated
 ```
+
+The icons and dividers are part of the set: `Dividers and icons`, below.
 
 Create only the pages the project has. `00 · Index` earns its place from the moment a second page exists; `02 · Components` from the moment a second flow reuses anything; a `Proto` page from the moment an initiative — a flow review, a redesign, a change to a mirrored product — should not disturb the pages it judges (`review.md`, `prototypes.md`).
 
@@ -82,11 +88,21 @@ With five pages or fewer, plain purpose names are cleaner and are fully complian
 
 ## Dividers and icons
 
-Both decorate the page list; neither changes what a page holds.
+Both decorate the page list; neither changes what a page holds, and neither carries owner or status. The Index says the owner, and the artboard name says the status.
 
-- A divider may separate the bands of a prefixed file: the file-wide pages, the flows, the `Proto` pages, and Explorations with the Archive. Add dividers only as part of a page map the user said yes to.
-- Icons follow the file. A file with none gets at most `paper` on the archive page, the meaning the tool gives that icon.
-- Neither carries owner or status. The Index says the owner, and the artboard name says the status.
+Dividers:
+
+- Only in a file with prefixes. A smaller file has no bands to separate.
+- One divider at each band boundary of the canonical set: after the file-wide pages, after the flows, and after the `Proto` pages. Never one at the top or bottom of the list, next to another divider, or around a band with no page.
+- A divider takes no name: the prefixes on each side name the band. Read its id from `get_basic_info.pages[]`; that id is not a `pageId`.
+- Set dividers in the `arrange_pages` call that sets the order: `{ "type": "divider" }` in `order` where a new one goes, and the id of each one to drop in `removeDividerIds`. The call takes the whole list, so read `pages[]` with `get_basic_info` right before it.
+- A band that gets its first page, such as the first `Proto` page, gets its divider in the call that moves that page into place. A band that loses its last page loses its divider in the next `arrange_pages` call.
+
+Icons:
+
+- Set the icon when the page is created, as with its name (L4): `create_page({ fileId, name, icon })`. `update_pages` changes it later, and `icon: null` restores the default.
+- The map is in the canonical set above: an icon marks each page that is not a flow and not an exploration, so the flows stay plain and the icons stay few, as the guide asks. A page outside the set takes no icon.
+- A file that already uses icons keeps its own map: follow it. Giving the map to the existing pages of a file changes pages a human made, so it waits for a yes (L10).
 
 ## What a page must not hold
 

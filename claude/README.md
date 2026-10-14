@@ -13,15 +13,15 @@ The idea: fast by default. Heavy checks run only when a mistake costs much. Hard
 
 - `CLAUDE.md`: the rules for the main session. One short core, because less text means better adherence.
 - `settings.json`: merged into `~/.claude/settings.json` by `install.sh`. Repo keys win, and Claude Code keeps the keys it writes.
-- `agents/`: `scout`, `verifier`, `worker`, `planner` and `clerk`.
-- `hooks/`: one hook lets a subagent start only a `clerk`.
+- `agents/`: `scout`, `verifier`, `worker`, `planner`, `clerk`, `researcher`, `reviewer` and `browser`.
+- `hooks/`: `nested-agents.sh` lets a subagent start only a `clerk` or a `browser`, and `bash-reads.sh` refuses a file read through `cat`, `sed`, `head`, `tail` or `nl`.
 - `statusline-command.sh`: the status line. Profile, folder, branch, model, tokens, rate limits, prompt cache, diff and age in one line. Each part stays dim until it needs you.
 - [`../bin/quiet`](../bin/quiet), installed in `~/.local/bin`: `quiet <command>` prints one line on a pass and the full output on a failure, to save context.
 
 ## The rules, in short
 
 - Senior quality in the fewest steps: correct first, then fast.
-- One flow for every task: understand, plan, build, check, review once, report. A small task skips the plan, and Claude builds it itself. With a plan, a fresh `worker` builds each ticket, and two `verifier` agents review the whole diff once.
+- One flow for every task: understand, plan, build, check, review once, report. A small task skips the plan, and Claude builds it itself. With a plan, a fresh `worker` builds each ticket, and one `verifier` reviews the whole diff once.
 - Claude asks only what the facts cannot settle, in one round with its picks, and goes on. It waits only when a wrong pick is costly and hard to undo.
 - One review and one fix round, never a score or a loop. One task a session: Claude tells you to `/clear` between unrelated tasks, and to `/handoff` near 300k tokens.
 - Claude reads the change before it runs anything. Checks run through `quiet`, only on the changed files, and on the whole repo only when the change can break code outside them.
@@ -38,13 +38,16 @@ The idea: fast by default. Heavy checks run only when a mistake costs much. Hard
 - `worker` (Opus 5.5, `high`): does the work that Claude delegates, in place of `general-purpose`: research, code search, multi-step tasks and code changes. It knows where to find the repo's coding rules, so a brief does not repeat them. It commits, pushes and opens the pull request when the brief says that you asked.
 - `planner` (Opus 5.5, `high`): writes or revises one plan of tickets in `~/.local/state/plans/<repo>/`, when the work needs more than one ticket. A fresh `worker` builds each ticket. The file is outside the repo, so nothing commits it. Each ticket fits one fresh session, so the plan has no session owner.
 - `clerk` (Haiku 5.5, `high`): does one narrow task that the parent checks, such as a summary, a list, a count or a change the brief spells out. Several run at once. It costs at least 20 times less than Opus 5.5 for a prompt up to 100K tokens, and at least 4 times less above that, and it is the fastest model. It is weaker at agentic coding, so it gets no judgment, design or review. At `low`, Haiku more often skips a search or stops early.
+- `researcher` (Sonnet 5.5, `high`): answers one question from the web and current docs, and gives each fact with its URL and the date of the source. Read-only, with no code in the repo.
+- `reviewer` (Opus 5.5, `high`): finds the defects in a diff or an area of code, most severe first, each with the input or state that breaks it and its evidence. It does not fix. Unlike `verifier`, it starts from no list of claims.
+- `browser` (Sonnet 5.5, `high`): checks a web page or app in a real browser with the `agent-browser` CLI, and gives `PASS` or `FAIL` for each expected result with a screenshot. It changes no code.
 
 How they work together:
 
-- All five set `omitClaudeMd: true`, because main-session rules such as "run the checks" or "ask me" would fight their jobs. Each reads the repo's `AGENTS.md` and `CLAUDE.md` itself, except `clerk`, whose brief is all its context.
+- All eight set `omitClaudeMd: true`, because main-session rules such as "run the checks" or "ask me" would fight their jobs. Each reads the repo's `AGENTS.md` and `CLAUDE.md` itself, except `clerk`, `researcher` and `browser`, whose brief is all their context.
 - None sets `maxTurns`, so each runs until its task is done.
-- `scout`, `worker`, `verifier` and `planner` can start a `clerk` with no round trip to the main session. `hooks/nested-agents.sh` refuses any other agent type and any `model` override from them, because Claude Code ignores the type list in `Agent(...)` in subagent frontmatter. A `clerk` starts nothing, and `CLAUDE_CODE_MAX_SUBAGENT_SPAWN_DEPTH=2` stops a deeper chain.
-- `scout` and `verifier` have no Edit or Write tool, and tell their clerks to change nothing: `scout` maps before you choose, and `verifier` must not fix what it judges.
+- `scout`, `planner` and `reviewer` can start a `clerk`, and `worker` and `verifier` a `clerk` or a `browser`, with no round trip to the main session. `hooks/nested-agents.sh` refuses any other agent type and any `model` override from them, because Claude Code ignores the type list in `Agent(...)` in subagent frontmatter. A `clerk`, `researcher` or `browser` starts nothing, and `CLAUDE_CODE_MAX_SUBAGENT_SPAWN_DEPTH=2` stops a deeper chain.
+- `scout`, `verifier`, `reviewer`, `researcher` and `browser` have no Edit or Write tool. `scout`, `verifier` and `reviewer` tell their clerks to change nothing: `scout` maps before you choose, and `verifier` and `reviewer` must not fix what they judge.
 - Each prompt follows the style of the built-in `general-purpose` prompt: an opening paragraph, then plain labeled lists such as `Your strengths:` and `Guidelines:`.
 
 ## Settings

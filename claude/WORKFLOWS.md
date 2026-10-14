@@ -31,7 +31,7 @@ The same flow for every task. A small task skips the plan.
         |
         v
 +----------------+   small: Claude reads its diff
-| 5. Review once |   plan or risky: verifiers, 1 fix round
+| 5. Review once |   plan or costly: 1 verifier, 1 fix round
 +----------------+   no scores, no loops
         |
         v
@@ -126,6 +126,12 @@ Check a page in a real browser:
 
 ```text
 <UI change>. Check it in agent-browser at <url> and show a screenshot.
+```
+
+A long job toward one number:
+
+```text
+/goal <number> reaches <target>, measured by <command>. Make one change at a time and measure after each. Do not delete a feature or a test. Stop after 50 turns. This goal overrides the "two fixes that do not help" stop.
 ```
 
 Continue in a fresh session:

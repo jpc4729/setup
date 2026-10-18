@@ -28,6 +28,7 @@
     "context7@claude-plugins-official": true,
     "paper-desktop@paper": true,
     "rust-analyzer-lsp@claude-plugins-official": true,
+    "swift-lsp@claude-plugins-official": true,
     "typescript-lsp@claude-plugins-official": true
   },
   "enforceAvailableModels": true,
@@ -42,6 +43,12 @@
     "GIT_SEQUENCE_EDITOR": "true"
   },
   "extraKnownMarketplaces": {
+    "claude-plugins-official": {
+      "source": {
+        "repo": "anthropics/claude-plugins-official",
+        "source": "github"
+      }
+    },
     "paper": {
       "source": {
         "repo": "paper-design/agent-plugins",

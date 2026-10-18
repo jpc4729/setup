@@ -64,7 +64,7 @@ How they work together:
 - Quiet and private: Concise output style. No spinner tips, feedback survey or error reports. No claude.ai connectors or skill sync, no Gmail, Calendar or Drive MCP, and no remote control. Auto memory is off, so what Claude knows is in files you can read.
 - History: Claude Code's default of 30 days. Older transcripts, checkpoints and plans are deleted at startup.
 - Real edits: `CLAUDE_CODE_THRIFTY_SONIC=0`, so Claude edits with Edit and Write, not `sed`. The docs do not list this switch. It turns off the `tengu_thrifty_sonic` test, as read in the 2.1.293 binary, so check it again after an update.
-- Plugins: context7 for current library docs, TypeScript and Rust LSP, Paper for design, and you-should-know, a side agent that flags what you might miss.
+- Plugins: context7 for current library docs, TypeScript, Rust and Swift LSP, Paper for design, and you-should-know, a side agent that flags what you might miss.
 
 ## Change it
 

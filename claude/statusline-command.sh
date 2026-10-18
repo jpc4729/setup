@@ -22,7 +22,7 @@ settings="${CLAUDE_CONFIG_DIR:-$HOME/.claude}/settings.json"
 # control characters, so a name can neither break the split nor print an
 # escape sequence.
 IFS=$'\x1f' read -r cwd model ctx_size compact_window lines_added lines_removed input_tokens cache_create cache_read duration_ms effort \
-  five_pct five_reset week_pct week_reset cache_seen cache_expires < <(
+  five_pct five_reset week_pct week_reset cache_seen cache_expires cache_ttl < <(
     jq -r --rawfile settings "$settings" '
     def clean: gsub("[[:cntrl:]]"; "");
     # The auto-compact window as Claude Code picks it from settings: the
@@ -49,7 +49,8 @@ IFS=$'\x1f' read -r cwd model ctx_size compact_window lines_added lines_removed 
       (.rate_limits.seven_day.used_percentage // -1 | round),
       (.rate_limits.seven_day.resets_at // 0 | floor),
       (.prompt_cache.caching_observed // false),
-      (.prompt_cache.expires_at // 0 | floor)
+      (.prompt_cache.expires_at // 0 | floor),
+      (.prompt_cache.ttl // "" | clean)
     ] | map(tostring) | join("\u001f")
   ' <<< "$input"
   )
@@ -137,9 +138,10 @@ fmt_tokens() {
 
 # Context tokens — used_tokens is the input-only sum that matches used_percentage
 used_tokens=$((input_tokens + cache_create + cache_read))
-# The JSON's context_window_size always reports the model's native window (1M),
-# even when an auto-compact window lowers the effective ceiling. Use that window
-# as /max so the display matches where auto-compact fires. As in Claude Code,
+# The JSON's context_window_size reports the model's full window (200k, or 1M
+# with extended context), even when an auto-compact window lowers the effective
+# ceiling. Use that window as /max so the display matches where auto-compact
+# fires. As in Claude Code,
 # CLAUDE_CODE_AUTO_COMPACT_WINDOW outranks the settings, 0 is ignored, and a
 # value below 100000 counts as 100000. A leading zero is ignored too, so bash
 # never reads the value as octal.
@@ -209,16 +211,22 @@ add_limit 5h "$five_pct" "$five_reset"
 add_limit 7d "$week_pct" "$week_reset"
 
 # Prompt cache, always shown once caching is seen: dim, yellow in its last 5
-# minutes, red once it has expired. After that, the next message sends the
-# whole conversation again, slower and at full price.
+# minutes (its last minute on a 5m TTL), red once it has expired or when the
+# last response cached nothing, which leaves expires_at null. Then the next
+# message sends the whole conversation again, slower and at the cache-write
+# price, above the normal input price.
 cache_display=""
-if [[ "$cache_seen" == "true" ]] && ((cache_expires > 0)); then
+if [[ "$cache_seen" == "true" ]] && ((cache_expires == 0)); then
+  cache_display="${RED}cache cold${RESET}"
+elif [[ "$cache_seen" == "true" ]]; then
   countdown "$cache_expires"
   if [[ -z "$countdown_text" ]]; then
     cache_display="${RED}cache expired${RESET}"
   else
     cache_color=$DIM
-    ((cache_expires - now < 300)) && cache_color=$YELLOW
+    cache_warn=300
+    [[ "$cache_ttl" == "5m" ]] && cache_warn=60
+    ((cache_expires - now < cache_warn)) && cache_color=$YELLOW
     [[ "$countdown_text" == "0m" ]] && countdown_text="<1m"
     cache_display="${cache_color}cache ${countdown_text}${RESET}"
   fi

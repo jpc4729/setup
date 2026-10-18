@@ -7,7 +7,7 @@ The idea: fast by default. Heavy checks run only when a mistake costs much. Hard
 ## Use it
 
 - [`WORKFLOWS.md`](WORKFLOWS.md): the flow, the words and commands to type, and prompts to copy. Ask plainly; Claude runs one flow for every task and skips the steps a small task does not need.
-- Choose the model when the session starts. A model switch sends the whole conversation again at the cache-write price; an `/effort` change does not. When the status line shows `cache expired`, the next message does the same.
+- Choose the model when the session starts. A model switch sends the whole conversation again at the cache-write price; an `/effort` change does not. When the status line shows `cache expired` or `cache cold`, the next message does the same.
 
 ## Files
 

@@ -1,8 +1,8 @@
 # What the Paper MCP can and cannot do
 
-The tool descriptions are the reference for parameters, defaults and formats, and this file does not repeat them. It holds what they leave out: what no tool does, what was seen live, and where the guide and the tools disagree. Checked against the tool descriptions and the guide on 2026-10-14; lines marked _exercised_ were run live in a scratch file on 2026-09-24. Every tool mechanism the laws in `SKILL.md` rely on traces to a line here or to a tool description; the owner and prototype rules are policy, not tool facts. A tool result that contradicts a line below wins; say so in the ledger.
+The tool descriptions are the reference for parameters, defaults and formats, and this file does not repeat them. It holds what they leave out: what no tool does, what was seen live, and where the guide and the tools disagree. Checked against the tool descriptions and the guide on 2026-10-19; lines marked _exercised_ were run live in a scratch file on 2026-09-24. Every tool mechanism the laws in `SKILL.md` rely on traces to a line here or to a tool description; the owner and prototype rules are policy, not tool facts. A tool result that contradicts a line below wins; say so in the ledger.
 
-On 2026-10-14 the server listed 37 tools: `arrange_pages`, `create_artboard`, `create_file`, `create_page`, `create_tokens`, `delete_nodes`, `duplicate_nodes`, `export`, `export_combined_pdf`, `find_nodes`, `finish_working_on_nodes`, `get_basic_info`, `get_children`, `get_comment_thread`, `get_computed_styles`, `get_fill_image`, `get_font_family_info`, `get_guide`, `get_jsx`, `get_node_info`, `get_screenshot`, `get_selection`, `get_tokens`, `get_tree_summary`, `list_comment_thread_authors`, `list_comment_threads`, `list_resources`, `move_nodes`, `open_file`, `rename_nodes`, `rename_resource`, `set_comment_thread_status`, `set_text_content`, `set_tokens`, `update_pages`, `update_styles`, `write_html`. A tool the server lists that is not here, or a name here that it no longer lists, means this skill is behind: check the tool descriptions before relying on a line below.
+On 2026-10-19 the server listed 37 tools: `arrange_pages`, `create_artboard`, `create_file`, `create_page`, `create_tokens`, `delete_nodes`, `duplicate_nodes`, `export`, `export_combined_pdf`, `find_nodes`, `finish_working_on_nodes`, `get_basic_info`, `get_children`, `get_comment_thread`, `get_computed_styles`, `get_fill_image`, `get_font_family_info`, `get_guide`, `get_jsx`, `get_node_info`, `get_screenshot`, `get_selection`, `get_tokens`, `get_tree_summary`, `list_comment_thread_authors`, `list_comment_threads`, `list_resources`, `move_nodes`, `open_file`, `rename_nodes`, `rename_resource`, `set_comment_thread_status`, `set_text_content`, `set_tokens`, `update_pages`, `update_styles`, `write_html`. A tool the server lists that is not here, or a name here that it no longer lists, means this skill is behind: check the tool descriptions before relying on a line below.
 
 ## What no tool does
 
@@ -51,7 +51,7 @@ On 2026-10-14 the server listed 37 tools: `arrange_pages`, `create_artboard`, `c
 
 ## Reading
 
-- `get_jsx` output carries neither node ids nor layer names, although the guide says each element has an id. Read names and ids from `get_tree_summary`, and match its elements by order and text. _Exercised_, again on 2026-10-14.
+- `get_jsx` output carries no layer names. It carries node ids by default (`includeNodeIds`), and code for a codebase needs `includeNodeIds: false`. Read names from `get_tree_summary`, and match its elements by order and text. _Exercised_ on 2026-10-19; on 2026-10-14 the output had no ids either.
 - A family Paper applied is stored first in the stack: `"Geist", system-ui, sans-serif`. A bare `system-ui, sans-serif` means it fell back. _Exercised._
 
 ## Search

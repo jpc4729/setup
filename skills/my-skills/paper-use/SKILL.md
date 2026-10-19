@@ -14,7 +14,7 @@ The scope here is structure: file identity, page purpose, canvas order, naming a
 ## Scope, and what overrules this
 
 - Visual direction, palette, mood, type scale, review checkpoints → the Paper MCP guide, `get_guide({ topic: "paper-mcp-instructions" })`. It wins on taste.
-- Exporting a design to code → read the exact values with `get_jsx`, `get_computed_styles` and `get_fill_image`, never from a screenshot, and follow the conventions of the target codebase.
+- Exporting a design to code → read the exact values with `get_jsx`, `get_computed_styles` and `get_fill_image`, never from a screenshot, pass `includeNodeIds: false` to `get_jsx` for code that ships, and follow the conventions of the target codebase.
 - An established convention in the file overrules the templates here: read the file first, and never restyle a file that has one.
 
 ## The core, whatever the project

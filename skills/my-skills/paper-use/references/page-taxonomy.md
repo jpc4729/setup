@@ -95,7 +95,8 @@ Dividers:
 - Only in a file with prefixes. A smaller file has no bands to separate.
 - One divider at each band boundary of the canonical set: after the file-wide pages, after the flows, and after the `Proto` pages. Never one at the top or bottom of the list, next to another divider, or around a band with no page.
 - A divider takes no name: the prefixes on each side name the band. Read its id from `get_basic_info.pages[]`; that id is not a `pageId`.
-- Set dividers in the `arrange_pages` call that sets the order: `{ "type": "divider" }` in `order` where a new one goes, and the id of each one to drop in `removeDividerIds`. The call takes the whole list, so read `pages[]` with `get_basic_info` right before it.
+- Set dividers in the `arrange_pages` call that sets the order: `{ "type": "divider" }` in `order` where a new one goes, and the id of each one to drop in `removeDividerIds`, never also in `order`. `order` lists every other page and divider id exactly once, so read `pages[]` with `get_basic_info` right before the call.
+- A missing, unknown or repeated id rejects the whole call with no change, and so does a page added or removed since the read: read `pages[]` again and send the call once more. The result is the new page list with the ids of the new dividers; use it, not a second read.
 - A band that gets its first page, such as the first `Proto` page, gets its divider in the call that moves that page into place. A band that loses its last page loses its divider in the next `arrange_pages` call.
 
 Icons:

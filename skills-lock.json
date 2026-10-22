@@ -37,6 +37,12 @@
       "skillPath": "skills/ponytail-review/SKILL.md",
       "computedHash": "09c824396581b0048a4feb504e21a9b3f943c9ec06b77eec04737c0f741c6d25"
     },
+    "security-audit": {
+      "source": "cloudflare/security-audit-skill",
+      "sourceType": "github",
+      "skillPath": "skills/security-audit/SKILL.md",
+      "computedHash": "98b97aad2873b3b9a8e064007c25e7827b493ba27fda8bfbdb41dab586767973"
+    },
     "thermo-nuclear-code-quality-review": {
       "source": "cursor/plugins",
       "sourceType": "github",

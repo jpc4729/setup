@@ -75,7 +75,7 @@
       "*": "ask"
     },
     // The model can't load these skills, and `/name` still runs them. The
-    // first five are the `user-invocable-only` entries of Claude's
+    // first six are the `user-invocable-only` entries of Claude's
     // skillOverrides; `bet` and `thermo-nuclear-code-quality-review` are its
     // `off` entries, which opencode can't hide from `/`. `read-only` and
     // `adhd-human` are authored skills: opencode ignores their
@@ -86,6 +86,7 @@
       "ponytail-audit": "deny",
       "ponytail-debt": "deny",
       "ponytail-review": "deny",
+      "security-audit": "deny",
       "bet": "deny",
       "thermo-nuclear-code-quality-review": "deny",
       "read-only": "deny",

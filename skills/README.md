@@ -27,12 +27,13 @@ Skills from upstream, pinned in [`../skills-lock.json`](../skills-lock.json), ea
 - `agent-browser` from [vercel-labs/agent-browser](https://github.com/vercel-labs/agent-browser), Apache-2.0.
 - `grilling` from [mattpocock/skills](https://github.com/mattpocock/skills), MIT.
 - `ponytail`, `ponytail-audit`, `ponytail-debt` and `ponytail-review` from [DietrichGebert/ponytail](https://github.com/DietrichGebert/ponytail), MIT.
+- `security-audit` from [cloudflare/security-audit-skill](https://github.com/cloudflare/security-audit-skill), MIT.
 - `thermo-nuclear-code-quality-review` from [cursor/plugins](https://github.com/cursor/plugins), MIT.
 - `typesafe-ai` from [typesafe-ai/skills](https://github.com/typesafe-ai/skills), MIT.
-- Changes from upstream: a shorter `description`, a `metadata` block and a Codex `agents/openai.yaml`. `typesafe-ai` is unchanged.
+- Changes from upstream: a shorter `description`, a `metadata` block and a Codex `agents/openai.yaml`. `security-audit` and `typesafe-ai` are unchanged.
 
 ## Start rules
 
 - Each skill in `my-skills` but `ui-principles` starts only when you type its name: `disable-model-invocation: true` for Claude Code, Cursor and Grok, and `allow_implicit_invocation: false` for Codex. opencode ignores those flags, so there only `read-only` and `adhd-human` are held back, by `deny` entries in `opencode/opencode.jsonc`.
-- `grilling` and the four `ponytail` skills start only when you type their name.
+- `grilling`, the four `ponytail` skills and `security-audit` start only when you type their name.
 - `bet` and `thermo-nuclear-code-quality-review` are off in every tool but Cursor, which has no switch for them.

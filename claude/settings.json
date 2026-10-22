@@ -314,6 +314,7 @@
     "ponytail-debt": "user-invocable-only",
     "ponytail-review": "user-invocable-only",
     "schedule": "off",
+    "security-audit": "user-invocable-only",
     "slides": "off",
     "thermo-nuclear-code-quality-review": "off",
     "update-config": "off",

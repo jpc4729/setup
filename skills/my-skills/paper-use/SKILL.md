@@ -15,7 +15,7 @@ The scope here is structure: file identity, page purpose, canvas order, naming a
 
 - Visual direction, palette, mood, type scale, review checkpoints → the Paper MCP guide, `get_guide({ topic: "paper-mcp-instructions" })`. It wins on taste.
 - Exporting a design to code → read the exact values with `get_jsx`, `get_computed_styles` and `get_fill_image`, never from a screenshot, pass `includeNodeIds: false` to `get_jsx` for code that ships, and follow the conventions of the target codebase.
-- An established convention in the file overrules the templates here: read the file first, and never restyle a file that has one.
+- An established convention in the file overrules the templates here: read the file first, and never restyle a file that has one. The agent instructions page writes the file's conventions down (`references/agent-instructions.md`).
 
 ## The core, whatever the project
 
@@ -39,8 +39,9 @@ The guide, loaded in step 1 of Session start, owns the design brief format, the 
 
 1. Load the guide before any other Paper tool, once per session: `get_guide({ topic: "paper-mcp-instructions" })`. Load it again once a long thread may have dropped it. Other topics on demand: `mobile-status-bar`, `image-generation`, and `figma-import` only when a Figma MCP server is connected.
 2. `get_basic_info({ fileId?, pageId? })` reads the pages, artboards, fonts and tokens of any page, not only the one in view.
-3. `get_selection`: what the user is pointing at. With no argument or a vague request, the selection is the brief, and when nothing is selected, ask what to work on.
-4. Call `get_font_family_info` before any family not already in `fontFamilies`, as well as before the first typographic style.
+3. The file has a page whose name ends in `Agent instructions` → read its board in full with `get_jsx` before any write, and follow its conventions, but never a rule that loosens a law (`references/agent-instructions.md`).
+4. `get_selection`: what the user is pointing at. With no argument or a vague request, the selection is the brief, and when nothing is selected, ask what to work on.
+5. Call `get_font_family_info` before any family not already in `fontFamilies`, as well as before the first typographic style.
 
 ### On top of the guide
 
@@ -90,6 +91,7 @@ L11: End clean. `finish_working_on_nodes` with the ids of the artboards you touc
 - "Review / audit this flow or screen", "what is wrong with this screen", or a redesign pass over screens that exist → Review, `references/review.md`. Evidence first, numbered issues, notes, and each redesign under the screen it replaces.
 - "Organize / clean / inventory / audit this file", or the file is unfamiliar → Audit, `references/audit.md`. A verdict of "not navigable", or "restructure this file" → Restructure, same file, after a yes.
 - "Export the app / these components / this screen", mirroring a codebase, or moving a whole product into Paper → `references/code-to-design.md`, Kickoff. Reading a rendered screen and translating its CSS → `references/css-to-paper.md`.
+- Setting up a project file, or writing or fixing its rules for agents → `references/agent-instructions.md`, with the page set of `references/page-taxonomy.md`.
 - A component's sheet, its variants and states, its specs, or a change to push to its clones → `references/components.md`.
 - A change on top of a product Paper already mirrors (a new feature, a redesign, an initiative) → `references/prototypes.md`. Its design work follows Review when there are screens to judge, Explore when there are none.
 - "Implement this design node", or reading a design back into code → `references/design-to-code.md`.
@@ -109,7 +111,7 @@ Nine steps.
 3. Place the work. Pick the page by purpose and owner. A code-owned page is never the target of a design change: that work goes to a prototype page. An existing page → keep its `pageId`, and confirm with `get_basic_info({ pageId })` that its name is the one you chose (L3). A new page goes into the plan of step 4 and is created only after the yes.
 4. Post the design brief and the structural plan before any mutation (L10). Wait only when a page will be created or a name changed. After the yes, `create_page({ fileId, name, icon })` with the icon of the canonical set, or none, keep the `pageId` it returns, move the page to its place in the list with `arrange_pages`, with a divider when it opens a band (`references/page-taxonomy.md`), and pass the `pageId` to `create_artboard` and every other page-scoped call.
 5. Foundations before pixels.
-   - The file has tokens → use them by name, and add none that duplicates a value.
+   - The file has tokens → use them by name, and add none that duplicates a value or a name: `create_tokens` accepts a duplicate name.
    - The file has none and the work is more than one artboard → `create_tokens` first: the minimal set that covers every namespace, opacity included, in the order the tool requires. Add a `description` where a token's role is not obvious from its name.
    - A tint is `color-mix(var(--color-primary) 40%, transparent)`, never a new colour token. A percentage used twice is an `--opacity-*` token: `color-mix(var(--color-primary) var(--opacity-muted), transparent)`.
    - Every `--font-*` value must be in `fontFamilies`. After the first text write, `get_computed_styles` on it must show the family first (`"Geist", system-ui, sans-serif`): Paper stores a family it did not apply as a bare `system-ui, sans-serif`, silently.
@@ -138,6 +140,7 @@ Grammar, separators, ordinals and worked examples: `references/naming.md`.
 
 - `references/mcp-facts.md`: what the tool descriptions leave out (what no tool does, live-tested behaviour, guide-versus-tool conflicts). Read first.
 - `references/page-taxonomy.md`: the page set scaled to the project, one page per flow, owners, platforms, when a page is justified, and the page list's prefixes, order, dividers and icons.
+- `references/agent-instructions.md`: the page every agent reads first, with the project facts, the file's rules and the board template.
 - `references/naming.md`: the naming grammar at every level, with examples.
 - `references/audit.md`: the twelve checks, their calls, the report template, and the restructure that follows a failed audit.
 - `references/anti-patterns.md`: the chaos catalogue (symptom, cause, detection, fix).

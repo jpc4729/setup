@@ -16,6 +16,7 @@ No project needs every page below. Start from the smallest shape that fits, and 
 ```text
 page                       icon       holds
 00 · Index                 info       what the file is, the page map with each page's owner, the release shown, links out
+00 · Agent instructions    padlock    the project facts and the file's rules, read by every agent first (agent-instructions.md)
 01 · Foundations           swatches   token specimens — colour ramps, type scale, spacing, radii, elevation
 02 · Components            design     one sheet per component; each cell is a canonical copy (L5)
 ── divider
@@ -30,7 +31,7 @@ page                       icon       holds
 
 The icons and dividers are part of the set: `Dividers and icons`, below.
 
-Create only the pages the project has. `00 · Index` earns its place from the moment a second page exists; `02 · Components` from the moment a second flow reuses anything; a `Proto` page from the moment an initiative — a flow review, a redesign, a change to a mirrored product — should not disturb the pages it judges (`review.md`, `prototypes.md`).
+Create only the pages the project has. `00 · Index` earns its place from the moment a second page exists, and `00 · Agent instructions` comes with it, in the same plan; `02 · Components` from the moment a second flow reuses anything; a `Proto` page from the moment an initiative — a flow review, a redesign, a change to a mirrored product — should not disturb the pages it judges (`review.md`, `prototypes.md`).
 
 ## One page per flow
 
@@ -48,7 +49,7 @@ Screenshots work on a page the user is not viewing. What does not work there is 
 In a file that mirrors a shipped product, every page but the Archive has exactly one owner (L2).
 
 - Code-owned — Foundations, Components and every flow page once it is mirrored. Written only by a re-mirror from the running product (`mirroring.md`).
-- Design-owned — `Proto` pages, Explorations and the Index. Edited freely; the re-mirror writes only the Index's release line, copied from the manifest.
+- Design-owned — `Proto` pages, Explorations, the Index and the agent instructions page. Edited freely, except that a rule on the instructions page changes only on the user's ask; the re-mirror writes only the Index's release line, copied from the manifest.
 - Nobody — Archive. Things arrive; nothing is edited.
 
 The Index says which is which. A new flow in a mirrored file is designed on its `Proto` page like any other change; its flow page is created by the re-mirror that promotes it. A file with no shipped product has no owners: every page is design-led.
@@ -70,7 +71,7 @@ Pages are purposes. Status lives where it can be changed — in the artboard nam
 A new page needs one of these, and nothing else does.
 
 - A new flow of the project.
-- A new kind of content about the whole file — foundations, components, index.
+- A new kind of content about the whole file — foundations, components, index, agent instructions.
 - A lifecycle bucket the file lacks — explorations, archive.
 - A live initiative — a flow review, a redesign, a change to a mirrored product (`review.md`, `prototypes.md`).
 
@@ -80,7 +81,7 @@ The guide invites a page for each distinct body of work. Here, a body of work ge
 
 ## Numeric prefixes
 
-A numeric prefix gives each page its place in the list and in every reference to it. Use one when the file has more than five pages, or when the user already uses one. Once one page carries a prefix, every page carries one; `update_pages` adds it to the existing pages in one batch, after a yes (L10). Leave gaps of ten between bands so a flow can be inserted without renumbering the file.
+A numeric prefix gives each page its place in the list and in every reference to it. Each page has its own prefix, except the two pages about the file itself: `00 · Index`, then `00 · Agent instructions`. Use one when the file has more than five pages, or when the user already uses one. Once one page carries a prefix, every page carries one; `update_pages` adds it to the existing pages in one batch, after a yes (L10). Leave gaps of ten between bands so a flow can be inserted without renumbering the file.
 
 The page list runs in the order of the canonical set, which the prefixes spell out. `create_page` adds a page after the one the user is viewing, so `arrange_pages` then moves it to its place in the list. A page this session created moves freely; a move of any other page waits for the same yes as a rename (L10).
 
@@ -113,4 +114,4 @@ Icons:
 
 ## The index page
 
-One artboard, desktop width, holding: the project name, one line on what the file covers, the page list with one line and one owner each, the release the code-owned pages show, copied from the manifest's `Release shown`, any live token redesign file, the status legend used in artboard names, and the links out — repo, tracker, deployed URL. The release changes with every re-mirror and a page name is a purpose, so the release lives here, never in a page name.
+One artboard, desktop width, holding: the project name, one line on what the file covers, the page list with one line and one owner each, the release the code-owned pages show, copied from the manifest's `Release shown`, any live token redesign file, the status legend used in artboard names, a pointer to the agent instructions page, and the links out — repo, tracker, deployed URL. The release changes with every re-mirror and a page name is a purpose, so the release lives here, never in a page name.

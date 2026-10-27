@@ -108,7 +108,7 @@ Nine steps.
 
 1. Preflight. Session start step 1 must have run. Paper Desktop must be running with a file open; a failed connection means telling the user to open it, not retrying. Only image generation is metered, and it runs only when the user asks for it, so the budget is wall-clock and the single open file.
 2. Orient. `list_resources` → does a file for this project already exist (L1)? `get_basic_info` → pages, active page, artboards, fonts, tokens. Never write before reading.
-3. Place the work. Pick the page by purpose and owner. A code-owned page is never the target of a design change: that work goes to a prototype page. An existing page → keep its `pageId`, and confirm with `get_basic_info({ pageId })` that its name is the one you chose (L3). A new page goes into the plan of step 4 and is created only after the yes.
+3. Place the work. Pick the page by purpose and owner. A code-owned page is never the target of a design change: that work goes to a prototype page. An existing page → keep its `pageId`, and confirm with `get_basic_info({ fileId, pageId })` that its name is the one you chose (L3). A new page goes into the plan of step 4 and is created only after the yes.
 4. Post the design brief and the structural plan before any mutation (L10). Wait only when a page will be created or a name changed. After the yes, `create_page({ fileId, name, icon })` with the icon of the canonical set, or none, keep the `pageId` it returns, move the page to its place in the list with `arrange_pages`, with a divider when it opens a band (`references/page-taxonomy.md`), and pass the `pageId` to `create_artboard` and every other page-scoped call.
 5. Foundations before pixels.
    - The file has tokens → use them by name, and add none that duplicates a value or a name: `create_tokens` accepts a duplicate name.
@@ -116,14 +116,14 @@ Nine steps.
    - A tint is `color-mix(var(--color-primary) 40%, transparent)`, never a new colour token. A percentage used twice is an `--opacity-*` token: `color-mix(var(--color-primary) var(--opacity-muted), transparent)`.
    - Every `--font-*` value must be in `fontFamilies`. After the first text write, `get_computed_styles` on it must show the family first (`"Geist", system-ui, sans-serif`): Paper stores a family it did not apply as a bare `system-ui, sans-serif`, silently.
 6. Definitions before screens. Every repeated element gets its one canonical copy first: a cell of its component's sheet (L5). The sheet lives on the components page, or on the prototype page in a mirrored file, where the components page is code-owned (L2). Everything later is a clone of it, never a second writing of the same HTML.
-7. Screens from definitions. `create_artboard` with its final name and ordinal; mobile boards get the status bar from the guide. `write_html` one visual group per call, `layer-name` on every element. Check where the board landed and restore the grid only if the order broke (L8).
+7. Screens from definitions. `create_artboard` with its final name and ordinal; mobile boards get the status bar from the guide, with its colour bound to a token (`references/mcp-facts.md`). `write_html` one visual group per call, `layer-name` on every element. Check where the board landed and restore the grid only if the order broke (L8).
 8. Validate each step. `get_screenshot` on the artboard at the end of each section, `get_tree_summary` for what the eye cannot check, critique against the guide's six checkpoints, and fix before the next section. End each section with a one-line verdict.
 9. End clean. `finish_working_on_nodes` with the ids of the artboards you touched, then the ledger (L11). Name every clone of a cell you changed that has not been pushed yet (`references/components.md`, Propagate).
 
 ## Audit
 
 - Read-only; ends with a table of contents plus a numbered defect list.
-- It never moves the user's view. Walk each page with `get_basic_info({ pageId })`.
+- It never moves the user's view. Walk each page with `get_basic_info({ fileId, pageId })`.
 - Full procedure, the twelve checks and the report template: `references/audit.md`.
 
 ## Naming, in one screen

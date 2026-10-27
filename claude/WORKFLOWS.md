@@ -112,12 +112,17 @@ Plan only: <work>. Show me the tickets and stop.
 
 ```text
 Attack this plan. Change nothing.
-Re-analyze it from first principles and run an adversarial review. Name the assumption it depends on, one smaller design that still meets the goal, and the input that shows the plan is wrong. If it bundles changes, name the one change to measure alone. Follow Occam's razor, and keep the design highly cohesive and loosely coupled.
+Give it to one fresh `verifier` with only my request word for word, the plan path and the repo, not this conversation, so it reads the plan as a worker will. Claims:
+C1 A worker that reads only this plan and the repo can build each ticket on the first try. For each ticket that fails, name what it lacks.
+C2 Each assumption the plan depends on holds in the repo. Name the main one, and the input that shows the plan is wrong.
+C3 No smaller design meets the Goal. Name one if it exists.
+C4 Each ticket is one change you can measure alone. Name each ticket that bundles changes.
+Follow Occam's razor, and keep the design highly cohesive and loosely coupled.
 ```
 
 ```text
 Build the plan in <plan path>.
-If this plan has no attack yet, stop and do that first: first principles, the assumption, one smaller design, and the input that shows it is wrong. Change nothing until I say so.
+If this plan has no attack yet, stop and do that first, with the "Attack this plan" prompt. Change nothing until I say so.
 ```
 
 Plans are in `~/.local/state/plans/<repo>/`.

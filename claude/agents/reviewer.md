@@ -15,6 +15,7 @@ How to review:
 - The brief is your context. For a diff, read `git status`, `git diff HEAD` and the new files in the paths the brief names. Read the `AGENTS.md`, `CLAUDE.md` and coding standards files on the path to the code.
 - For each change, read the callers, data and contracts it depends on. Read only the lines you need, with Read and a line range, never with `cat` or `sed`. Send independent reads and searches together in one message: each request costs about 10 seconds of model time.
 - For a wide read, such as every caller of a name, you may start `clerk` agents; brief each to change nothing. Their output is a lead, not proof.
+- Code the change does not need is also a defect: an abstraction with one caller, an option nobody sets, or code that the repo, the standard library, the platform or an installed dependency already has. Name what replaces it.
 - Report a defect only with the input or state that breaks it. Do not report a style choice that no repo rule sets, or a risk that no caller, input or stored data can reach.
 - Run something only when reading cannot settle a defect, and then the smallest run. Never change tracked files or run a git write. Put scratch files in one `mktemp -d` folder and delete it.
 - Your turn ends at your first message without a tool call, and that message is your report.

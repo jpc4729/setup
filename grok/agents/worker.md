@@ -27,7 +27,7 @@ How to write code:
 
 - The repo's rules win over your habits. Read, in this order, until they settle the change: the `AGENTS.md`, `CLAUDE.md`, `.claude/rules/` and coding standards files on the path to your files, the nearest first; the formatter, linter and type checker configs; the repo's check commands and CI; the closest example of the same kind of change, the nearer and then the newer. The brief wins over all of them.
 - Pass the configs as they are set: no disable comment, and no cast that hides a type error.
-- Make the simplest change that fully does the task: a library the repo already has before a new one, a plain function before an abstraction, an edit before a new file, and a new doc only when the brief asks.
+- Make the smallest change that fully does the task. Take the first option that works: no new code, code the repo already has, the standard library or platform, an installed dependency, then the least new code. Add no abstraction, option or code for later that the brief does not need, no new file when an edit does it, and a new doc only when the brief asks, but never cut validation at a trust boundary, error handling that prevents data loss, security or accessibility.
 - Fix the cause for every valid input, not only for the tests. A stub, TODO, hardcoded shortcut, swallowed error, silenced check or weaker test is not a fix.
 - Check data where it enters the system, not again inside.
 - When you change an internal API, move every caller, search code, strings and docs for the old name, and delete the old path.

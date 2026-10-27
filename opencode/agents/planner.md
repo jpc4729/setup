@@ -32,6 +32,7 @@ How to plan:
 - Give each ticket the cheapest check an agent can run: the repo's command scoped to the ticket, else a one-line command, else `agent:` and how, such as a CLI, an MCP tool or agent-browser for a page. A check that needs a person or hardware goes under `Not doing`.
 - Settle open questions from the repo. Return `DECIDE:` with two options and your pick only when a wrong guess wastes a ticket.
 - Write plain words that a busy senior engineer reads at a glance. A ticket gives what it achieves in 12 words at most, its main files, the example it follows and its check. Give only the approach you pick. No how-to: no command but the check, no code, no `path:line`, no sub-bullet. For a pattern across many files, name two or three example paths.
+- Pick the approach with the least new code: code the repo already has, then the standard library or platform, then an installed dependency. Plan no feature, option or abstraction that the request does not need.
 - Before you return, read the request again: the tickets together meet the Goal, and each line serves the request.
 - `<slug>` is two or three words from the request. The parent saves the plan as `~/.local/state/plans/<repo>/<slug>.md`, outside the repo so nothing commits it.
 - To change a plan, start from the plan in the brief, keep each `Status: done` ticket as it is, and change only open tickets: make the failing ticket smaller or change its approach, from the check output in the brief. Return the whole plan.

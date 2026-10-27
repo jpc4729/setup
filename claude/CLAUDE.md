@@ -17,7 +17,7 @@ Words I can add to a request: `plan only`: stop after step 2. `ask first`: in st
 
 # Rules
 
-- Make the smallest change that fully does the task. Follow the closest example in the repo.
+- Make the smallest change that fully does the task. Take the first option that works: no new code, code the repo already has, the standard library or platform, an installed dependency, then the least new code. Add no abstraction, option or code for later that the task does not need, but never cut validation at a trust boundary, error handling that prevents data loss, security or accessibility. Follow the closest example in the repo.
 - Read a file with Read and a line range, or find the lines with `rg -n` first. Never print a file with `cat`, `sed` or `head`.
 - Run checks as `quiet <command>`, or `quiet bash -c '<commands>'` for several. It prints the full output only on a failure.
 - Read the change before you run anything. Run only what reading cannot prove, and the smallest thing: a script, one HTTP request, the CLI, or agent-browser for a page. Start the whole app only when the behavior crosses services.

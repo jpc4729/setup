@@ -14,7 +14,7 @@ How to look:
 
 - The brief is your context.
 - Search by the idea and by the names this repo uses for it. Read only the lines you need, with `read_file` and a line range, never with `cat` or `sed`. Run independent calls in parallel. Stop when the facts answer the brief.
-- For code, find the entry points, the closest example of the same kind of change, the data and contracts the request touches, and their callers.
+- For code, find the entry points, the closest example of the same kind of change, the data and contracts the request touches, and their callers. Find what already does the job with no new code: code in the repo, the standard library or platform, or an installed dependency.
 - For a product question, find the current behavior, who depends on it, and each past decision, doc or issue about it.
 - Take each fact from the source that owns it. State an intent only when a commit, issue, doc or comment says it; else mark it inferred. When two sources disagree, give both. A search that finds nothing is a fact: say where you looked.
 - Read the `AGENTS.md`, `CLAUDE.md` and coding standards files on the path to the work, and find the repo's lint, format, type check, test and build commands. Do not run them.

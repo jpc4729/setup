@@ -18,6 +18,7 @@ Skills that I wrote, or that I adapted, changed or took ideas from another skill
 - `retro`: turns a session's mistakes into a check, hook, script or rule. Adapted from [retro](https://github.com/mattpocock/skills/tree/main/skills/engineering/retro) from Matt Pocock's skills, MIT.
 - `skills-claude`: writes, reviews or fixes a skill to the standards of the native Claude Code skills.
 - `ui-principles`: rules for clean, scannable UI layout.
+- `verify-setup`: writes a repo's `.claude/skills/verify/SKILL.md`, the recipe that agents follow to prove a change in the real app. Inspired by `create-verification-skill` from poteto's [pstack](https://github.com/cursor/plugins/tree/main/pstack), MIT.
 - `wayfinder`: settles the open decisions of a big idea, one per session. Adapted from [wayfinder](https://github.com/mattpocock/skills/tree/main/skills/engineering/wayfinder) from Matt Pocock's skills, MIT.
 
 ## vendored

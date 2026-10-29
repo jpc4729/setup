@@ -7,7 +7,9 @@ set -euo pipefail
 # newlines, so `cd src && head x` is caught too. A part with a pipe or a
 # redirect passes, and so does the whole command when it has a heredoc, whose
 # body can hold `cat` or `sed` lines. Files under the temp folders and /dev
-# pass, as does a path that starts with a variable, such as a mktemp folder.
+# pass, as does a path that starts with `$TMPDIR` or a variable that the same
+# command sets from mktemp. A keyword such as `do` or `then` is skipped, so a
+# loop body is checked too.
 # A separator inside quotes does not split, so a commit message that holds
 # `; cat` passes. This hook is a nudge, not a sandbox: `sudo cat` or an
 # escaped quote gets past it. Exit 2 blocks the call and shows the reason. Any
@@ -50,7 +52,14 @@ reads_file() {
     fi
     case $word in
       -) ;;
-      /tmp/* | /private/tmp/* | /var/folders/* | /dev/* | \$*) found=1 ;;
+      /tmp/* | /private/tmp/* | /var/folders/* | /dev/*) found=1 ;;
+      \$*)
+        found=1
+        var=${word#\$}
+        var=${var#\{}
+        var=${var%%[!A-Za-z0-9_]*}
+        [[ " $temp_vars " == *" $var "* ]] || temp_only=0
+        ;;
       *)
         found=1
         temp_only=0
@@ -66,12 +75,29 @@ command=$(jq -r '([39] | implode) as $s
   | gsub("(?<q>\($s)[^\($s)]*\($s)|\"[^\"]*\")"; .q | gsub("[;&|<>\n]"; " "))' <<< "$payload" 2> /dev/null) || exit 0
 [[ -z $command || $command == *"<<"* ]] && exit 0
 
+# Variables that hold a temp path: TMPDIR, and each name this command sets
+# from mktemp, such as `d=$(mktemp -d)`.
+temp_vars="TMPDIR"
+rest=$command
+mktemp_re='([A-Za-z_][A-Za-z0-9_]*)=\$\(mktemp(.*)'
+while [[ $rest =~ $mktemp_re ]]; do
+  temp_vars+=" ${BASH_REMATCH[1]}"
+  rest=${BASH_REMATCH[2]}
+done
+
 parts=${command//&&/$'\n'}
 parts=${parts//||/$'\n'}
 parts=${parts//;/$'\n'}
 while IFS= read -r part; do
   [[ $part == *[\|\<\>]* ]] && continue
   read -r -a words <<< "$part"
+  # A keyword such as `do` starts the part in a loop or an if.
+  while ((${#words[@]})); do
+    case ${words[0]} in
+      do | then | else | '{' | '!') words=("${words[@]:1}") ;;
+      *) break ;;
+    esac
+  done
   [[ ${#words[@]} -eq 0 ]] && continue
   if reads_file "${words[@]}"; then
     echo "Read the file with Read and a line range (offset and limit), or find the lines with \`rg -n\` first." >&2

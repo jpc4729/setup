@@ -1,0 +1,5 @@
+interface:
+  display_name: "Verify setup"
+  short_description: "Repo recipe to prove a change works"
+policy:
+  allow_implicit_invocation: false

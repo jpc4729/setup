@@ -60,6 +60,7 @@ a bug                         /diagnose <symptom>
 a big, unclear idea           /wayfinder <idea>
 a question, no changes        /read-only <question>
 see the app run               /run
+a recipe to prove changes     /verify-setup
 bugs in a diff or an area     "find bugs in <diff or path>"
 a deeper bug review           /code-review
 simpler code                  /simplify

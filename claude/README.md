@@ -21,7 +21,7 @@ The idea: fast by default. Heavy checks run only when a mistake costs much. Hard
 ## The rules, in short
 
 - Senior quality in the fewest steps: correct first, then fast.
-- One flow for every task: understand, plan, build, check, review once, report. A small task skips the plan, and Claude builds it itself. With a plan, a fresh `worker` builds each ticket, and one `verifier` reviews the whole diff once.
+- One flow for every task: understand, plan, build, check, review once, report. A small task skips the plan, and Claude builds it itself. With a plan, a fresh `worker` builds each ticket, and one `verifier` on Fable 5.1 reviews the whole diff once. A subagent starts fresh with a brief, and a fork is only for side research.
 - Claude asks only what the facts cannot settle, in one round with its picks, and goes on. It waits only when a wrong pick is costly and hard to undo.
 - One review and one fix round, never a score or a loop. One task a session: Claude tells you to `/clear` between unrelated tasks, and to `/handoff` near 300k tokens.
 - Claude reads the change before it runs anything. Checks run through `quiet`, only on the changed files, and on the whole repo only when the change can break code outside them.
@@ -34,7 +34,7 @@ The idea: fast by default. Heavy checks run only when a mistake costs much. Hard
 ## Agents
 
 - `scout` (Sonnet 5.5, `medium`): maps what exists, and returns facts, checks, open decisions and risks, or `CLEAR:`. Read-only. Reading is cheap, so speed matters more.
-- `verifier` (Opus 5.5, `high`): checks finished work claim by claim, such as code, an analysis, a plan or a number, quickly, the same way each run and with no bias to find problems. It reports scope gaps as `MISSING`, `EXTRA` or `WRONG`, and has no Edit or Write tool. A missed failure costs more than tokens.
+- `verifier` (Opus 5.5, `high`): checks finished work claim by claim, such as code, an analysis, a plan or a number, quickly, the same way each run and with no bias to find problems. It reports scope gaps as `MISSING`, `EXTRA` or `WRONG`, and has no Edit or Write tool. A missed failure costs more than tokens. With a plan, the main session starts it on Fable 5.1, so the model that checks the work is not the model that built it; "two models" adds a second one on Opus 5.5. It follows a repo's `.claude/skills/verify/` recipe, which `/verify-setup` writes.
 - `worker` (Opus 5.5, `medium`): does the work that Claude delegates, in place of `general-purpose`: research, code search, multi-step tasks and code changes. It knows where to find the repo's coding rules, so a brief does not repeat them. It commits, pushes and opens the pull request when the brief says that you asked.
 - `planner` (Opus 5.5, `high`): writes or revises one plan of tickets in `~/.local/state/plans/<repo>/`, when the work needs more than one ticket. A fresh `worker` builds each ticket. The file is outside the repo, so nothing commits it. Each ticket fits one fresh session, so the plan has no session owner.
 - `clerk` (Haiku 5.5, `high`): does one narrow task that the parent checks, such as a summary, a list, a count or a change the brief spells out. Several run at once. It costs at least 20 times less than Opus 5.5 for a prompt up to 100K tokens, and at least 4 times less above that, and it is the fastest model. It is weaker at agentic coding, so it gets no judgment, design or review. At `low`, Haiku more often skips a search or stops early.

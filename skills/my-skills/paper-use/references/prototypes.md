@@ -47,7 +47,7 @@ Tokens are file-wide and live. A prototype that edits `--color-primary` restyles
 When the initiative changes the token set itself, prototype tokens would double every token in the file. That is the one case for a second file (L1).
 
 - Only after a yes: no tool deletes a file. Then `create_file({ name: "<Project> — <Initiative>", cloneFileId })` and `open_file`, which moves the user's view to the new file; say so first. The clone starts identical, and there `set_tokens` edits freely.
-- It is disposable. It is never merged back by hand: the redesign ships in the code, the main file is re-mirrored, tokens first, and the user deletes the redesign file.
+- It is disposable. It is never merged back by hand: the redesign ships in the code, the main file is re-mirrored, tokens first, and the redesign file is archived with `archive_resources` after a yes that names it. No tool deletes a file, and `unarchive_resources` brings it back.
 - Declare it in the main file's Index while it lives. Anything else with the project's name is still a fork (C1).
 
 ## Stale prototypes

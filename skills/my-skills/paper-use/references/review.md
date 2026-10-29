@@ -36,7 +36,7 @@ C1 v2     C3 v2                    version 2, under the same columns
 
 In order of preference:
 
-1. The production boards in Paper. `export({ fileId, nodes: { <boardId>: [] }, pageId })` with default settings writes `<board name>@2x.png` to `~/Downloads` and returns its `filePath`. Embed it right away, before another export can overwrite it: `<img src="paper-asset://<filePath>">` with `width` and `height` set to the screen's size. Paper uploads it into the file, so the board keeps it after the local file is gone. Components come from the components page the same way.
+1. The production boards in Paper. `export({ fileId, nodes: { <boardId>: [] }, pageId })` with default settings writes `<board name>@2x.png` to `~/Downloads` and returns its `filePath` with Paper Desktop; the remote server returns a download link instead (`mcp-facts.md`). Embed it right away, before another export can overwrite it: `<img src="paper-asset://<filePath>">` with `width` and `height` set to the screen's size. Paper uploads it into the file, so the board keeps it after the local file is gone. Components come from the components page the same way.
 2. The running product, when Paper has no production board yet. Capture the route in a browser at the boards' width, and embed the PNG the same way.
 3. Never a live clone as evidence. `<x-paper-clone>` of a production board works, but the clone is editable, heavy, and moves under the markers after the next re-mirror. An audit records what was judged, so its evidence is a frozen image.
 

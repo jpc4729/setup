@@ -4,7 +4,7 @@ Each entry: the symptom, the cause, the detection, the fix. Paper-specific entri
 
 ## File level
 
-The fork. `Project v2`, `Project — handoff`, `Project copy`. Cause: someone needed a safe place to try something. Detection: `list_resources`, two names sharing a stem. Fix: none that is cheap — Paper tokens are file-level and a copy stops tracking the original, so the two files diverge from the moment they exist. Paper-specific severity: a permanent split, not a recoverable one. Prevent it with L1. The one sanctioned copy is a token redesign file: declared in the Index, disposable, never merged by hand (`prototypes.md`).
+The fork. `Project v2`, `Project — handoff`, `Project copy`. Cause: someone needed a safe place to try something. Detection: `list_resources`, two names sharing a stem. Fix: none that is cheap — Paper tokens are file-level and a copy stops tracking the original, so the two files diverge from the moment they exist. Paper-specific severity: a permanent split, not a recoverable one. After a hand merge, `archive_resources` takes the fork out of the file browser, after a yes that names it. Prevent it with L1. The one sanctioned copy is a token redesign file: declared in the Index, disposable, never merged by hand (`prototypes.md`).
 
 The name that carries state. `App-layout-v1-final-final`. Cause: file names used as version control. Detection: any version, date, or `final` in the file name. Fix: `rename_resource` after a yes (L10), and put the state where it can change — on the artboard.
 

@@ -63,7 +63,7 @@ The guide, loaded in step 1 of Session start, owns the design brief format, the 
 
 Eleven laws. The concern in each is tool-independent; only the mechanism below it is Paper's.
 
-L1: File boundary. One project, one file, named for the project. Paper tokens are file-level and never sync between files, so a second file forks the design system permanently: there is no library and no publishing that could heal it. Never `create_file` for a project that already has one. Split only when a separate product ships. One exception: a redesign of the token set itself gets a disposable clone, `<Project> — <Initiative>`, created only after a yes, declared in the main file's Index, and deleted by the user once the redesign ships (`references/prototypes.md`).
+L1: File boundary. One project, one file, named for the project. Paper tokens are file-level and never sync between files, so a second file forks the design system permanently: there is no library and no publishing that could heal it. Never `create_file` for a project that already has one. Split only when a separate product ships. One exception: a redesign of the token set itself gets a disposable clone, `<Project> — <Initiative>`, created only after a yes, declared in the main file's Index, and archived with `archive_resources` once the redesign ships, after a yes that names it: no tool deletes a file (`references/prototypes.md`).
 
 L2: A page is one purpose and one owner. Paper gives one level of container above the artboard, so the page carries every separation the project needs. New content goes on the page whose purpose covers it, or on a new page created for a new purpose, never on whatever page happens to be open. Once a product is mirrored, each page is code-owned or design-owned, the Index says which, and an agent never hand-edits a code-owned page. Taxonomy: `references/page-taxonomy.md`.
 
@@ -100,6 +100,7 @@ L11: End clean. `finish_working_on_nodes` with the ids of the artboards you touc
 - The request points at the selection, or asks for variants of it → Tweak, `references/iterate.md`.
 - "Export", "share", a deck, a PNG → Present, `references/iterate.md`.
 - Keeping the two identical over time (what changed since the last release, a re-mirror, drift, the sync ritual, the review loop) → `references/mirroring.md`.
+- Files and folders in the file browser (rename, move into a folder, archive a fork once it is merged) → `list_resources` first, then `rename_resource`, `create_folder`, `move_resources` or `archive_resources`, each after a yes that names the items (L1, L10). Never archive a file the user did not name.
 - A single rename, one artboard, one token → do it, then run the checks its level could break: C3 for a page, C5 for an artboard, C8 and C11 for a layer, C10 for a token. In a mirrored file, only on a design-owned page, and never by editing an existing token.
 
 ## Build
@@ -138,7 +139,7 @@ Grammar, separators, ordinals and worked examples: `references/naming.md`.
 
 ## Files
 
-- `references/mcp-facts.md`: what the tool descriptions leave out (what no tool does, live-tested behaviour, guide-versus-tool conflicts). Read first.
+- `references/mcp-facts.md`: the tool list, and what the tool descriptions leave out (what no tool does, files and folders, live-tested behaviour, guide-versus-tool conflicts). Read first.
 - `references/page-taxonomy.md`: the page set scaled to the project, one page per flow, owners, platforms, when a page is justified, and the page list's prefixes, order, dividers and icons.
 - `references/agent-instructions.md`: the page every agent reads first, with the project facts, the file's rules and the board template.
 - `references/naming.md`: the naming grammar at every level, with examples.

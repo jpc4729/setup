@@ -83,7 +83,7 @@ cd setup
 ## Layout
 
 ```text
-claude/            → ~/.claude             the reference: rules, settings, eight agents, hooks, status line
+claude/            → ~/.claude             the reference: rules, settings, eight agents, hooks, status line, worklog mod
 codex/             → ~/.codex              rules, config, seven agents, policy, command rules
 cursor/            → ~/.cursor             rules, seven agents, MCP, permissions
 grok/              → ~/.grok               rules, config, seven agents

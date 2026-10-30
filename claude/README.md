@@ -15,6 +15,7 @@ The idea: fast by default. Heavy checks run only when a mistake costs much. Hard
 - `settings.json`: merged into `~/.claude/settings.json` by `install.sh`. Repo keys win, and Claude Code keeps the keys it writes.
 - `agents/`: `scout`, `verifier`, `worker`, `planner`, `clerk`, `researcher`, `reviewer` and `browser`.
 - `hooks/`: `nested-agents.sh` lets a subagent start only a `clerk` or a `browser`, and `bash-reads.sh` refuses a file read through `cat`, `sed`, `head`, `tail` or `nl`.
+- `mods/worklog/`: a mod that draws a live tree of the main session's prompts, decisions, edits, commands and subagents in a pane beside the chat. `CLAUDE_CODE_PLUGIN_DIRS` in `settings.json` loads it. `/worklog` opens it, `/worklog history` lists the last 10 sessions, and `/worklog <id>` shows one. The model adds decisions and findings with the `mcp__worklog__record` tool.
 - `statusline-command.sh`: the status line. Profile, folder, branch, model, tokens, rate limits, prompt cache, diff and age in one line. Each part stays dim until it needs you.
 - [`../bin/quiet`](../bin/quiet), installed in `~/.local/bin`: `quiet <command>` prints one line on a pass and the full output on a failure, to save context.
 

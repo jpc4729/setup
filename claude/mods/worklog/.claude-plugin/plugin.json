@@ -1,0 +1,6 @@
+{
+  "name": "worklog",
+  "version": "0.1.0",
+  "description": "A live tree of the main session's prompts, decisions, edits, commands and subagents, in a pane beside the chat",
+  "types": "./types/index.d.ts"
+}

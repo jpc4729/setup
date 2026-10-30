@@ -46,7 +46,7 @@ The guide, loaded in step 1 of Session start, owns the design brief format, the 
 ### On top of the guide
 
 - The design brief goes out with the L10 structural plan, never instead of it.
-- `get_screenshot` takes a `nodeId`: the artboard or the group, never "the page". Use the default scale 1, and scale 2 only to read small text.
+- `get_screenshot` takes a `nodeId`: the artboard or the group, never "the page". Use the default scale 1, and scale 2 only to read small text; for more detail, capture a child node.
 - `update_styles` returns the styles it dropped under `ignoredStyles`. Read that key after every call; a style listed there did not apply.
 - `find_nodes` by computed style, token or text is the only mechanical way to find a hardcoded value.
 - `finish_working_on_nodes` is mandatory in every session that wrote anything.

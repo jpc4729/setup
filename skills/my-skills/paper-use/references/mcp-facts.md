@@ -41,6 +41,7 @@ On 2026-10-29 the server listed 41 tools: `archive_resources`, `arrange_pages`, 
 
 - A `font-family` Paper does not apply is stored as `system-ui, sans-serif`, with no error, even when `get_font_family_info` reports the family available. _Exercised:_ Inter and Geist, bare and quoted, through `write_html` and `update_styles`, in a new file. A `--font-*` token kept its `var()` binding, but `fontFamilies` still listed only `System Sans-Serif`. Cause unknown. Read `get_computed_styles` after the first text write.
 - `var(--token)` works in `write_html` and `update_styles` for the file's own tokens. _Exercised._
+- The guide says to consider a page for each distinct body of work, and that an agent may organize the pages it creates. On structure this skill is stricter: a new page waits for a yes (L10), because no tool deletes one.
 - Mobile boards: the tool's default is 390x844, while the guide's text says 375. Keep 390x844.
 - The `mobile-status-bar` guide gives fixed markup with a literal `white` and `font-family: system-ui`, and allows a change to the colour only, `black` on a light background. Keep the markup as it is, and bind the text `color` and the SVG `fill` to a colour token of the file, such as `var(--color-on-surface)`: the guide says SVG `fill` takes a token. Its `system-ui` is the guide's choice and needs no `--font-*` token.
 - `create_tokens` accepts a name that already exists and makes a second token with it. Read `get_tokens({ fileId, namePattern })` before you create one; to change an existing token, use `set_tokens`.

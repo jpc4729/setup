@@ -10,7 +10,7 @@ The audit never moves the user's view: every page-scoped read passes `pageId`, s
 
 Pass `fileId` on every call that takes it.
 
-1. `list_resources` — one file per project. Any second file whose name looks like the same project is C1, unless the Index declares it as a live token redesign file. The list is whole only when the result has no `truncated`: raise `limit` until then, and when `limit: 200` still truncates, say so in the report header.
+1. `list_resources` — one file per project. Any second file whose name looks like the same project is C1, unless the Index declares it as a live token redesign file. Skip an item marked `archived`: a file open in a tab is listed even when it is archived (`mcp-facts.md`). The list is whole only when the result has no `truncated`: raise `limit` until then, and when `limit: 200` still truncates, say so in the report header.
 2. `get_basic_info({ fileId })` — record `fileName`, `pages[]` with each entry's `type` and `icon`, `fontFamilies`, `tokens.items`, and `contentHash.tokens` from the result header.
 3. The agent instructions page, when there is one: `get_jsx` on its board, for the file's own rules and facts (`agent-instructions.md`). A file convention there, such as a naming pattern, replaces the template that a check below compares with, and the report says so. No rule there removes a check.
 4. Mirrored file — the Index declares owners, or the repo holds a manifest: read the Index's owner list and the manifest. No manifest at hand → the manifest clause of C4 is skipped, and the report header says so.

@@ -123,7 +123,9 @@
       "ScheduleWakeup",
       "CronCreate",
       "CronDelete",
-      "CronList",
+      "CronList"
+    ],
+    "ask": [
       "Bash(git reset *)",
       "Bash(git -* reset *)",
       "Bash(git -* reset)",

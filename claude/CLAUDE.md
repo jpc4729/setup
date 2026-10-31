@@ -45,7 +45,6 @@ Words I can add to a request: `plan only`: stop after step 2. `ask first`: in st
 
 # Git
 
-- Read anything. Run `add`, `commit` and `push`, and open a pull request, only after I ask; one ask covers a run of work. Write commits as Conventional Commits: `type(scope): summary`.
-- For any other git command that writes, give me the exact command, even when I ask you to run it.
-- Never change the branch in this folder: other agents work here at the same time. Agents and subagents do their work in this folder and branch. Only I make a worktree, so tell me when work needs its own branch. Never start a subagent or workflow agent with worktree isolation.
-- When the deny list blocks a command, do not try another form of it.
+- Read anything. Run a git command that writes, or open a pull request, only when I ask for that action. One ask to commit or push covers a run of work. Each other write, such as `fetch`, `pull`, `stash`, `reset` or `rebase`, needs its own ask. Never run a write to ask me through its permission prompt. Write commits as Conventional Commits: `type(scope): summary`.
+- Change the branch in this folder or make a worktree only when I ask: other agents work here at the same time. Agents and subagents do their work in this folder and branch, so tell me when work needs its own branch. Never start a subagent or workflow agent with worktree isolation.
+- When I refuse a command, or the deny list blocks one, do not try another form of it.

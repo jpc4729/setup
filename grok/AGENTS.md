@@ -13,6 +13,8 @@ Use it for every task. Skip a step that the task does not need.
 5. Review once: read the whole diff yourself, with the changes of each worker. With a plan, start one `verifier` on the whole diff. Without a plan, start one `verifier` only when a mistake is costly: a schema or stored data, money, login or permissions, concurrency, or an API that others use. Give it my request word for word, the changed paths, and claims that a read or run can fail. Fix what the code confirms, send the fixes once to the same verifier with `resume_from` set to its subagent ID, and stop. Then update each doc that the change made wrong, and delete the plan file. Add a second `verifier` with `model: grok-4.7` when I ask for two models. Do not score the work or review it again unless I ask. A second review goes to a `reviewer`.
 6. Report: what changed, each check and its result, each finding as fixed, dropped or left, and at most three lessons, each with the check, hook or rule that would prevent it. Then stop.
 
+Words I can add to a request: `plan only`: stop after step 2. `ask first`: in step 1, give options with your pick and wait for my answer. `verify this`: in step 5, start one `verifier`. `use workers`: give each separate part to a `worker`.
+
 # Rules
 
 - Make the smallest change that fully does the task. Take the first option that works: no new code, code the repo already has, the standard library or platform, an installed dependency, then the least new code. Add no abstraction, option or code for later that the task does not need, but never cut validation at a trust boundary, error handling that prevents data loss, security or accessibility. Follow the closest example in the repo.
@@ -31,6 +33,7 @@ Use it for every task. Skip a step that the task does not need.
 - Start a subagent with `spawn_subagent` and its `subagent_type`. Give work to a `worker`, never `general-purpose`, and name the files each one owns.
 - Give web research to a `researcher`, a hunt for defects or an audit to a `reviewer`, and a check in a real browser to a `browser`.
 - Brief a subagent with the goal and the decisions. Read each change it returns, except a plan ticket, which the final review reads. Never start a second subagent to review the same work.
+- When you run as `scout`, `verifier`, `worker`, `planner`, `researcher`, `reviewer` or `browser`, your agent instructions win where they conflict with this file.
 - Start a workflow only when my current message contains `ultracode`. Limit its retry loops to 3 rounds. Report a failed run, or one that hits its `agent_budget`; do not resume it or start it again.
 - For a real browser, such as to click, log in, take a screenshot or test a web app, use the `agent-browser` skill. Read static pages with `web_fetch`.
 
@@ -43,7 +46,7 @@ Use it for every task. Skip a step that the task does not need.
 
 # Git
 
-- Read anything. Run `add`, `commit` and `push`, and open a pull request, only after I ask; one ask covers a run of work. Write commits as Conventional Commits: `type(scope): summary`.
-- For any other git command that writes, give me the exact command, even when I ask you to run it.
-- Never change the branch in this folder: other agents work here at the same time. In this tool, only I make a worktree, so tell me when work needs its own branch. Never start a subagent or workflow agent with worktree isolation.
-- When the deny list blocks a command, do not try another form of it.
+- Read anything. Run a git command that writes, or open a pull request, only when I ask for that action. One ask to commit or push covers a run of work. Each other write, such as `fetch`, `pull`, `stash`, `reset` or `rebase`, needs its own ask. Never run a write to ask me through its approval prompt. Write commits as Conventional Commits: `type(scope): summary`.
+- Change the branch in this folder or make a worktree only when I ask: other agents work here at the same time. Agents and subagents do their work in this folder and branch, so tell me when work needs its own branch. Never start a subagent or workflow agent with worktree isolation.
+- In a checkout under `~/.local/src`, read `~/.local/src/AGENTS.md` first. It has the folder layout and the branch names.
+- When I refuse a command or a rule blocks one, do not try another form of it.

@@ -85,6 +85,8 @@ merge() {
   [[ -f "$live" ]] || { install -m 600 "$tmp" "$live" && new=1; }
   # shellcheck disable=SC2016  # $f is a yq variable
   case "$live" in
+    # grok/config.toml moved its git rules from permission.deny to permission.ask.
+    */.grok/config.toml) yq -p toml -o toml eval-all '. as $f ireduce ({}; . * $f) | del(.permission.deny)' "$live" "$tmp" ;;
     *.toml) yq -p toml -o toml eval-all '. as $f ireduce ({}; . * $f)' "$live" "$tmp" ;;
     */.claude/settings.json) jq -s ".[0] * .[1] | $claude_drop" "$live" "$tmp" ;;
     *) jq -s '.[0] * .[1]' "$live" "$tmp" ;;

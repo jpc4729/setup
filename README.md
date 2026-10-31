@@ -1,6 +1,6 @@
 # setup
 
-My agent setup, Claude Code first. I build and tune it in Claude Code. Codex, Cursor, Grok and opencode get the same rules, git deny lists, subagents and 21 skills, each in its own syntax and on its analogous models.
+My agent setup, Claude Code first. I build and tune it in Claude Code. Codex, Cursor, Grok and opencode get the same rules, git approval rules, subagents and 21 skills, each in its own syntax and on its analogous models.
 
 ```text
               CLAUDE CODE SUBAGENTS · OPUS 5.5 + SONNET 5.5 + HAIKU 5.5
@@ -36,7 +36,7 @@ My agent setup, Claude Code first. I build and tune it in Claude Code. Codex, Cu
 ## Claude Code first
 
 - `claude/` is the reference. A change starts there, and each other tool copies it in its own syntax.
-- Claude's deny list is the source of the git deny lists in the other tools.
+- Claude's ask list is the source of the git approval rules in the other tools.
 - Only Claude Code has the `clerk` subagent. The other tools have `scout`, `worker`, `verifier`, `planner`, `researcher`, `reviewer` and `browser`, and run the same flow. In them, no subagent starts another agent.
 - Each tool gives each role its analogous model:
 
@@ -112,10 +112,9 @@ Every tool gets the same short core:
 
 Git:
 
-- Reads are free. `add`, `commit`, `push` and a pull request wait for your ask.
-- Any other git write comes to you as the exact command.
-- No agent changes the branch in the session's folder.
-- Agents and subagents work in the session's folder and branch. Only you make a worktree, and an agent tells you when work needs its own branch. Claude also denies worktree isolation.
+- Reads are free. A git write or a pull request waits for your ask. One ask to commit or push covers a run of work, and each other write needs its own ask.
+- An agent changes the branch in the session's folder or makes a worktree only when you ask.
+- Agents and subagents work in the session's folder and branch, and an agent tells you when work needs its own branch. Claude also denies worktree isolation.
 
 ## Worktrees
 
@@ -140,9 +139,10 @@ Git:
 
 ## Safety
 
-- Claude's deny list is the source. Grok, Cursor and opencode copy it in their own syntax.
-- Among others, it refuses resets, branch switches, rebases, amends, stashes, history rewrites, force and delete pushes, and branch, repo and release deletes.
+- Claude's ask list is the source. Codex, Grok and opencode copy it in their own syntax, and each risky git write asks you first.
+- Among others, it covers resets, branch switches, rebases, amends, stashes, history rewrites, force and delete pushes, and branch, repo and release deletes.
 - Codex's prefix rules catch only the start of a command. Its rules text covers the rest.
+- The Cursor CLI has no ask list, so these commands prompt like every other command. With `--force`, they run with no prompt.
 - No tool runs a git hook.
 
 ## Why
@@ -152,8 +152,8 @@ Git and branches:
 - One folder has one branch, one index and one set of files. A branch change by one agent changes the files under every other agent there.
 - A worktree has its own index, so its commits and its pull request hold only its own changes.
 - Agents work in your folder and branch, so you see each change where you work. You decide when work gets its own worktree.
-- Hard limits are deny rules, not text or hooks. In Claude and Grok, a deny rule holds even when the tool approves commands on its own. A Claude hook that times out, crashes or is missing lets the command run.
-- Commits, pushes and pull requests wait for your ask, so you decide what leaves your machine.
+- Hard limits are permission rules, not text or hooks. In Claude, an ask rule prompts even when the tool approves commands on its own. A Claude hook that times out, crashes or is missing lets the command run.
+- Git writes and pull requests wait for your ask, so you decide what changes your work and what leaves your machine.
 
 Short text:
 

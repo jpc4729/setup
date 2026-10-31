@@ -49,13 +49,14 @@ timeout_secs = 120.0
 # Ask before any tool call not already allowed, matching codex on-request.
 # `permission_mode` wins over the legacy `yolo` key, which is left out.
 # Opt into auto-approve for one session with `grok --always-approve`.
-# Deny rules and PreToolUse hooks apply in every mode.
+# Ask rules and PreToolUse hooks apply in every mode. Under always-approve,
+# Grok keeps only the ask rules that match a shell command's segments.
 [ui]
 permission_mode = "ask"
 
 # Decouple from Claude Code AND Cursor — Grok scans only its own native sources.
 # Skills come from ~/.agents/skills/, which Grok finds on its own, and rules
-# from ~/.grok/AGENTS.md; the [permission] block carries the git denies. Two
+# from ~/.grok/AGENTS.md; the [permission] block carries the git ask rules. Two
 # ~/.claude reads have no compat cell: the shared plugin cache (see [plugins]
 # below) and the settings.json permission rules. All compat cells default true.
 #
@@ -109,16 +110,18 @@ enabled = []
 [skills]
 disabled = ["bet", "thermo-nuclear-code-quality-review"]
 
-# The git rule in code: deny wins over allow (deny > ask > allow) regardless of
-# source and holds under always-approve. The Bash entries of Claude's
-# permissions.deny, with two Grok changes. `git reset*` also refuses a bare
-# `git reset`, which Grok's `git reset *` glob would not match. The two
-# `:?*` rules refuse a `:ref` delete push. Claude has none: it reads a trailing
+# The git rule in code: each git, gh and wt write asks for approval. Ask wins
+# over allow (deny > ask > allow) regardless of source. Under always-approve,
+# Grok keeps the ask rules that match a shell command's segments (documented,
+# not tested on 1.0.70). The Bash entries of Claude's permissions.ask, with two
+# Grok changes. `git reset*` also matches a bare `git reset`, which Grok's
+# `git reset *` glob would not match. The two `:?*` rules match a `:ref`
+# delete push. Claude has none: it reads a trailing
 # `:*` as a plain prefix, as Grok does, and Grok's `?` avoids that ending.
 # Claude's EnterWorktree and Agent(isolation:*) entries are not copied:
 # Grok skips them as unknown tools. AGENTS.md alone forbids worktree isolation.
 [permission]
-deny = [
+ask = [
   "Bash(git reset*)",
   "Bash(git -* reset *)",
   "Bash(git -* reset)",

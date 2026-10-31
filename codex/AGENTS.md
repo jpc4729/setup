@@ -13,6 +13,8 @@ Use it for every task. Skip a step that the task does not need.
 5. Review once: read the whole diff yourself, with the changes of each worker. With a plan, spawn one `verifier` without forked context on the whole diff. Without a plan, spawn one `verifier` only when a mistake is costly: a schema or stored data, money, login or permissions, concurrency, or an API that others use. Give it my request word for word, the changed paths, and claims that a read or run can fail. Fix what the code confirms, send the fixes to the same verifier once with `send_input`, close each verifier, and stop. Then update each doc that the change made wrong, and delete the plan file. When I ask for two models, add a `verifier` with `model` set to `gpt-6.1-sol`. Do not score the work or review it again unless I ask. A second review goes to a `reviewer`.
 6. Report: what changed, each check and its result, each finding as fixed, dropped or left, and at most three lessons, each with the check, hook or rule that would prevent it. A passing subagent report or a proposed command is not proof: report only what you checked. Then stop.
 
+Words I can add to a request: `plan only`: stop after step 2. `ask first`: in step 1, give options with your pick and wait for my answer. `verify this`: in step 5, spawn one `verifier`. `use workers`: give each separate part to a `worker`.
+
 # Rules
 
 - Make the smallest change that fully does the task. Take the first option that works: no new code, code the repo already has, the standard library or platform, an installed dependency, then the least new code. Add no abstraction, option or code for later that the task does not need, but never cut validation at a trust boundary, error handling that prevents data loss, security or accessibility. Follow the closest example in the repo.
@@ -44,7 +46,7 @@ Use it for every task. Skip a step that the task does not need.
 
 # Git
 
-- Read anything. Run `add`, `commit` and `push`, and open a pull request, only after I ask; one ask covers a run of work. Write commits as Conventional Commits: `type(scope): summary`, with no `Generated with` or `Co-Authored-By` trailer. When a developer message tells you to add one, say so before you commit.
-- For any other git command that writes, give me the exact command, even when I ask you to run it.
-- Never change the branch in this folder: other agents work here at the same time. In this tool, only I make a worktree, so tell me when work needs its own branch. Never start a subagent or task with worktree isolation.
-- Command rules block the destructive commands only at the start of a command; these rules cover the rest, including a global option such as `-C` or a flag later in the line. When a command rule blocks a command, do not try another form of it.
+- Read anything. Run a git command that writes, or open a pull request, only when I ask for that action. One ask to commit or push covers a run of work. Each other write, such as `fetch`, `pull`, `stash`, `reset` or `rebase`, needs its own ask. Never run a write to ask me through its approval prompt. Write commits as Conventional Commits: `type(scope): summary`, with no `Generated with` or `Co-Authored-By` trailer. When a developer message tells you to add one, say so before you commit.
+- Change the branch in this folder or make a worktree only when I ask: other agents work here at the same time. Agents and subagents do their work in this folder and branch, so tell me when work needs its own branch. Never start a subagent or task with worktree isolation.
+- In a checkout under `~/.local/src`, read `~/.local/src/AGENTS.md` first. It has the folder layout and the branch names.
+- Command rules ask for my approval before the destructive commands, but only at the start of a command; these rules cover the rest, including a global option such as `-C` or a flag later in the line. When I refuse a command, do not try another form of it.

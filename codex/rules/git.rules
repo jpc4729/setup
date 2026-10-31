@@ -1,173 +1,174 @@
-# The git rule in code, as the deny lists of the other homes carry it; Claude's
-# list in claude/settings.json is the source. Prefix rules match whole
-# leading tokens only, so a git global option such as -C, a flag after a remote
-# or another word, and wrappers pass; AGENTS.md binds those. Authorization for
-# add, commit and plain push remains in AGENTS.md.
+# The git rule in code, as prompt rules: Codex asks the user before each of
+# these commands. They mirror permissions.ask in claude/settings.json, which
+# is the source. Prefix rules match whole leading tokens only, so a git global
+# option such as -C, a flag after a remote or another word, and wrappers pass;
+# AGENTS.md binds those. AGENTS.md also says that the user must ask for each
+# write, and that one ask to commit or push covers a run of work.
 
 prefix_rule(
     pattern = ["git", ["am", "apply", "bisect", "checkout", "checkout-index", "cherry-pick", "clone", "fetch", "filter-branch", "filter-repo", "gc", "init", "merge", "mv", "prune", "prune-packed", "pull", "read-tree", "rebase", "replace", "reset", "restore", "revert", "rm", "sparse-checkout", "switch", "update-index", "update-ref"]],
-    decision = "forbidden",
-    justification = "The user leaves git writes other than add, commit and plain push to themselves. Give the user the exact command and continue on this checkout.",
+    decision = "prompt",
+    justification = "Changes or discards work, a branch or the index; run it only when the user asked for this action.",
     match = ["git reset --hard HEAD~1", "git switch main", "git checkout -b feature", "git fetch origin", "git filter-repo --path src", "git checkout-index -a -f", "git sparse-checkout set docs"],
     not_match = ["git status", "git branch -a", "git stash list", "git add file", "git commit -m message", "git push"],
 )
 
 prefix_rule(
     pattern = ["git", "clean", ["-f", "-ff", "-fd", "-df", "-fx", "-xf", "-fdx", "-fxd", "-dfx", "-dxf", "-xdf", "-xfd", "--force"]],
-    decision = "forbidden",
-    justification = "Leave deletion of untracked files to the user.",
+    decision = "prompt",
+    justification = "Deletes untracked files that git cannot bring back; run it only when the user asked for this action.",
     match = ["git clean -fd", "git clean -dfx", "git clean --force"],
     not_match = ["git clean -n", "git clean --dry-run"],
 )
 
 prefix_rule(
     pattern = ["git", "branch", ["-d", "-D", "-m", "-M", "-f", "-c", "-C", "--delete", "--move", "--force", "--copy"]],
-    decision = "forbidden",
-    justification = "Only the user creates, moves, renames or deletes branches. Give them the command.",
+    decision = "prompt",
+    justification = "Creates, moves, renames or deletes a branch; run it only when the user asked for this action.",
     match = ["git branch -D old", "git branch --copy old new"],
     not_match = ["git branch", "git branch -a", "git branch --merged main"],
 )
 
 prefix_rule(
     pattern = ["git", "stash"],
-    decision = "forbidden",
-    justification = "Stash writes move or discard work, and a bare git stash is one. Leave every stash command to the user, as Claude's deny list does.",
+    decision = "prompt",
+    justification = "Stash writes move or discard work, and a bare git stash is one. Like Claude's ask list, every stash command asks; run it only when the user asked for this action.",
     match = ["git stash", "git stash push", "git stash pop", "git stash -u", "git stash list"],
     not_match = ["git status"],
 )
 
 prefix_rule(
     pattern = ["git", "worktree", ["add", "move", "remove", "prune", "repair", "lock", "unlock"]],
-    decision = "forbidden",
-    justification = "Only the user changes worktrees. Continue in the session's original checkout.",
+    decision = "prompt",
+    justification = "Changes a worktree that other agents can use; run it only when the user asked for this action.",
     match = ["git worktree add ../wt main", "git worktree remove ../wt"],
     not_match = ["git worktree list"],
 )
 
 prefix_rule(
     pattern = ["git", "remote", ["add", "remove", "rm", "rename", "set-url", "set-head", "prune", "update"]],
-    decision = "forbidden",
-    justification = "Changing remotes or fetching is a git write the user runs. Give them the command.",
+    decision = "prompt",
+    justification = "Changes remotes or fetches; run it only when the user asked for this action.",
     match = ["git remote set-url origin example", "git remote update"],
     not_match = ["git remote -v", "git remote get-url origin", "git remote show origin"],
 )
 
 prefix_rule(
     pattern = ["git", "config", ["set", "unset", "rename-section", "remove-section", "edit", "-e", "--add", "--unset", "--unset-all", "--replace-all", "--rename-section", "--remove-section", "--edit"]],
-    decision = "forbidden",
-    justification = "Only the user changes git configuration. Give them the command.",
+    decision = "prompt",
+    justification = "Changes git configuration; run it only when the user asked for this action.",
     match = ["git config set user.name example", "git config --unset user.name"],
     not_match = ["git config get user.name", "git config --list"],
 )
 
 prefix_rule(
     pattern = ["git", "tag", ["-d", "--delete", "-f", "--force"]],
-    decision = "forbidden",
-    justification = "Only the user writes tags. Give them the command.",
+    decision = "prompt",
+    justification = "Deletes or moves a tag; run it only when the user asked for this action.",
     match = ["git tag -d old", "git tag --force latest"],
     not_match = ["git tag", "git tag --list"],
 )
 
 prefix_rule(
     pattern = ["git", "reflog", ["expire", "delete", "drop", "write"]],
-    decision = "forbidden",
-    justification = "Reflog writes can destroy recovery history. Leave them to the user.",
+    decision = "prompt",
+    justification = "Reflog writes can destroy recovery history; run it only when the user asked for this action.",
     match = ["git reflog expire --expire=now --all"],
     not_match = ["git reflog", "git reflog show"],
 )
 
 prefix_rule(
     pattern = ["git", "symbolic-ref", ["-d", "--delete"]],
-    decision = "forbidden",
-    justification = "Only the user deletes or moves a symbolic ref such as HEAD. Give them the command.",
+    decision = "prompt",
+    justification = "Deletes a symbolic ref such as HEAD; run it only when the user asked for this action.",
     match = ["git symbolic-ref -d refs/remotes/origin/HEAD", "git symbolic-ref --delete HEAD"],
     not_match = ["git symbolic-ref HEAD", "git symbolic-ref --short HEAD", "git symbolic-ref refs/remotes/origin/HEAD", "git symbolic-ref --short refs/remotes/origin/HEAD"],
 )
 
 prefix_rule(
     pattern = ["git", "commit", "--amend"],
-    decision = "forbidden",
-    justification = "Only new commits are permitted after the user asks. Give the user the amend command.",
+    decision = "prompt",
+    justification = "Rewrites the last commit; run it only when the user asked for this action.",
     match = ["git commit --amend --no-edit"],
     not_match = ["git commit -m message"],
 )
 
 prefix_rule(
     pattern = ["git", "push", ["-f", "--force", "--force-with-lease", "--force-if-includes", "-d", "--delete", "--mirror", "--prune"]],
-    decision = "forbidden",
-    justification = "Only a plain push is permitted after the user asks. Leave remote history rewrites and ref deletion to the user.",
+    decision = "prompt",
+    justification = "Rewrites remote history or deletes remote refs; run it only when the user asked for this action.",
     match = ["git push --force origin main", "git push --delete origin old"],
     not_match = ["git push origin main"],
 )
 
 prefix_rule(
     pattern = ["wt", ["switch", "remove", "merge", "step", "hook"]],
-    decision = "forbidden",
-    justification = "Only the user changes branches or worktrees. Give them the command and continue in the session's original checkout.",
+    decision = "prompt",
+    justification = "Changes a branch or worktree that other agents can use; run it only when the user asked for this action.",
     match = ["wt switch feature", "wt remove", "wt merge main", "wt step commit", "wt hook pre-merge"],
     not_match = ["wt list", "wt config show"],
 )
 
 prefix_rule(
     pattern = ["wt", ["-y", "--yes", "-v", "-vv", "--verbose"], ["switch", "remove", "merge", "step", "hook"]],
-    decision = "forbidden",
-    justification = "A global option does not change what the command does. Only the user changes branches or worktrees. Give them the command and continue in the session's original checkout.",
+    decision = "prompt",
+    justification = "A global option does not change what the command does. Changes a branch or worktree that other agents can use; run it only when the user asked for this action.",
     match = ["wt -y remove", "wt -v switch feature", "wt --yes merge main"],
     not_match = ["wt -y list", "wt -v config show"],
 )
 
 prefix_rule(
     pattern = ["gh", "pr", ["checkout", "co", "merge"]],
-    decision = "forbidden",
-    justification = "Checking out or merging a pull request changes a branch, which only the user does. Give them the command and continue on this checkout.",
+    decision = "prompt",
+    justification = "Checking out or merging a pull request changes a branch; run it only when the user asked for this action.",
     match = ["gh pr checkout 12", "gh pr co 12", "gh pr merge 12 --squash"],
     not_match = ["gh pr view 12", "gh pr list", "gh pr checks 12"],
 )
 
 prefix_rule(
     pattern = ["gh", "repo", "sync"],
-    decision = "forbidden",
-    justification = "Syncing a repository moves a branch, which only the user does. Give them the command.",
+    decision = "prompt",
+    justification = "Syncing a repository moves a branch; run it only when the user asked for this action.",
     match = ["gh repo sync", "gh repo sync owner/fork"],
     not_match = ["gh repo view", "gh repo list"],
 )
 
 prefix_rule(
     pattern = ["gh", "pr", "close", ["-d", "--delete-branch"]],
-    decision = "forbidden",
-    justification = "This deletes the local and remote branch of the pull request, which only the user does. Give them the command.",
+    decision = "prompt",
+    justification = "Deletes the local and remote branch of the pull request; run it only when the user asked for this action.",
     match = ["gh pr close -d 12", "gh pr close --delete-branch 12"],
     not_match = ["gh pr close 12", "gh pr create --fill"],
 )
 
 prefix_rule(
     pattern = ["gh", "repo", ["delete", "archive", "rename"]],
-    decision = "forbidden",
-    justification = "Deleting, archiving or renaming a repository changes it for every user. Give the user the command.",
+    decision = "prompt",
+    justification = "Deleting, archiving or renaming a repository changes it for every user; run it only when the user asked for this action.",
     match = ["gh repo delete owner/repo --yes", "gh repo archive", "gh repo rename new-name"],
     not_match = ["gh repo view", "gh repo list"],
 )
 
 prefix_rule(
     pattern = ["gh", "release", ["delete", "delete-asset"]],
-    decision = "forbidden",
-    justification = "Only the user deletes a release or its files. Give them the command.",
+    decision = "prompt",
+    justification = "Deletes a release or its files; run it only when the user asked for this action.",
     match = ["gh release delete v1.0.0", "gh release delete-asset v1.0.0 app.zip"],
     not_match = ["gh release view v1.0.0", "gh release list"],
 )
 
 prefix_rule(
     pattern = ["gh", "api", ["-X", "--method"], "DELETE"],
-    decision = "forbidden",
-    justification = "A DELETE request deletes data on GitHub, such as a branch, a tag or a release. Give the user the command.",
+    decision = "prompt",
+    justification = "A DELETE request deletes data on GitHub, such as a branch, a tag or a release; run it only when the user asked for this action.",
     match = ["gh api -X DELETE repos/owner/repo/git/refs/heads/old", "gh api --method DELETE repos/owner/repo/releases/1"],
     not_match = ["gh api repos/owner/repo", "gh api -X GET repos/owner/repo"],
 )
 
 prefix_rule(
     pattern = ["gh", "api", ["-XDELETE", "--method=DELETE"]],
-    decision = "forbidden",
-    justification = "A DELETE request deletes data on GitHub, such as a branch, a tag or a release. Give the user the command.",
+    decision = "prompt",
+    justification = "A DELETE request deletes data on GitHub, such as a branch, a tag or a release; run it only when the user asked for this action.",
     match = ["gh api -XDELETE repos/owner/repo/git/refs/heads/old", "gh api --method=DELETE repos/owner/repo/releases/1"],
     not_match = ["gh api -XGET repos/owner/repo", "gh api --method=GET repos/owner/repo"],
 )

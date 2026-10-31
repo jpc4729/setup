@@ -54,5 +54,5 @@ ls -d ~/.local/src/*/*/*/         # each checkout on this Mac
 ## For agents
 
 - You work in one checkout. Stay in it. A sibling folder is another branch of the same repo, and another agent can use it.
-- Make, move or remove a worktree only when the user asks, and never switch the branch in a checkout. When work needs its own branch, tell the user, with a branch name that follows the rules above.
+- Make, move or remove a worktree, or switch the branch, only when the user asks. A switch makes the folder name wrong, so say so in your reply. When work needs its own branch, tell the user, with a branch name that follows the rules above.
 - For the code of a repo, its own `AGENTS.md` or `CLAUDE.md` comes before this file.

@@ -57,10 +57,10 @@ browser    Sonnet 5.5 · high    GPT-6.1 Sol · medium   Sonnet 5.5   grok-4.6 �
 
 ## Install
 
-You need bash, rsync, [jq](https://jqlang.org) and [yq](https://github.com/mikefarah/yq). The worktree layout also needs [Worktrunk](https://worktrunk.dev). `herdr/` configures [herdr](https://herdr.dev), a terminal workspace for agents.
+You need bash, rsync, [jq](https://jqlang.org) and [yq](https://github.com/mikefarah/yq). The worktree layout also needs [Worktrunk](https://worktrunk.dev). The herdr config also needs [herdr](https://herdr.dev).
 
 ```sh
-git clone https://github.com/josechifflet/setup.git
+git clone https://github.com/jpc4729/setup.git
 cd setup
 ./install.sh -n   # list what would change
 ./install.sh

@@ -1,0 +1,33 @@
+id = "local.repo-label"
+name = "Repo label"
+version = "0.1.0"
+min_herdr_version = "0.9.5"
+description = "Label a workspace in ~/.local/src/<owner>/<repo>/<folder> as <repo>"
+platforms = ["linux", "macos"]
+
+[[startup]]
+command = ["sh", "label.sh"]
+
+[[events]]
+on = "workspace.created"
+command = ["sh", "label.sh"]
+
+# A pane that changes folder sends only pane.updated, which cannot run a plugin
+# hook in herdr 0.9.5. These events come soon after, such as when you start an
+# agent there or focus the pane. Do not hook workspace.renamed: each rename
+# that label.sh makes sends it.
+[[events]]
+on = "workspace.focused"
+command = ["sh", "label.sh"]
+
+[[events]]
+on = "pane.created"
+command = ["sh", "label.sh"]
+
+[[events]]
+on = "pane.focused"
+command = ["sh", "label.sh"]
+
+[[events]]
+on = "pane.agent_status_changed"
+command = ["sh", "label.sh"]

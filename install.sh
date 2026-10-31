@@ -120,6 +120,18 @@ merge worktrunk/config.toml "$HOME/.config/worktrunk/config.toml"
 merge herdr/config.toml "$HOME/.config/herdr/config.toml"
 # tab_bar_right in the herdr config runs this script. merge made its folder.
 rsync -a ${dry:+"$dry"} --backup --suffix=.bak "$repo/herdr/status.sh" "$HOME/.config/herdr/"
+# The repo-label plugin names each workspace in ~/.local/src after its repo.
+# Linking it again is safe.
+rsync -a ${dry:+"$dry"} --backup --suffix=.bak "$repo/herdr/plugins/repo-label" "$HOME/.config/herdr/plugins/"
+if [[ -n "$dry" ]]; then
+  echo "link herdr plugin $HOME/.config/herdr/plugins/repo-label"
+elif command -v herdr > /dev/null; then
+  # An older herdr refuses the plugin; the rest of the install goes on.
+  herdr plugin link "$HOME/.config/herdr/plugins/repo-label" > /dev/null ||
+    echo "install.sh: herdr did not link the repo-label plugin" >&2
+else
+  echo "install.sh: herdr is missing, so the repo-label plugin is not linked" >&2
+fi
 codex_requirements
 
 # Codex and Grok read ~/.agents/skills. Claude gets one symlink per skill into

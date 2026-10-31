@@ -78,7 +78,7 @@ cd setup
 - Copies the skills into `~/.agents/skills` and `~/.cursor/skills`, and links them into `~/.claude/skills`.
 - Copies `bin/quiet` and `bin/agent-stats` into `~/.local/bin`.
 - Copies `src/AGENTS.md` into `~/.local/src`, and merges `worktrunk/config.toml` into `~/.config/worktrunk/config.toml`.
-- Merges `herdr/config.toml` into `~/.config/herdr/config.toml`, and copies `herdr/status.sh` beside it. Run `herdr server reload-config` to load it in a running herdr.
+- Merges `herdr/config.toml` into `~/.config/herdr/config.toml`, and copies `herdr/status.sh` beside it. Run `herdr server reload-config` to load it in a running herdr. Copies the `repo-label` plugin into `~/.config/herdr/plugins` and links it: each workspace in `~/.local/src/<owner>/<repo>/<folder>` gets the label `<repo>`, not herdr's `main` or branch folder. A name you give a workspace stays. `herdr plugin disable local.repo-label` turns it off.
 - On macOS, installs Codex's `requirements.toml` as a managed preference.
 - Never links and never deletes. A link would carry agent state back into the repo.
 
@@ -96,7 +96,7 @@ bin/quiet          → ~/.local/bin/quiet    one line on a pass, full output on 
 bin/agent-stats    → ~/.local/bin/         Claude Code agent runs, minutes, efforts and quality guards
 src/AGENTS.md      → ~/.local/src/         layout, branch names and cleanup for each clone and worktree
 worktrunk/         → ~/.config/worktrunk   the worktree path for that layout, merged
-herdr/             → ~/.config/herdr       theme, tab bar and host vitals for herdr, config merged
+herdr/             → ~/.config/herdr       theme, tab bar, host vitals and repo labels for herdr, config merged
 AGENTS.md                                  rules for an agent that edits this repo
 ```
 

@@ -57,7 +57,7 @@ browser    Sonnet 5.5 · high    GPT-6.1 Sol · medium   Sonnet 5.5   grok-4.6 �
 
 ## Install
 
-You need bash, rsync, [jq](https://jqlang.org) and [yq](https://github.com/mikefarah/yq). The worktree layout also needs [Worktrunk](https://worktrunk.dev).
+You need bash, rsync, [jq](https://jqlang.org) and [yq](https://github.com/mikefarah/yq). The worktree layout also needs [Worktrunk](https://worktrunk.dev). `herdr/` configures [herdr](https://herdr.dev), a terminal workspace for agents.
 
 ```sh
 git clone https://github.com/josechifflet/setup.git
@@ -78,6 +78,7 @@ cd setup
 - Copies the skills into `~/.agents/skills` and `~/.cursor/skills`, and links them into `~/.claude/skills`.
 - Copies `bin/quiet` and `bin/agent-stats` into `~/.local/bin`.
 - Copies `src/AGENTS.md` into `~/.local/src`, and merges `worktrunk/config.toml` into `~/.config/worktrunk/config.toml`.
+- Merges `herdr/config.toml` into `~/.config/herdr/config.toml`, and copies `herdr/status.sh` beside it. Run `herdr server reload-config` to load it in a running herdr.
 - On macOS, installs Codex's `requirements.toml` as a managed preference.
 - Never links and never deletes. A link would carry agent state back into the repo.
 
@@ -95,6 +96,7 @@ bin/quiet          → ~/.local/bin/quiet    one line on a pass, full output on 
 bin/agent-stats    → ~/.local/bin/         Claude Code agent runs, minutes, efforts and quality guards
 src/AGENTS.md      → ~/.local/src/         layout, branch names and cleanup for each clone and worktree
 worktrunk/         → ~/.config/worktrunk   the worktree path for that layout, merged
+herdr/             → ~/.config/herdr       theme, tab bar and host vitals for herdr, config merged
 AGENTS.md                                  rules for an agent that edits this repo
 ```
 

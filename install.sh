@@ -117,6 +117,9 @@ for f in $merged; do
   merge "$f" "$HOME/.$f"
 done
 merge worktrunk/config.toml "$HOME/.config/worktrunk/config.toml"
+merge herdr/config.toml "$HOME/.config/herdr/config.toml"
+# tab_bar_right in the herdr config runs this script. merge made its folder.
+rsync -a ${dry:+"$dry"} --backup --suffix=.bak "$repo/herdr/status.sh" "$HOME/.config/herdr/"
 codex_requirements
 
 # Codex and Grok read ~/.agents/skills. Claude gets one symlink per skill into

@@ -1,0 +1,20 @@
+onboarding = false
+
+[theme]
+name = "dracula"
+auto_switch = false
+
+[ui]
+show_agent_labels_on_pane_borders = true
+agent_panel_sort = "priority"
+
+# The herdr server that draws the tab bar runs the command, so under
+# `herdr --remote` the remote box's own config and status.sh apply.
+tab_bar_right = [
+  { type = "command", command = "~/.config/herdr/status.sh", interval_seconds = 5, timeout_seconds = 2 },
+  { type = "hostname" },
+]
+tab_bar_right_separator = " · "
+
+[ui.sound]
+enabled = false

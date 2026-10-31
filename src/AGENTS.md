@@ -7,6 +7,7 @@ This folder holds each git checkout on this Mac: each primary clone and each wor
 ```text
 ~/.local/src/
   AGENTS.md                  this file
+  local-src.code-workspace   optional VS Code workspace, one folder per repo
   <owner>/                   GitHub user or org, as in the remote URL
     <repo>/                  repo name, as in the remote URL
       main/                  primary clone, always on the default branch
@@ -47,10 +48,11 @@ ls -d ~/.local/src/*/*/*/         # each checkout on this Mac
 - Untracked files, such as `.env` and `node_modules`, are separate in each worktree. Worktrunk copies them from the primary clone when it makes a worktree.
 - Worktrees of one repo can run at the same time. Give each dev server its own port, for example with `{{ branch | hash_port }}` in the hooks of the repo's `.config/wt.toml`.
 - Each week, run `wt list` in each repo you used and remove each merged worktree.
+- When you use `local-src.code-workspace`, give it one folder per repo, `<owner>/<repo>`, named `<repo>`. VS Code shows each worktree in it and finds each checkout one level down as a Source Control repository. Add or remove a folder there only when you add or remove a repo.
 - Remove a repo folder only when `wt list` shows no open work and `git log --branches --not --remotes` in the primary clone shows no commits.
 
 ## For agents
 
 - You work in one checkout. Stay in it. A sibling folder is another branch of the same repo, and another agent can use it.
-- Do not make, move or remove a worktree, and do not switch the branch. When work needs its own branch, tell the user, with a branch name that follows the rules above.
+- Make, move or remove a worktree only when the user asks, and never switch the branch in a checkout. When work needs its own branch, tell the user, with a branch name that follows the rules above.
 - For the code of a repo, its own `AGENTS.md` or `CLAUDE.md` comes before this file.

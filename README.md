@@ -5,7 +5,7 @@ My agent setup, Claude Code first. I build and tune it in Claude Code. Codex, Cu
 ```text
               CLAUDE CODE SUBAGENTS · OPUS 5.5 + SONNET 5.5 + HAIKU 5.5
 
-                        Opus 5.5 · high · main session
+                        Opus 5.5 · xhigh · main session
                                       |
         one flow for every task: understand, plan, build, check, review once,
                     report. A small task skips the plan.
@@ -42,7 +42,7 @@ My agent setup, Claude Code first. I build and tune it in Claude Code. Codex, Cu
 
 ```text
 role       Claude Code          Codex                  Cursor       Grok               opencode
-main       Opus 5.5 · high      GPT-6.1 Sol · xhigh    your pick    grok-4.6 · high    glm-5.3-flash · high
+main       Opus 5.5 · xhigh     GPT-6.1 Sol · xhigh    your pick    grok-4.6 · high    glm-5.3-flash · high
 scout      Sonnet 5.5 · medium  GPT-6.1 Sol · medium   Sonnet 5.5   grok-4.6 · high    glm-5.3-flash · high
 worker     Opus 5.5 · medium    GPT-6.1 Sol · high     Opus 5.5     grok-4.6 · xhigh   glm-5.3 · high
 verifier   Opus 5.5 · high      GPT-6 Astra · medium   Opus 5.5     grok-4.6 · xhigh   glm-5.3 · high
@@ -83,7 +83,7 @@ cd setup
 ## Layout
 
 ```text
-claude/            → ~/.claude             the reference: rules, settings, eight agents, hooks, status line, worklog mod
+claude/            → ~/.claude             the reference: rules, settings, eight agents, hooks, status line, worklog mod (off)
 codex/             → ~/.codex              rules, config, seven agents, policy, command rules
 cursor/            → ~/.cursor             rules, seven agents, MCP, permissions
 grok/              → ~/.grok               rules, config, seven agents

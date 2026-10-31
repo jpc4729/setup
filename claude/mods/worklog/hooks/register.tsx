@@ -8,6 +8,7 @@ import type {
 
 import type {
   WorklogKind,
+  WorklogListing,
   WorklogNode,
   WorklogSession,
   WorklogStatus,
@@ -15,10 +16,11 @@ import type {
 
 const PANE = 'worklog'
 const RECORD = 'mcp__worklog__record'
-const STORE_KEY = 'sessions-1'
-// The store holds 4 MiB for all keys: these bound one session and the history.
-const KEEP_NODES = 400
-const KEEP_SESSIONS = 10
+const STORE_KEY = 'sessions-2'
+const OLD_STORE_KEYS = ['sessions-1']
+// Bounds for one session in memory and for the history on disk.
+const KEEP_NODES = 200
+const KEEP_SESSIONS = 5
 
 // Change a tag when its value's fields change: it declines what an earlier
 // version stored, which outlives a reload.
@@ -28,23 +30,18 @@ const session = atom({ plugin: 'worklog', key: 'session' } as const, null, {
 const past = atom({ plugin: 'worklog', key: 'past' } as const, null, {
   shape: 'session-1',
 })
+const listing = atom({ plugin: 'worklog', key: 'listing' } as const, null, {
+  shape: 'listing-1',
+})
 
-const RECORDED: readonly WorklogKind[] = [
-  'decision',
-  'rejected',
-  'step',
-  'finding',
-  'summary',
-]
-const STATUSES: readonly WorklogStatus[] = ['running', 'done', 'failed']
+const RECORDED: readonly WorklogKind[] = ['decision', 'rejected', 'finding', 'step']
 
 const PREFIX: Record<WorklogKind, string> = {
   prompt: '',
   decision: 'Decision ',
   rejected: 'Rejected ',
-  step: 'Step ',
   finding: 'Finding ',
-  summary: 'Summary ',
+  step: 'Step ',
   edit: 'Edit ',
   run: 'Bash ',
   agent: 'Agent ',
@@ -56,43 +53,33 @@ const COLOR: Record<WorklogStatus, string> = {
   failed: 'error',
 }
 
-const RULES = `# Work log
-The user watches a tree of this session's work in a pane beside the chat. Prompts, file edits, commands that change state and subagent runs are logged by themselves. Call ${RECORD} for what the hooks cannot see: each decision you make (kind "decision", the reason in \`detail\`), each option you rejected (kind "rejected", \`parent\` the decision's id), each finding of a check or review (kind "finding", with \`file\` and \`line\` when known), and one line at the end of a task (kind "summary"). For a long step, record it with status "running" and update it by \`id\` when it ends. Keep titles short. Do not record reads or routine steps.`
+// The model reads the description and the schema on every request: keep both
+// short. Edits, commands and subagents need no call: the hooks log them.
+const DESCRIPTION =
+  "Log a decision, rejected option, finding or key step to the user's work-log pane. Only what a reviewer must know, never routine work. Returns an id for parent."
 
 const SCHEMA = {
   type: 'object',
   properties: {
-    kind: {
-      type: 'string',
-      enum: RECORDED,
-      description: 'What the node is. Required when adding.',
-    },
-    title: {
-      type: 'string',
-      description: 'One short line. Required when adding.',
-    },
-    detail: {
-      type: 'string',
-      description: 'A short reason or note, shown dim after the title.',
-    },
-    parent: {
-      type: 'string',
-      description: 'The id of the node to nest under. Default: the current prompt.',
-    },
-    file: { type: 'string', description: 'A file the node is about.' },
-    line: { type: 'integer', minimum: 1, description: 'A line in that file.' },
-    status: { type: 'string', enum: STATUSES, description: 'Default "done".' },
-    id: {
-      type: 'string',
-      description: 'The id of an existing node to update instead of adding one.',
-    },
+    kind: { enum: RECORDED },
+    title: { type: 'string' },
+    detail: { type: 'string' },
+    parent: { type: 'string' },
+    file: { type: 'string' },
+    line: { type: 'integer' },
   },
+  required: ['kind', 'title'],
   additionalProperties: false,
 }
 
 type Dollar = EngineInterface
 type NewNode = Omit<WorklogNode, 'id' | 'parent'> & { parent?: string | null }
 type Row = { node: WorklogNode; lead: string; isRoot: boolean }
+// On disk a node keeps no runtime ids, and `status` only when it failed.
+type StoredNode = Omit<WorklogNode, 'status' | 'ref' | 'agent'> & {
+  status?: 'failed'
+}
+type StoredSession = Omit<WorklogSession, 'seq' | 'nodes'> & { nodes: StoredNode[] }
 
 const oneLine = (text: string, max: number) => {
   const line = text.trim().split('\n')[0]?.trim() ?? ''
@@ -104,18 +91,27 @@ const basename = (path: string) => path.split('/').pop() || path
 
 const lastRoot = (s: WorklogSession) => s.nodes.findLast(n => n.parent === null)
 
-// A background task's notice reads as its <summary>, other markup as its text.
-const promptTitle = (text: string) => {
-  const summary = /<summary>([\s\S]*?)<\/summary>/.exec(text)?.[1]
-
-  return oneLine(summary ?? text.replace(/<[^>]+>/g, ' '), 120)
-}
-
-const isSession = (value: unknown): value is WorklogSession =>
+const isStored = (value: unknown): value is StoredSession =>
   typeof value === 'object' &&
   value !== null &&
-  typeof (value as WorklogSession).id === 'string' &&
-  Array.isArray((value as WorklogSession).nodes)
+  typeof (value as StoredSession).id === 'string' &&
+  Array.isArray((value as StoredSession).nodes)
+
+const compact = (s: WorklogSession): StoredSession => ({
+  id: s.id,
+  title: s.title,
+  startedAt: s.startedAt,
+  files: s.files,
+  nodes: s.nodes.map(({ ref: _ref, agent: _agent, status, ...n }) =>
+    status === 'failed' ? { ...n, status } : n,
+  ),
+})
+
+const expand = (s: StoredSession): WorklogSession => ({
+  ...s,
+  seq: Math.max(0, ...s.nodes.map(n => Number(n.id.slice(1)) || 0)),
+  nodes: s.nodes.map(n => ({ ...n, status: n.status ?? 'done' })),
+})
 
 // Drops the oldest prompts, each with all its nodes, until the session fits.
 // A parent is always older than its children, so one pass finds them.
@@ -162,11 +158,16 @@ async function addNode($: Dollar, node: NewNode): Promise<string | undefined> {
   return id
 }
 
+// Changes the matching nodes; writes nothing when none match.
 async function patchNodes(
   $: Dollar,
   isMatch: (n: WorklogNode) => boolean,
   change: Partial<WorklogNode>,
 ) {
+  const live = await read($, session)
+  if (live === null || !live.nodes.some(isMatch)) {
+    return
+  }
   await update($, session, s =>
     s === null
       ? s
@@ -177,10 +178,10 @@ async function patchNodes(
   )
 }
 
-async function stored($: Dollar): Promise<WorklogSession[]> {
+async function stored($: Dollar): Promise<StoredSession[]> {
   const value = await $.store.get(STORE_KEY)
 
-  return Array.isArray(value) ? value.filter(isSession) : []
+  return Array.isArray(value) ? value.filter(isStored) : []
 }
 
 async function save($: Dollar, s: WorklogSession | null) {
@@ -188,7 +189,7 @@ async function save($: Dollar, s: WorklogSession | null) {
     return
   }
   const rest = (await stored($)).filter(one => one.id !== s.id)
-  await $.store.set(STORE_KEY, [...rest, s].slice(-KEEP_SESSIONS))
+  await $.store.set(STORE_KEY, [...rest, compact(s)].slice(-KEEP_SESSIONS))
 }
 
 // Makes the live session the one the engine runs now. A new id (the first
@@ -202,10 +203,10 @@ async function ensure($: Dollar) {
   await save($, live)
   const found = (await stored($)).find(one => one.id === id)
   const startedAt = await $.clock.now()
-  await update(
-    $,
-    session,
-    () => found ?? { id, title: '', startedAt, seq: 0, nodes: [], files: [] },
+  await update($, session, () =>
+    found !== undefined
+      ? expand(found)
+      : { id, title: '', startedAt, seq: 0, nodes: [], files: [] },
   )
 }
 
@@ -353,85 +354,86 @@ function layout(nodes: readonly WorklogNode[]): Row[] {
   return rows
 }
 
+const dateOf = (ms: number) => new Date(ms).toISOString().slice(5, 16).replace('T', ' ')
+
 export const register: Register = on => {
-  // The slash command a turn runs: its row reads as the typed line, not the
-  // skill body the model gets. Every prompt sets or clears it.
-  let commandLine: string | undefined
+  // Off in a headless run (`claude -p`, the SDK): nothing draws there, so it
+  // adds no tool and writes no history.
+  let isLive = false
+  // The person's own prompt, typed or a slash command line, for the next
+  // turn's root. Turns that no person started go under the prompt before.
+  let typed: string | undefined
 
   on('session.start', async ($, e, next) => {
-    await $.tool.register({
-      name: 'record',
-      description:
-        'Adds a node to the work log tree the user sees beside the chat, or updates one by id. Use it for decisions, rejected options, findings, long steps and the summary of a task; edits, commands and subagents are logged by themselves. Returns the node id, to pass later as `parent` or `id`.',
-      inputSchema: SCHEMA,
-      isDeferred: false,
-    })
-    await $.command.register({
-      name: 'worklog',
-      description: 'Show the work log of this session or of a stored one',
-      argumentHint: '[history | <session id>]',
-    })
-    if (e.isInteractive) {
+    isLive = e.isInteractive
+    if (isLive) {
+      await $.tool.register({
+        name: 'record',
+        description: DESCRIPTION,
+        inputSchema: SCHEMA,
+        isDeferred: false,
+      })
+      await $.command.register({
+        name: 'worklog',
+        description: 'Show the work log: this session, history, or a stored session id',
+        argumentHint: '[history | <session id>]',
+      })
+      for (const key of OLD_STORE_KEYS) {
+        await $.store.delete(key)
+      }
       void $.ui.open({ id: PANE, title: 'Work log' })
     }
 
     return next(e)
   })
 
+  // Every answer shows in the pane or a toast, never as text the model reads.
   on('command.run', { command: 'worklog' }, async ($, e) => {
+    typed = undefined
     const arg = e.args.trim().replace(/^#/, '')
     if (arg === 'history') {
-      const all = (await stored($)).reverse()
-      const lines = all.map(
-        s =>
-          `#${s.id.slice(0, 8)}  ${new Date(s.startedAt).toISOString().slice(0, 16).replace('T', ' ')}  ${s.nodes.length} nodes  ${s.title}`,
-      )
-
-      return { text: lines.length > 0 ? lines.join('\n') : 'No stored sessions yet.' }
-    }
-    if (arg === '') {
+      const rows: WorklogListing[] = (await stored($)).reverse().map(s => ({
+        id: s.id,
+        startedAt: s.startedAt,
+        size: s.nodes.length,
+        title: s.title,
+      }))
       await update($, past, () => null)
-      await $.ui.open({ id: PANE, title: 'Work log' })
+      await update($, listing, () => rows)
+    } else if (arg === '') {
+      await update($, past, () => null)
+      await update($, listing, () => null)
+    } else {
+      const found = (await stored($)).findLast(s => s.id.startsWith(arg))
+      if (found === undefined) {
+        $.ui.toast(`worklog: no stored session starts with ${arg}`)
 
-      return { text: 'Work log opened.' }
+        return {}
+      }
+      await update($, listing, () => null)
+      await update($, past, () => expand(found))
     }
-    const found = (await stored($)).findLast(s => s.id.startsWith(arg))
-    if (found === undefined) {
-      return { text: `No stored session id starts with "${arg}". Run /worklog history.` }
-    }
-    await update($, past, () => found)
     await $.ui.open({ id: PANE, title: 'Work log' })
 
-    return {
-      text: `Showing session #${found.id.slice(0, 8)}. Run /worklog to show this session again.`,
-    }
-  })
-
-  on('prompt.compose', async ($, e, next) => {
-    const composed = await next(e)
-    if (!e.tools.includes(RECORD)) {
-      return composed
-    }
-
-    return {
-      ...composed,
-      sections: [
-        ...composed.sections,
-        { id: 'worklog:rules', text: RULES, scope: 'session' },
-      ],
-    }
+    return {}
   })
 
   on('prompt.submit', ($, e, next) => {
-    commandLine =
-      e.command === undefined
-        ? undefined
-        : oneLine(`/${e.command.name} ${e.command.args}`, 120)
+    const isPerson =
+      (e.origin.kind === 'composer' || e.origin.kind === 'bridge') && e.isMeta !== true
+    typed = !isPerson
+      ? undefined
+      : e.command !== undefined
+        ? oneLine(`/${e.command.name} ${e.command.args}`, 80)
+        : oneLine(e.text, 80)
 
     return next(e)
   })
 
   on('turn.start', async ($, e, next) => {
+    if (!isLive) {
+      return next(e)
+    }
     if (e.agentId !== undefined) {
       const agent = e.agentId
       await patchNodes($, n => n.agent === agent, { status: 'running' })
@@ -439,31 +441,33 @@ export const register: Register = on => {
       return next(e)
     }
     await ensure($)
-    const text = e.text.trim()
-    if (text === '') {
-      // A continuation runs under the prompt before it.
-      const live = await read($, session)
-      const root = live === null ? undefined : lastRoot(live)
-      if (root !== undefined) {
-        await patchNodes($, n => n.id === root.id, { status: 'running', ref: e.turnId })
-      }
-    } else {
-      const title = commandLine ?? promptTitle(text)
-      commandLine = undefined
+    const title = typed
+    typed = undefined
+    const live = await read($, session)
+    const root = live === null ? undefined : lastRoot(live)
+    if (title !== undefined || root === undefined) {
+      const text = title ?? (oneLine(e.text, 80) || 'Session')
       await addNode($, {
         parent: null,
         kind: 'prompt',
-        title,
+        title: text,
         status: 'running',
         ref: e.turnId,
       })
-      await update($, session, s => (s !== null && s.title === '' ? { ...s, title } : s))
+      await update($, session, s =>
+        s !== null && s.title === '' ? { ...s, title: text } : s,
+      )
+    } else {
+      await patchNodes($, n => n.id === root.id, { status: 'running', ref: e.turnId })
     }
 
     return next(e)
   })
 
   on('turn.complete', async ($, e, next) => {
+    if (!isLive) {
+      return next(e)
+    }
     const status: WorklogStatus = e.reason === 'answer' ? 'done' : 'failed'
     if (e.agentId !== undefined) {
       const agent = e.agentId
@@ -479,9 +483,12 @@ export const register: Register = on => {
   })
 
   on('session.end', async ($, e, next) => {
-    await save($, await read($, session))
-    if (e.reason === 'clear') {
-      await update($, session, () => null)
+    typed = undefined
+    if (isLive) {
+      await save($, await read($, session))
+      if (e.reason === 'clear') {
+        await update($, session, () => null)
+      }
     }
 
     return next(e)
@@ -489,7 +496,7 @@ export const register: Register = on => {
 
   on('agent.spawn', async ($, e, next) => {
     const spawned = await next(e)
-    if (spawned.agentId !== undefined) {
+    if (isLive && spawned.agentId !== undefined) {
       const agent = spawned.agentId
       const ref = e.tool_use_id
       await patchNodes($, n => n.kind === 'agent' && n.ref === ref, { agent })
@@ -508,74 +515,44 @@ export const register: Register = on => {
         : undefined
     }
     const kind = RECORDED.find(k => k === input.kind)
-    const status = STATUSES.find(s => s === input.status)
-    const title = text('title', 120)
-    const detail = text('detail', 160)
+    const title = text('title', 80)
+    if (kind === undefined || title === undefined) {
+      return { deny: `Needs kind (${RECORDED.join('|')}) and title.` }
+    }
+    const detail = text('detail', 80)
     const file = text('file', 400)
+    const parent = text('parent', 20)
     const line =
       typeof input.line === 'number' && Number.isInteger(input.line) && input.line > 0
         ? input.line
         : undefined
-    const id = text('id', 20)
-    const parent = text('parent', 20)
-    if (input.kind !== undefined && kind === undefined) {
-      return { deny: `kind must be one of: ${RECORDED.join(', ')}.` }
-    }
-    if (input.status !== undefined && status === undefined) {
-      return { deny: `status must be one of: ${STATUSES.join(', ')}.` }
-    }
-    if (id === undefined && (kind === undefined || title === undefined)) {
-      return { deny: 'kind and title are required to add a node.' }
-    }
     await ensure($)
     const live = await read($, session)
-    const has = (nodeId: string) => live?.nodes.some(n => n.id === nodeId) === true
-    const where =
-      file === undefined
-        ? undefined
-        : `${basename(file)}${line === undefined ? '' : `:${line}`}`
-
-    if (id !== undefined) {
-      if (!has(id)) {
-        return { deny: `No work log node has the id ${id}.` }
-      }
-      await patchNodes($, n => n.id === id, {
-        ...(kind !== undefined && { kind }),
-        ...(title !== undefined && { title }),
-        ...(detail !== undefined && { detail }),
-        ...(where !== undefined && { where }),
-        ...(status !== undefined && { status }),
-      })
-
-      return { result: `Updated ${id}.` }
-    }
-    if (kind === undefined || title === undefined) {
-      return { deny: 'kind and title are required to add a node.' }
-    }
-    if (parent !== undefined && !has(parent)) {
-      return { deny: `No work log node has the id ${parent}.` }
+    if (parent !== undefined && live?.nodes.some(n => n.id === parent) !== true) {
+      return { deny: `No node ${parent}.` }
     }
     // A subagent's node nests under its own agent row.
     const agentRow =
       e.agentId === undefined
         ? undefined
         : live?.nodes.find(n => n.agent === e.agentId)?.id
+    const nest = parent ?? agentRow
     const added = await addNode($, {
       kind,
       title,
-      status: status ?? 'done',
-      ...(parent !== undefined || agentRow !== undefined
-        ? { parent: parent ?? agentRow }
-        : {}),
+      status: 'done',
+      ...(nest !== undefined && { parent: nest }),
       ...(detail !== undefined && { detail }),
-      ...(where !== undefined && { where }),
+      ...(file !== undefined && {
+        where: `${basename(file)}${line === undefined ? '' : `:${line}`}`,
+      }),
     })
 
-    return { result: `Recorded ${added}.` }
+    return { result: added ?? 'not logged' }
   })
 
   on('tool.call', async ($, e, next) => {
-    const node = e.agentId === undefined ? await startOf($, e) : undefined
+    const node = isLive && e.agentId === undefined ? await startOf($, e) : undefined
     const id = node === undefined ? undefined : await addNode($, node)
     if (id === undefined) {
       return next(e)
@@ -596,6 +573,31 @@ export const register: Register = on => {
 
   on('ui.render', { component: 'Pane', requestId: PANE }, async ($, e) => {
     const { Box, Text } = $.ui.resolve(e)
+    const list = await read($, listing)
+
+    if (list !== null) {
+      return (
+        <Box flexDirection="column" width={e.props.bodyColumns}>
+          <Box flexDirection="row" gap={1} marginBottom={1}>
+            <Text color="merged">⎇</Text>
+            <Text weight="bold">History</Text>
+            <Text dimColor>/worklog &lt;id&gt; shows one</Text>
+          </Box>
+          {list.length === 0 && <Text dimColor>No stored sessions yet.</Text>}
+          {list.map(s => (
+            <Box flexDirection="row" gap={2}>
+              <Text weight="bold">#{s.id.slice(0, 8)}</Text>
+              <Text dimColor>{dateOf(s.startedAt)}</Text>
+              <Text dimColor>{s.size}</Text>
+              <Box flexGrow={1} flexShrink={1}>
+                <Text wrap="truncate-end">{s.title}</Text>
+              </Box>
+            </Box>
+          ))}
+        </Box>
+      )
+    }
+
     const saved = await read($, past)
     const shown = saved ?? (await read($, session))
 
@@ -619,7 +621,9 @@ export const register: Register = on => {
           <Text>
             <Text color="success">■</Text> {steps} {steps === 1 ? 'step' : 'steps'}
           </Text>
-          <Text dimColor>{shown.files.length} {shown.files.length === 1 ? 'file' : 'files'}</Text>
+          <Text dimColor>
+            {shown.files.length} {shown.files.length === 1 ? 'file' : 'files'}
+          </Text>
           {saved !== null && <Text dimColor>saved</Text>}
         </Box>
         {rows.map(({ node, lead, isRoot }, i) => {

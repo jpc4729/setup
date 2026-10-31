@@ -26,8 +26,9 @@ merged="claude/settings.json codex/config.toml grok/config.toml cursor/mcp.json 
 
 # A merge never deletes a key, so this jq filter deletes what claude/settings.json
 # set before and has dropped: the advisor, the history limit, the compaction env
-# var, and the hooks that ran deleted scripts. Hook entries of your own stay.
-claude_drop='del(.advisorModel, .cleanupPeriodDays, .env.CLAUDE_CODE_AUTO_COMPACT_WINDOW)
+# var, the mod path that turned worklog on, and the hooks that ran deleted
+# scripts. Hook entries of your own stay.
+claude_drop='del(.advisorModel, .cleanupPeriodDays, .env.CLAUDE_CODE_AUTO_COMPACT_WINDOW, .env.CLAUDE_CODE_PLUGIN_DIRS)
   | if .hooks then .hooks |= with_entries(
       .value |= map(select(any(.hooks[]?; (.command // "") | test("/(session-plans|verifier-report)\\.sh$")) | not))
       | select(.value | length > 0)) else . end'

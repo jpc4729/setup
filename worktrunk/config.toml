@@ -1,0 +1,14 @@
+# Worktrunk (`wt`) keys for the `~/.local/src` layout. install.sh merges this
+# file over `~/.config/worktrunk/config.toml`: these keys win, and your own
+# keys stay. Per-repo hooks belong in that repo's committed `.config/wt.toml`.
+
+# Each checkout lives at `~/.local/src/<owner>/<repo>/<branch>`, the primary
+# clone included (as `<default-branch>/`); `~/.local/src/AGENTS.md` has the rules.
+# `remote_repo`, not `repo`: `repo` is the primary's folder name, here `main`.
+worktree-path = "~/.local/src/{{ owner }}/{{ remote_repo }}/{{ branch | sanitize }}"
+
+[post-start]
+# Worktrees share the repository but not untracked files. Reflink-copies build
+# caches and `.env` from the primary worktree, so a new worktree skips the cold
+# start. Runs in the background.
+copy = "wt step copy-ignored"

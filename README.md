@@ -57,7 +57,7 @@ browser    Sonnet 5.5 · high    GPT-6.1 Sol · medium   Sonnet 5.5   grok-4.6 �
 
 ## Install
 
-You need bash, rsync, [jq](https://jqlang.org) and [yq](https://github.com/mikefarah/yq).
+You need bash, rsync, [jq](https://jqlang.org) and [yq](https://github.com/mikefarah/yq). The worktree layout also needs [Worktrunk](https://worktrunk.dev).
 
 ```sh
 git clone https://github.com/josechifflet/setup.git
@@ -77,6 +77,7 @@ cd setup
 - Merges the five settings files that the apps rewrite. Repo keys win, and the app's own keys stay.
 - Copies the skills into `~/.agents/skills` and `~/.cursor/skills`, and links them into `~/.claude/skills`.
 - Copies `bin/quiet` and `bin/agent-stats` into `~/.local/bin`.
+- Copies `src/AGENTS.md` into `~/.local/src`, and merges `worktrunk/config.toml` into `~/.config/worktrunk/config.toml`.
 - On macOS, installs Codex's `requirements.toml` as a managed preference.
 - Never links and never deletes. A link would carry agent state back into the repo.
 
@@ -92,6 +93,8 @@ skills/my-skills/  → ~/.agents/skills      skills I wrote or adapted
 skills/vendored/   → ~/.agents/skills      vendored skills, pinned in skills-lock.json
 bin/quiet          → ~/.local/bin/quiet    one line on a pass, full output on a failure
 bin/agent-stats    → ~/.local/bin/         Claude Code agent runs, minutes, efforts and quality guards
+src/AGENTS.md      → ~/.local/src/         layout, branch names and cleanup for each clone and worktree
+worktrunk/         → ~/.config/worktrunk   the worktree path for that layout, merged
 AGENTS.md                                  rules for an agent that edits this repo
 ```
 
@@ -113,6 +116,13 @@ Git:
 - Any other git write comes to you as the exact command.
 - No agent changes the branch in the session's folder.
 - Agents and subagents work in the session's folder and branch. Only you make a worktree, and an agent tells you when work needs its own branch. Claude also denies worktree isolation.
+
+## Worktrees
+
+- Each clone and worktree is in `~/.local/src/<owner>/<repo>/<branch>`. The primary clone is the folder of the default branch, such as `main`, and stays on it.
+- Worktrunk makes each worktree there: `wt switch -c feat/oauth-refresh` makes `feat-oauth-refresh/`.
+- Branch names are `<type>/<slug>`: a Conventional Commits type, then 2 to 5 lowercase words in kebab-case.
+- `~/.local/src/AGENTS.md` has the full rules. Claude Code reads it in each session under `~/.local/src`, because `claude/settings.json` loads `AGENTS.md` together with `CLAUDE.md`.
 
 ## Subagents
 

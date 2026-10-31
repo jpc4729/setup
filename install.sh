@@ -102,6 +102,7 @@ copy codex "$HOME/.codex"
 copy cursor "$HOME/.cursor"
 copy grok "$HOME/.grok"
 copy opencode "$HOME/.config/opencode"
+copy src "$HOME/.local/src"
 
 # Every tool's rules run checks through quiet, so it must be on PATH.
 [[ -n "$dry" ]] || mkdir -p "$HOME/.local/bin"
@@ -113,6 +114,7 @@ esac
 for f in $merged; do
   merge "$f" "$HOME/.$f"
 done
+merge worktrunk/config.toml "$HOME/.config/worktrunk/config.toml"
 codex_requirements
 
 # Codex and Grok read ~/.agents/skills. Claude gets one symlink per skill into

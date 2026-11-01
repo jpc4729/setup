@@ -1,4 +1,5 @@
 #!/bin/sh
+# shellcheck shell=sh  # herdr runs it with sh
 # One line of host vitals for herdr's tab_bar_right. Command entries resolve on
 # the herdr server, so under `herdr --remote` this reports the remote box.
 # Portable: Linux and macOS both run it. A failing command leaves the entry blank.

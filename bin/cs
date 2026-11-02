@@ -15,8 +15,8 @@ cs() {
   [[ ${1-} == -* ]] || { query=${1-}; (( $# )) && shift; }
   local -a dirs=("$src"/*/*/*(N/)) f accts run=(claude)
   (( $#dirs )) || { print -u2 "cs: no checkout in $src"; return 1; }
-  out=$(_cs_rows "$src" "${dirs[@]}" |
-    fzf --ansi --delimiter=$'\t' --with-nth=3 --accept-nth=1,2,4,5 --expect=ctrl-o \
+  out=$(_cs_rows "$src" "${COLUMNS:-80}" "${dirs[@]}" |
+    fzf --read0 --ansi --delimiter=$'\t' --with-nth=3 --accept-nth=1,2,4,5 --expect=ctrl-o \
       --query="$query" ${query:+--select-1} ${query:+--exit-0} --height=100% \
       --header='enter: start claude in the checkout, or go to or resume the session · ctrl-o: start with another account' \
       --preview-window='down,50%' \
@@ -42,7 +42,8 @@ cs() {
   cd "$f[3]" && $run "$@"
 }
 
-# Rows for cs: kind, target, display text, folder, account. Kind c is a checkout with its
+# Rows for cs, after the folder and the terminal width: kind, target, display
+# text, folder, account. Kind c is a checkout with its
 # changed files and commits ahead and behind, the one with the latest Claude
 # session first; s is a session open in herdr, the ones that wait for you first;
 # r is one of the 10 latest sessions that is not running. The target is the
@@ -53,9 +54,9 @@ _cs_rows() {
   emulate -L zsh
   zmodload -F zsh/stat b:zstat
   zmodload zsh/datetime
-  local src=$1 r d t rel title acct age w=0 yellow=$'\e[33m' dim=$'\e[90m' reset=$'\e[0m'
-  local -i i
-  shift
+  local src=$1 cols=$2 r d t rel title acct age w=0 yellow=$'\e[33m' dim=$'\e[90m' reset=$'\e[0m'
+  local -i i cw
+  shift 2
   local -A color=(blocked 31 done 32 idle 90 working 33) folder entry custom ai asked used
   local -a sessions files picked recent running records f g ab note mtime parts order
   if (( ${+commands[jq]} )); then
@@ -129,6 +130,19 @@ _cs_rows() {
     f=("${(@ps:\t:)r}")
     (( ${#f[2]} > w )) && w=${#f[2]}
   done
+  # When one session row is wider than the list, each session row puts its title
+  # on a second line (width 0). The list is the terminal width less 6 columns of
+  # fzf border and pointer; a row is 13 columns of label and gaps, the path and
+  # the title, which for r holds two color codes.
+  cw=$w
+  for r in $sessions; do
+    f=("${(@ps:\t:)r}")
+    (( 13 + w + ${#f[4]} > cols - 6 )) && cw=0
+  done
+  for r in $recent; do
+    f=("${(@ps:\t:)r}")
+    (( 13 + w + ${#f[3]} - ${#dim} - ${#reset} > cols - 6 )) && cw=0
+  done
 
   # Without --no-optional-locks, git status takes index.lock, and a git commit
   # of an agent in that checkout can fail at the same moment.
@@ -142,21 +156,25 @@ _cs_rows() {
   done
   for r in $sessions; do
     f=("${(@ps:\t:)r}")
-    _cs_row $w s "$f[1]" "● $f[3]" "${color[$f[3]]:-90}" "$f[2]" "$f[4]"
+    _cs_row $cw s "$f[1]" "● $f[3]" "${color[$f[3]]:-90}" "$f[2]" "$f[4]"
   done
   for r in $recent; do
     f=("${(@ps:\t:)r}")
-    _cs_row $w r "$f[1]" "↺ resume" 35 "$f[2]" "$f[3]" "$f[4]" "$f[5]"
+    _cs_row $cw r "$f[1]" "↺ resume" 35 "$f[2]" "$f[3]" "$f[4]" "$f[5]"
   done
 }
 
-# One row of _cs_rows: $1 path column width, $2 kind, $3 target, $4 label, $5 its
-# color, $6 path under ~/.local/src, $7 note, $8 folder, $9 account.
+# One row of _cs_rows, ended by NUL so that fzf --read0 shows a second line:
+# $1 path column width, or 0 to put the note on a second line indented 4 spaces,
+# $2 kind, $3 target, $4 label, $5 its color, $6 path under ~/.local/src, $7
+# note, $8 folder, $9 account.
 _cs_row() {
   emulate -L zsh
   local -a p=("${(@s:/:)6}")
-  printf '%s\t%s\t\e[%sm%-9s\e[0m  \e[90m%s/\e[0;1m%s\e[0m%s%*s  %s\t%s\t%s\n' \
-    "$2" "$3" "$5" "$4" "$p[1]" "$p[2]" "${${(j:/:)p[3,-1]}:+/${(j:/:)p[3,-1]}}" $(( $1 - ${#6} )) '' "$7" "$8" "${9-}"
+  local gap=$'\n    '
+  (( $1 )) && printf -v gap '%*s' $(( $1 - ${#6} + 2 )) ''
+  printf '%s\t%s\t\e[%sm%-9s\e[0m  \e[90m%s/\e[0;1m%s\e[0m%s%s%s\t%s\t%s\0' \
+    "$2" "$3" "$5" "$4" "$p[1]" "$p[2]" "${${(j:/:)p[3,-1]}:+/${(j:/:)p[3,-1]}}" "$gap" "$7" "$8" "${9-}"
 }
 
 cs "$@"

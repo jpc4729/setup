@@ -124,7 +124,21 @@ Git:
 - Each clone and worktree is in `~/.local/src/<owner>/<repo>/<branch>`. The primary clone is the folder of the default branch, such as `main`, and stays on it.
 - Worktrunk makes each worktree there: `wt switch -c feat/oauth-refresh` makes `feat-oauth-refresh/`.
 - Branch names are `<type>/<slug>`: a Conventional Commits type, then 2 to 5 lowercase words in kebab-case.
-- `cs`, from any folder, opens a picker. On top, each checkout, the one with your latest Claude Code session first: enter starts `claude` there, and ctrl-o asks for the account first. Below, each session open in herdr (enter goes to its pane) and the 10 latest sessions that do not run (enter resumes one in its folder with the account that owns it). The args go to `claude`, such as `cs -c`. An account `<name>` is the config home `~/.claude-<name>`.
+- `cs`, from any folder, opens a picker. On top, each checkout, the one with your latest Claude Code session first: enter starts `claude` there, and ctrl-o asks for the account first. Below, each session open in herdr (enter goes to its pane) and the 10 latest sessions that do not run (enter resumes one in its folder with the account that owns it). The args go to `claude`, such as `cs -c`. ctrl-t on any row opens a new shell in its folder, with no claude: a script cannot move the shell that started it, and `exit` goes back. An account `<name>` is the config home `~/.claude-<name>`.
+- To open `cs` in each new herdr pane, tab or workspace that has the focus, add these lines to `~/.zshrc`. Esc gives the prompt. A pane opened with `--no-focus`, as scripts and agents do before `herdr pane run` or `herdr agent start`, gets a plain prompt. `CS_AUTO_PANE` holds the pane ID, so a later shell in the pane, such as the one ctrl-t opens, does not open `cs` again.
+
+  ```zsh
+  if [[ -n ${HERDR_PANE_ID-} && ${CS_AUTO_PANE-} != "$HERDR_PANE_ID" ]] && (( $+commands[cs] )); then
+    export CS_AUTO_PANE=$HERDR_PANE_ID
+    autoload -Uz add-zsh-hook
+    _cs_first_prompt() {
+      add-zsh-hook -d precmd _cs_first_prompt
+      herdr pane get "$HERDR_PANE_ID" 2> /dev/null | jq -e .result.pane.focused > /dev/null && cs
+    }
+    precmd_functions=(_cs_first_prompt $precmd_functions)
+  fi
+  ```
+
 - `~/.local/src/AGENTS.md` has the full rules. Claude Code reads it in each session under `~/.local/src`, because `claude/settings.json` loads `AGENTS.md` together with `CLAUDE.md`.
 
 ## Subagents

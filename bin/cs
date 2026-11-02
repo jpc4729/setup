@@ -7,18 +7,20 @@
 # Pick in ~/.local/src: a checkout ~/.local/src/<owner>/<repo>/<folder> starts a
 # new Claude Code session there, with the account you pick on ctrl-o; an open
 # session goes to its herdr pane; a recent one resumes in its folder with the
-# account that owns it. The other args go to claude. One match for the query skips
-# fzf. A first arg that starts with - is a claude arg, so `cs -c` has no query.
+# account that owns it. ctrl-t on any row opens a new shell in its folder.
+# The other args go to claude. One match for the query skips fzf. A first arg
+# that starts with - is a claude arg, so `cs -c` has no query. README.md has
+# lines for ~/.zshrc that open cs in each new herdr pane that has the focus.
 cs() {
   emulate -L zsh
-  local src="$HOME/.local/src" query out acct
+  local src="$HOME/.local/src" query out key acct
   [[ ${1-} == -* ]] || { query=${1-}; (( $# )) && shift; }
   local -a dirs=("$src"/*/*/*(N/)) f accts run=(claude)
   (( $#dirs )) || { print -u2 "cs: no checkout in $src"; return 1; }
   out=$(_cs_rows "$src" "${COLUMNS:-80}" "${dirs[@]}" |
-    fzf --read0 --ansi --delimiter=$'\t' --with-nth=3 --accept-nth=1,2,4,5 --expect=ctrl-o \
+    fzf --read0 --ansi --delimiter=$'\t' --with-nth=3 --accept-nth=1,2,4,5 --expect=ctrl-o,ctrl-t \
       --query="$query" ${query:+--select-1} ${query:+--exit-0} --height=100% \
-      --header='enter: start claude in the checkout, or go to or resume the session · ctrl-o: start with another account' \
+      --header='enter: start, go to or resume claude · ctrl-o: start with another account · ctrl-t: open a shell there' \
       --preview-window='down,50%' \
       --preview='case {1} in
         s) herdr agent read {2} --lines "$FZF_PREVIEW_LINES" ;;
@@ -26,13 +28,14 @@ cs() {
         c) git --no-optional-locks -C {2} -c color.ui=always status -sb; echo; git -C {2} log --oneline --color=always -10 ;;
       esac') ||
     { (( $? == 1 )) && [[ -n $query ]] && print -u2 "cs: no match for $query"; return 1; }
-  f=("${(@ps:\t:)${out#*$'\n'}}")
+  key=${out%%$'\n'*} f=("${(@ps:\t:)${out#*$'\n'}}")
+  [[ $key == ctrl-t ]] && { cd "$f[3]" && exec "${SHELL:-zsh}"; return; }
   case $f[1] in
     s) [[ -n ${HERDR_ENV-} ]] || { print -u2 'cs: go to an open session from inside herdr'; return 1; }
       herdr agent focus "$f[2]" > /dev/null; return ;;
     r) acct=$f[4]
       set -- --resume "${f[2]:t:r}" "$@" ;;
-    c) if [[ ${out%%$'\n'*} == ctrl-o ]]; then
+    c) if [[ $key == ctrl-o ]]; then
         accts=($HOME/.claude-*(N/:t))
         acct=$(print -rl default ${accts#.claude-} | fzf --height=~10 --header='account') || return
         [[ $acct == default ]] && acct=
@@ -156,7 +159,7 @@ _cs_rows() {
   done
   for r in $sessions; do
     f=("${(@ps:\t:)r}")
-    _cs_row $cw s "$f[1]" "● $f[3]" "${color[$f[3]]:-90}" "$f[2]" "$f[4]"
+    _cs_row $cw s "$f[1]" "● $f[3]" "${color[$f[3]]:-90}" "$f[2]" "$f[4]" "$src/$f[2]"
   done
   for r in $recent; do
     f=("${(@ps:\t:)r}")

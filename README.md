@@ -57,7 +57,7 @@ browser    Sonnet 5.5 · high    GPT-6.1 Sol · medium   Sonnet 5.5   grok-4.6 �
 
 ## Install
 
-You need bash, rsync, [jq](https://jqlang.org) and [yq](https://github.com/mikefarah/yq). The worktree layout also needs [Worktrunk](https://worktrunk.dev). The herdr config also needs [herdr](https://herdr.dev).
+You need bash, rsync, [jq](https://jqlang.org) and [yq](https://github.com/mikefarah/yq). The worktree layout also needs [Worktrunk](https://worktrunk.dev). The herdr config also needs [herdr](https://herdr.dev). `cs` also needs zsh, git, [fzf](https://github.com/junegunn/fzf) and [ripgrep](https://github.com/BurntSushi/ripgrep).
 
 ```sh
 git clone https://github.com/jpc4729/setup.git
@@ -76,7 +76,7 @@ cd setup
 - Copies each tool folder into its home. A replaced file stays beside it as `<name>.bak`.
 - Merges the five settings files that the apps rewrite. Repo keys win, and the app's own keys stay.
 - Copies the skills into `~/.agents/skills` and `~/.cursor/skills`, and links them into `~/.claude/skills`.
-- Copies `bin/quiet` and `bin/agent-stats` into `~/.local/bin`.
+- Copies `bin/quiet`, `bin/agent-stats` and `bin/cs` into `~/.local/bin`.
 - Copies `src/AGENTS.md` into `~/.local/src`, and merges `worktrunk/config.toml` into `~/.config/worktrunk/config.toml`.
 - Merges `herdr/config.toml` into `~/.config/herdr/config.toml`, and copies `herdr/status.sh` beside it. Run `herdr server reload-config` to load it in a running herdr. Copies the `repo-label` plugin into `~/.config/herdr/plugins` and links it: each workspace in `~/.local/src/<owner>/<repo>/<folder>` gets the label `<repo>`, not herdr's `main` or branch folder. When the workspace leaves `~/.local/src`, it gets herdr's label for its folder again. A name you give a workspace stays. `herdr plugin disable local.repo-label` turns it off.
 - On macOS, installs Codex's `requirements.toml` as a managed preference.
@@ -94,6 +94,7 @@ skills/my-skills/  → ~/.agents/skills      skills I wrote or adapted
 skills/vendored/   → ~/.agents/skills      vendored skills, pinned in skills-lock.json
 bin/quiet          → ~/.local/bin/quiet    one line on a pass, full output on a failure
 bin/agent-stats    → ~/.local/bin/         Claude Code agent runs, minutes, efforts and quality guards
+bin/cs             → ~/.local/bin/         start, go to or resume a Claude Code session in ~/.local/src
 src/AGENTS.md      → ~/.local/src/         layout, branch names and cleanup for each clone and worktree
 worktrunk/         → ~/.config/worktrunk   the worktree path for that layout, merged
 herdr/             → ~/.config/herdr       theme, tab bar, host vitals and repo labels for herdr, config merged
@@ -123,6 +124,7 @@ Git:
 - Each clone and worktree is in `~/.local/src/<owner>/<repo>/<branch>`. The primary clone is the folder of the default branch, such as `main`, and stays on it.
 - Worktrunk makes each worktree there: `wt switch -c feat/oauth-refresh` makes `feat-oauth-refresh/`.
 - Branch names are `<type>/<slug>`: a Conventional Commits type, then 2 to 5 lowercase words in kebab-case.
+- `cs`, from any folder, opens a picker. On top, each checkout, the one with your latest Claude Code session first: enter starts `claude` there, and ctrl-o asks for the account first. Below, each session open in herdr (enter goes to its pane) and the 10 latest sessions that do not run (enter resumes one in its folder with the account that owns it). The args go to `claude`, such as `cs -c`. An account `<name>` is the config home `~/.claude-<name>`.
 - `~/.local/src/AGENTS.md` has the full rules. Claude Code reads it in each session under `~/.local/src`, because `claude/settings.json` loads `AGENTS.md` together with `CLAUDE.md`.
 
 ## Subagents

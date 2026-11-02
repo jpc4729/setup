@@ -98,6 +98,7 @@ bin/cs             → ~/.local/bin/         start, go to or resume a Claude Cod
 src/AGENTS.md      → ~/.local/src/         layout, branch names and cleanup for each clone and worktree
 worktrunk/         → ~/.config/worktrunk   the worktree path for that layout, merged
 herdr/             → ~/.config/herdr       theme, tab bar, host vitals and repo labels for herdr, config merged
+docs/                                      the cs demo and the VHS tape that makes it
 AGENTS.md                                  rules for an agent that edits this repo
 ```
 
@@ -124,7 +125,16 @@ Git:
 - Each clone and worktree is in `~/.local/src/<owner>/<repo>/<branch>`. The primary clone is the folder of the default branch, such as `main`, and stays on it.
 - Worktrunk makes each worktree there: `wt switch -c feat/oauth-refresh` makes `feat-oauth-refresh/`.
 - Branch names are `<type>/<slug>`: a Conventional Commits type, then 2 to 5 lowercase words in kebab-case.
-- `cs`, from any folder, opens a picker. On top, each checkout, the one with your latest Claude Code session first: enter starts `claude` there, and ctrl-o asks for the account first. Below, each session open in herdr (enter goes to its pane) and the 10 latest sessions that do not run (enter resumes one in its folder with the account that owns it). The args go to `claude`, such as `cs -c`. ctrl-t on any row opens a new shell in its folder, with no claude: a script cannot move the shell that started it, and `exit` goes back. An account `<name>` is the config home `~/.claude-<name>`.
+- `cs`, from any folder, opens a picker. It shows each repo with its checkouts and their sessions: first the repos with a session that waits for you (blocked or done), then the one with your latest Claude Code session. A checkout shows its branch and changes: enter starts `claude` there, and ctrl-o asks for the account first. Enter on a repo row starts `claude` in the repo folder. Under each checkout come its sessions open in herdr (enter goes to its pane) and its sessions among the 10 latest that do not run (enter resumes one in its folder with the account that owns it). A search for a repo or branch also keeps its sessions. The args go to `claude`, such as `cs -c`. ctrl-t on any row opens a new shell in its folder, with no claude: a script cannot move the shell that started it, and `exit` goes back. An account `<name>` is the config home `~/.claude-<name>`.
+
+  ![cs with example repos: the picker shows each repo with its checkouts, their changes and their sessions, open in herdr or recent, with a preview of the selected row. A search for login keeps a checkout and its session, and ctrl-t opens a shell in that checkout.](docs/cs.gif)
+
+  Two settings change what `cs` shows. Export them in `~/.zshrc`, or set them before the command, such as `CS_LAYOUT=flat cs`: `cs` is a script, so a variable that is not exported does not reach it.
+  - `CS_LAYOUT=flat` shows the checkouts, then the sessions open in herdr, then the recent ones, in place of the tree.
+  - `CS_BRANCH_INFO` adds branch data, none by default: `base` for the commits ahead and behind the default branch `origin/HEAD`, such as `main +4 -1`, `merged` for a pushed branch with no commit that the default branch lacks, or `gone` when its upstream is gone, and `pr` for its pull request at the top of the preview, from [gh](https://cli.github.com). For example, `export CS_BRANCH_INFO='base merged'`.
+
+  To make the demo again after a change to `cs`, run `vhs docs/cs.tape` from the repo root. It needs [VHS](https://github.com/charmbracelet/vhs), and `docs/cs-demo.sh` builds the example repos and sessions in `/tmp/cs-demo`.
+
 - To open `cs` in each new herdr pane, tab or workspace that has the focus, add these lines to `~/.zshrc`. Esc gives the prompt. A pane opened with `--no-focus`, as scripts and agents do before `herdr pane run` or `herdr agent start`, gets a plain prompt. `CS_AUTO_PANE` holds the pane ID, so a later shell in the pane, such as the one ctrl-t opens, does not open `cs` again.
 
   ```zsh

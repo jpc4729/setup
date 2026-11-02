@@ -4,28 +4,46 @@
 # for the open sessions. Claude runs in the checkout, and your shell stays in
 # its folder. An account <name> is the config home ~/.claude-<name>.
 
-# Pick in ~/.local/src: a checkout ~/.local/src/<owner>/<repo>/<folder> starts a
-# new Claude Code session there, with the account you pick on ctrl-o; an open
-# session goes to its herdr pane; a recent one resumes in its folder with the
-# account that owns it. ctrl-t on any row opens a new shell in its folder.
+# Pick in ~/.local/src: a checkout ~/.local/src/<owner>/<repo>/<folder>, or a
+# repo folder in the tree layout, starts a new Claude Code session there, with
+# the account you pick on ctrl-o; an open session goes to its herdr pane; a
+# recent one resumes in its folder with the account that owns it. ctrl-t on any
+# row opens a new shell in its folder.
 # The other args go to claude. One match for the query skips fzf. A first arg
 # that starts with - is a claude arg, so `cs -c` has no query. README.md has
 # lines for ~/.zshrc that open cs in each new herdr pane that has the focus.
+# Two settings, exported in ~/.zshrc or set before the command: CS_LAYOUT is
+# tree, the default, for each repo with its branches and their sessions, or
+# flat for the checkouts, then the open sessions, then the recent ones.
+# CS_BRANCH_INFO holds the extra branch data to show, none by default: base for
+# the commits ahead and behind the default branch, merged for a pushed branch
+# with no commit that the default branch lacks, or gone when its upstream is
+# gone, pr for its pull request in the preview.
 cs() {
   emulate -L zsh
-  local src="$HOME/.local/src" query out key acct
+  local src="$HOME/.local/src" layout=${CS_LAYOUT:-tree} query out key acct pr
   [[ ${1-} == -* ]] || { query=${1-}; (( $# )) && shift; }
-  local -a dirs=("$src"/*/*/*(N/)) f accts run=(claude)
+  local -a dirs=("$src"/*/*/*(N/)) f accts run=(claude) info=(${=CS_BRANCH_INFO-}) known=(base merged pr) bad opts
+  [[ $layout == (tree|flat) ]] || { print -u2 "cs: CS_LAYOUT is tree or flat, not $layout"; return 1; }
+  bad=(${info:|known})
+  (( $#bad )) && { print -u2 "cs: CS_BRANCH_INFO takes base, merged and pr, not $bad"; return 1; }
   (( $#dirs )) || { print -u2 "cs: no checkout in $src"; return 1; }
-  out=$(_cs_rows "$src" "${COLUMNS:-80}" "${dirs[@]}" |
-    fzf --read0 --ansi --delimiter=$'\t' --with-nth=3 --accept-nth=1,2,4,5 --expect=ctrl-o,ctrl-t \
-      --query="$query" ${query:+--select-1} ${query:+--exit-0} --height=100% \
+  # A sort by match would break the tree, and a scroll to a match in the faint
+  # path at the end of a long row would hide its label and title. With no sort,
+  # the cursor stays where it was when you type, so move it to the first match.
+  [[ $layout == tree ]] && opts=(--no-sort --no-hscroll --bind=change:first)
+  (( ${info[(Ie)pr]} )) &&
+    pr='(cd {2} && gh pr view --json number,state,title,url -t "#{{.number}} {{.state}} {{.title}}  {{.url}}{{\"\\n\\n\"}}" 2> /dev/null); '
+  out=$(_cs_rows "$src" "${COLUMNS:-80}" "$layout" "$info" "${dirs[@]}" |
+    fzf --read0 --ansi --delimiter=$'\t' --with-nth=3 --accept-nth=1,2,4,5 --expect=ctrl-o,ctrl-t $opts \
+      --query="$query" ${query:+--select-1} ${query:+--exit-0} --height=100% --layout=reverse \
       --header='enter: start, go to or resume claude · ctrl-o: start with another account · ctrl-t: open a shell there' \
       --preview-window='down,50%' \
       --preview='case {1} in
         s) herdr agent read {2} --lines "$FZF_PREVIEW_LINES" ;;
         r) rg -F "\"last-prompt\"" {2} | jq -r "select(.type == \"last-prompt\") | \"› \" + (.lastPrompt // \"\" | gsub(\"\\n\"; \" \"))" | uniq | tail -n 10 ;;
-        c) git --no-optional-locks -C {2} -c color.ui=always status -sb; echo; git -C {2} log --oneline --color=always -10 ;;
+        c) '"$pr"'git --no-optional-locks -C {2} -c color.ui=always status -sb; echo; git -C {2} log --oneline --color=always -10 ;;
+        p) for d in {2}/*/; do git -C "$d" worktree list 2> /dev/null && break; done ;;
       esac') ||
     { (( $? == 1 )) && [[ -n $query ]] && print -u2 "cs: no match for $query"; return 1; }
   key=${out%%$'\n'*} f=("${(@ps:\t:)${out#*$'\n'}}")
@@ -35,9 +53,9 @@ cs() {
       herdr agent focus "$f[2]" > /dev/null; return ;;
     r) acct=$f[4]
       set -- --resume "${f[2]:t:r}" "$@" ;;
-    c) if [[ $key == ctrl-o ]]; then
+    c|p) if [[ $key == ctrl-o ]]; then
         accts=($HOME/.claude-*(N/:t))
-        acct=$(print -rl default ${accts#.claude-} | fzf --height=~10 --header='account') || return
+        acct=$(print -rl default ${accts#.claude-} | fzf --height=~10 --layout=reverse --header='account') || return
         [[ $acct == default ]] && acct=
       fi ;;
   esac
@@ -45,23 +63,26 @@ cs() {
   cd "$f[3]" && $run "$@"
 }
 
-# Rows for cs, after the folder and the terminal width: kind, target, display
-# text, folder, account. Kind c is a checkout with its
-# changed files and commits ahead and behind, the one with the latest Claude
-# session first; s is a session open in herdr, the ones that wait for you first;
-# r is one of the 10 latest sessions that is not running. The target is the
-# checkout, the herdr pane or the transcript.
+# Rows for cs, after the folder, the terminal width, the layout and the extra
+# branch data: kind, target, display text, folder, account. Kind c is a
+# checkout with its changed files and commits ahead and behind, the one with
+# the latest Claude session first; s is a session open in herdr, the ones that
+# wait for you first; r is one of the 10 latest sessions that is not running;
+# p, only in the tree layout, is a repo folder. The target is the checkout, the
+# herdr pane, the transcript or the repo folder. _cs_tree gives the tree order.
 # Transcripts are an internal format: read only the folder, entrypoint, titles
 # and prompts, so a format change hides a row or a title but breaks no resume.
 _cs_rows() {
   emulate -L zsh
   zmodload -F zsh/stat b:zstat
   zmodload zsh/datetime
-  local src=$1 cols=$2 r d t rel title acct age w=0 yellow=$'\e[33m' dim=$'\e[90m' reset=$'\e[0m'
+  local src=$1 cols=$2 layout=$3 r d t k rel title acct age s up w=0
+  local yellow=$'\e[33m' cyan=$'\e[36m' bold=$'\e[1m' dim=$'\e[90m' faint=$'\e[38;5;238m' reset=$'\e[0m'
   local -i i cw
-  shift 2
-  local -A color=(blocked 31 done 32 idle 90 working 33) folder entry custom ai asked used
-  local -a sessions files picked recent running records f g ab note mtime parts order
+  local -a info=(${=4})
+  shift 4
+  local -A color=(blocked 31 done 32 idle 90 working 33) folder entry custom ai asked used heads notes base
+  local -a sessions files picked recent running records kids f g st ab lr note mtime parts order
   if (( ${+commands[jq]} )); then
     (( ${+commands[herdr]} )) &&
       sessions=(${(f)"$(herdr agent list 2>/dev/null | jq -r --arg src "$src/" '
@@ -90,12 +111,14 @@ _cs_rows() {
         *) : ${entry[$t]:=${${r#*\":\"}%\"}} ;;
       esac
     done
-  # Checkouts by their latest session in any account, newest first, then by name.
+  # Checkouts and repos by their latest session in any account, newest first,
+  # then by name.
   for (( i = 1; i <= $#files; i++ )); do
     t=$files[i]
     [[ $folder[$t] == $src/* ]] || continue
     parts=(${(s:/:)${folder[$t]#$src/}})
     (( $#parts >= 3 )) && : ${used[$src/${(j:/:)parts[1,3]}]:=$i}
+    : ${used[$src/${(j:/:)parts[1,2]}]:=$i}
   done
   for d; order+=("${used[$d]:-999999} $d")
   set -- ${${(on)order}#* }
@@ -128,42 +151,150 @@ _cs_rows() {
     else age="$(( age / 86400 ))d"; fi
     recent+=("$t"$'\t'"${folder[$t]#$src/}"$'\t'"${title[1,100]}  $dim$age ${acct:-default}$reset"$'\t'"$folder[$t]"$'\t'"$acct")
   done
-  for rel in ${@#$src/}; (( $#rel > w )) && w=$#rel
-  for r in $sessions $recent; do
+  # One row for each session: kind, target, label, its color, path under
+  # ~/.local/src, note, folder, account.
+  for r in $sessions; do
     f=("${(@ps:\t:)r}")
-    (( ${#f[2]} > w )) && w=${#f[2]}
+    g=(s "$f[1]" "● $f[3]" "${color[$f[3]]:-90}" "$f[2]" "$f[4]" "$src/$f[2]" "")
+    kids+=("${(pj:\t:)g}")
+  done
+  for r in $recent; do
+    f=("${(@ps:\t:)r}")
+    g=(r "$f[1]" "↺ resume" 35 "$f[2]" "$f[3]" "$f[4]" "$f[5]")
+    kids+=("${(pj:\t:)g}")
+  done
+
+  # Without --no-optional-locks, git status takes index.lock, and a git commit
+  # of an agent in that checkout can fail at the same moment. The default
+  # branch is origin/HEAD, which all checkouts of a repo share.
+  for d; do
+    st=(${(f)"$(git --no-optional-locks -C "$d" status --porcelain=v2 --branch 2>/dev/null)"})
+    ab=(${=${${(M)st:#\# branch.ab *}#\# branch.ab }})
+    note=(${${st:#\#*}:+±${#${st:#\#*}}})
+    (( ${ab[1]#+} )) && note+=("↑${ab[1]#+}")
+    (( ${ab[2]#-} )) && note+=("↓${ab[2]#-}")
+    notes[$d]="${note:+$yellow$note$reset}"
+    heads[$d]=${${(M)st:#\# branch.head *}#\# branch.head }
+    (( ${info[(Ie)base]} + ${info[(Ie)merged]} )) || continue
+    k=${d:h}
+    : ${base[$k]:=$(git -C "$d" symbolic-ref -q --short refs/remotes/origin/HEAD 2>/dev/null)}
+    [[ -n $base[$k] && $heads[$d] != ${base[$k]#*/} ]] || continue
+    # lr: the commits behind, then ahead of, the default branch.
+    lr=(${=$(git -C "$d" rev-list --left-right --count "$base[$k]...HEAD" 2>/dev/null)})
+    note=()
+    if (( ${info[(Ie)base]} )); then
+      s=
+      (( lr[2] )) && s+=" +$lr[2]"
+      (( lr[1] )) && s+=" -$lr[1]"
+      [[ -n $s ]] && note+=("${base[$k]#*/}$s")
+    fi
+    # Only a pushed branch: a new one has no upstream, or the default branch as
+    # its upstream when it was made from origin/<default>, and it also has no
+    # commit that the default branch lacks.
+    up=${${(M)st:#\# branch.upstream *}#\# branch.upstream }
+    if (( ${info[(Ie)merged]} )) && [[ -n $up && $up != $base[$k] ]]; then
+      if (( $#lr == 2 && ! lr[2] && lr[1] )); then note+=(merged)
+      elif [[ -z ${(M)st:#\# branch.ab *} ]]; then note+=(gone)
+      fi
+    fi
+    (( $#note )) && notes[$d]+="${notes[$d]:+ }$dim$note$reset"
+  done
+
+  [[ $layout == tree ]] && { _cs_tree "$@"; return; }
+  for rel in ${@#$src/}; (( $#rel > w )) && w=$#rel
+  for r in $kids; do
+    f=("${(@ps:\t:)r}")
+    (( ${#f[5]} > w )) && w=${#f[5]}
   done
   # When one session row is wider than the list, each session row puts its title
   # on a second line (width 0). The list is the terminal width less 6 columns of
   # fzf border and pointer; a row is 13 columns of label and gaps, the path and
-  # the title, which for r holds two color codes.
+  # the title, less its color codes.
   cw=$w
-  for r in $sessions; do
+  for r in $kids; do
     f=("${(@ps:\t:)r}")
-    (( 13 + w + ${#f[4]} > cols - 6 )) && cw=0
+    (( 13 + w + ${#${(S)f[6]//$'\e['*m}} > cols - 6 )) && cw=0
   done
-  for r in $recent; do
+  for d; _cs_row $w c "$d" "+ new" 36 "${d#$src/}" "$notes[$d]" "$d"
+  for r in $kids; do
     f=("${(@ps:\t:)r}")
-    (( 13 + w + ${#f[3]} - ${#dim} - ${#reset} > cols - 6 )) && cw=0
+    _cs_row $cw "$f[@]"
   done
+}
 
-  # Without --no-optional-locks, git status takes index.lock, and a git commit
-  # of an agent in that checkout can fail at the same moment.
+# The tree layout of _cs_rows, after its checkouts. It reads and changes the
+# locals of _cs_rows: src, kids, used, heads, notes and the color codes. Each
+# repo comes in order: first the repos with a session that waits for you
+# (blocked or done), then the one with the latest session, then by name. Under
+# it, the sessions in its folder, then each checkout, the primary clone first,
+# with the sessions in it. A repo with one checkout and no session of its own is
+# one row. A checkout shows its branch, and ⚠ with the folder when the branch
+# does not match the folder name. fzf searches only the text it shows, so a row
+# under a repo ends with its path in a faint color.
+_cs_tree() {
+  emulate -L zsh
+  local d k rk w
+  local -i i tw
+  local -A names count own
+  local -a repos order ds f parts
   for d; do
-    g=(${(f)"$(git --no-optional-locks -C "$d" status --porcelain=v2 --branch 2>/dev/null)"})
-    ab=(${=${${(M)g:#\# branch.ab *}#\# branch.ab }})
-    note=(${${g:#\#*}:+±${#${g:#\#*}}})
-    (( ${ab[1]#+} )) && note+=("↑${ab[1]#+}")
-    (( ${ab[2]#-} )) && note+=("↓${ab[2]#-}")
-    _cs_row $w c "$d" "+ new" 36 "${d#$src/}" "${note:+$yellow$note$reset}" "$d"
+    k=${${d:h}#$src/}
+    names[$d]=${heads[$d]:-${d:t}}
+    [[ ${names[$d]//\//-} == ${d:t} ]] || names[$d]+=" ⚠ ${d:t}"
+    count[$k]=$(( ${count[$k]:-0} + 1 ))
+    repos+=($k)
   done
-  for r in $sessions; do
-    f=("${(@ps:\t:)r}")
-    _cs_row $cw s "$f[1]" "● $f[3]" "${color[$f[3]]:-90}" "$f[2]" "$f[4]" "$src/$f[2]"
+  # Each session row starts with its group: the checkout it is in, else its
+  # repo, which then has a session of its own.
+  for (( i = 1; i <= $#kids; i++ )); do
+    f=("${(@ps:\t:)kids[i]}")
+    parts=(${(s:/:)f[5]})
+    k=${(j:/:)parts[1,3]}
+    (( $#parts >= 3 && ${argv[(Ie)$src/$k]} )) || { k=${(j:/:)parts[1,2]}; own[$k]=1; }
+    kids[i]=$k$'\t'$kids[i]
+    repos+=(${(j:/:)parts[1,2]})
+    [[ $f[1] == s && $f[3] == '● '(blocked|done) ]] && used[$src/${(j:/:)parts[1,2]}]=0
   done
-  for r in $recent; do
+  # The width of the widest repo or checkout text, for the note column.
+  for d; do
+    k=${${d:h}#$src/}
+    if (( ${count[$k]} == 1 )) && [[ -z $own[$k] ]]; then w=$(( $#k + 3 + ${#names[$d]} ))
+    else w=$(( 4 + ${#names[$d]} > $#k ? 4 + ${#names[$d]} : $#k )); fi
+    (( w > tw )) && tw=$w
+  done
+  for k in ${(k)own}; (( $#k > tw )) && tw=$#k
+  for k in ${(u)repos}; order+=("${used[$src/$k]:-999999} $k")
+  for k in ${${(on)order}#* }; do
+    ds=()
+    for d; do
+      [[ ${d:h} == $src/$k ]] || continue
+      if [[ -d $d/.git ]]; then ds=($d $ds); else ds+=($d); fi
+    done
+    rk=$bold$k$reset
+    [[ $k == */* ]] && rk=$dim${k%/*}/$reset$bold${k:t}$reset
+    if (( $#ds == 1 )) && [[ -z $own[$k] ]]; then
+      d=$ds[1]
+      _cs_trow c "$d" "$rk · $cyan$names[$d]$reset" $(( $#k + 3 + ${#names[$d]} )) "$notes[$d]" "" "${d#$src/}" 4
+      continue
+    fi
+    _cs_trow p "$src/$k" "$rk" $#k "" "" "$k" 4
+    for d in $ds; _cs_trow c "$d" "    $cyan$names[$d]$reset" $(( 4 + ${#names[$d]} )) "$notes[$d]" "${d#$src/}" "${d#$src/}" 8
+  done
+}
+
+# One repo or checkout row of _cs_tree, then the session rows of its group:
+# $1 kind, $2 folder, $3 text, $4 its width, $5 note, $6 faint path, $7 group,
+# $8 indent of the session rows. It reads tw, kids and the color codes of its
+# callers.
+_cs_trow() {
+  emulate -L zsh
+  local r
+  local -a f
+  printf '%s\t%s\t%s%*s%s%s\t%s\t\0' "$1" "$2" "$3" $(( tw - $4 + 2 )) '' "$5" "${6:+  $faint$6$reset}" "$2"
+  for r in ${(M)kids:#$7$'\t'*}; do
     f=("${(@ps:\t:)r}")
-    _cs_row $cw r "$f[1]" "↺ resume" 35 "$f[2]" "$f[3]" "$f[4]" "$f[5]"
+    printf '%s\t%s\t%*s\e[%sm%-9s\e[0m  %s  %s%s%s\t%s\t%s\0' "$f[2]" "$f[3]" $8 '' \
+      "$f[5]" "$f[4]" "$f[7]" "$faint" "$f[6]" "$reset" "$f[8]" "$f[9]"
   done
 }
 

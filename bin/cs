@@ -9,9 +9,13 @@
 # the account you pick on ctrl-o; an open session goes to its herdr pane; a
 # recent one resumes in its folder with the account that owns it. ctrl-t on any
 # row opens a new shell in its folder.
-# The other args go to claude. One match for the query skips fzf. A first arg
-# that starts with - is a claude arg, so `cs -c` has no query. README.md has
-# lines for ~/.zshrc that open cs in each new herdr pane that has the focus.
+# The other args go to claude, except, in any place, --<name> for the account
+# ~/.claude-<name>, such as --mode1, or --config <path> for any config home: a
+# new session then starts with that account. Sessions in a home that is not
+# ~/.claude or ~/.claude-<name> also show, and resume with that home.
+# One match for the query skips fzf. A first arg that starts with - is a
+# claude arg, so `cs -c` has no query. README.md has lines for ~/.zshrc that
+# open cs in each new herdr pane that has the focus.
 # Two settings, exported in ~/.zshrc or set before the command: CS_LAYOUT is
 # tree, the default, for each repo with its branches and their sessions, or
 # flat for the checkouts, then the open sessions, then the recent ones.
@@ -21,7 +25,25 @@
 # gone, pr for its pull request in the preview.
 cs() {
   emulate -L zsh
-  local src="$HOME/.local/src" layout=${CS_LAYOUT:-tree} query out key acct pr
+  local src="$HOME/.local/src" layout=${CS_LAYOUT:-tree} query out key acct pr home REPLY
+  local -a args
+  while (( $# )); do
+    case $1 in
+      --config) (( $# > 1 )) || { print -u2 'cs: --config needs a path'; return 1; }
+        home=$2; shift ;;
+      --config=*) home=${${1#--config=}/#\~/$HOME} ;;
+      --?*) if [[ -d $HOME/.claude-${1#--} ]]; then acct=${1#--}; else args+=("$1"); fi ;;
+      *) args+=("$1") ;;
+    esac
+    shift
+  done
+  set -- "${args[@]}"
+  # An unknown home must not reach claude: it would make a new empty home.
+  if [[ -n $home ]]; then
+    [[ -d $home ]] || { print -u2 "cs: --config needs a folder that exists, not $home"; return 1; }
+    _cs_acct "$home"
+    acct=$REPLY
+  fi
   [[ ${1-} == -* ]] || { query=${1-}; (( $# )) && shift; }
   local -a dirs=("$src"/*/*/*(N/)) f accts run=(claude) info=(${=CS_BRANCH_INFO-}) known=(base merged pr) bad opts
   [[ $layout == (tree|flat) ]] || { print -u2 "cs: CS_LAYOUT is tree or flat, not $layout"; return 1; }
@@ -34,10 +56,10 @@ cs() {
   [[ $layout == tree ]] && opts=(--no-sort --no-hscroll --bind=change:first)
   (( ${info[(Ie)pr]} )) &&
     pr='(cd {2} && gh pr view --json number,state,title,url -t "#{{.number}} {{.state}} {{.title}}  {{.url}}{{\"\\n\\n\"}}" 2> /dev/null); '
-  out=$(_cs_rows "$src" "${COLUMNS:-80}" "$layout" "$info" "${dirs[@]}" |
+  out=$(_cs_rows "$src" "${COLUMNS:-80}" "$layout" "$info" "${(M)acct:#/*}" "${dirs[@]}" |
     fzf --read0 --ansi --delimiter=$'\t' --with-nth=3 --accept-nth=1,2,4,5 --expect=ctrl-o,ctrl-t $opts \
       --query="$query" ${query:+--select-1} ${query:+--exit-0} --height=100% --layout=reverse \
-      --header='enter: start, go to or resume claude · ctrl-o: start with another account · ctrl-t: open a shell there' \
+      --header="enter: start${acct:+ with ${(D)acct}}, go to or resume claude · ctrl-o: start with another account · ctrl-t: open a shell there" \
       --preview-window='down,50%' \
       --preview='case {1} in
         s) herdr agent read {2} --lines "$FZF_PREVIEW_LINES" ;;
@@ -59,12 +81,24 @@ cs() {
         [[ $acct == default ]] && acct=
       fi ;;
   esac
-  [[ -n $acct ]] && export CLAUDE_CONFIG_DIR=$HOME/.claude-$acct
+  if [[ $acct == /* ]]; then export CLAUDE_CONFIG_DIR=$acct
+  elif [[ -n $acct ]]; then export CLAUDE_CONFIG_DIR=$HOME/.claude-$acct; fi
   cd "$f[3]" && $run "$@"
 }
 
-# Rows for cs, after the folder, the terminal width, the layout and the extra
-# branch data: kind, target, display text, folder, account. Kind c is a
+# The account of the config home $1, in REPLY: empty for ~/.claude, the
+# default; <name> for ~/.claude-<name>; else the absolute path of the home.
+_cs_acct() {
+  emulate -L zsh
+  REPLY=${1:a}
+  if [[ $REPLY == $HOME/.claude ]]; then REPLY=
+  elif [[ ${REPLY:h} == $HOME && ${REPLY:t} == .claude-?* ]]; then REPLY=${${REPLY:t}#.claude-}
+  fi
+}
+
+# Rows for cs, after the folder, the terminal width, the layout, the extra
+# branch data and a config home that is not ~/.claude or ~/.claude-<name>, or
+# an empty arg: kind, target, display text, folder, account. Kind c is a
 # checkout with its changed files and commits ahead and behind, the one with
 # the latest Claude session first; s is a session open in herdr, the ones that
 # wait for you first; r is one of the 10 latest sessions that is not running;
@@ -76,11 +110,11 @@ _cs_rows() {
   emulate -L zsh
   zmodload -F zsh/stat b:zstat
   zmodload zsh/datetime
-  local src=$1 cols=$2 layout=$3 r d t k rel title acct age s up w=0
+  local src=$1 cols=$2 layout=$3 home=$5 r d t k rel title acct age s up w=0 REPLY
   local yellow=$'\e[33m' cyan=$'\e[36m' bold=$'\e[1m' dim=$'\e[90m' faint=$'\e[38;5;238m' reset=$'\e[0m'
   local -i i cw
   local -a info=(${=4})
-  shift 4
+  shift 5
   local -A color=(blocked 31 done 32 idle 90 working 33) folder entry custom ai asked used heads notes base
   local -a sessions files picked recent running records kids f g st ab lr note mtime parts order
   if (( ${+commands[jq]} )); then
@@ -91,6 +125,7 @@ _cs_rows() {
         | .[] | [.pane_id, (.cwd | ltrimstr($src)), .agent_status, .terminal_title_stripped] | @tsv')"})
     # Each running session has a sessions/<pid>.json in its config home.
     records=($HOME/.claude(|-*)/sessions/*.json(N))
+    [[ -n $home ]] && records+=($home/sessions/*.json(N))
     (( $#records )) &&
       for r in ${(f)"$(jq -r '"\(.pid) \(.sessionId)"' $records 2>/dev/null)"}; do
         kill -0 ${r%% *} 2>/dev/null && running+=(${r#* })
@@ -101,6 +136,16 @@ _cs_rows() {
   # title is your last name for it, else its last AI title, else its last prompt.
   # The first rg reads only the head of each file; the second reads at most 20 files.
   files=($HOME/.claude(|-*)/projects/${src//[^[:alnum:]]/-}-*/*.jsonl(N.om))
+  # A glob sorts only its own files, so sort again with those of the other home.
+  if [[ -n $home ]]; then
+    files+=($home/projects/${src//[^[:alnum:]]/-}-*/*.jsonl(N.))
+    parts=()
+    for t in $files; do
+      zstat -A mtime +mtime -- $t
+      parts+=("$mtime[1] $t")
+    done
+    files=(${${(On)parts}#* })
+  fi
   (( $#files && ${+commands[rg]} && ${+commands[jq]} )) || files=()
   (( $#files )) &&
     for r in ${(f)"$(rg -m3 -o --with-filename --no-line-number '"(cwd|entrypoint)":"[^"]*"' $files)"}; do
@@ -142,14 +187,14 @@ _cs_rows() {
     [[ -n $title ]] || continue
     (( $#recent < 10 )) || break
     title=${${title//\\n/ }//\\\"/\"}
-    # ~/.claude is the default account, ~/.claude-<name> the account <name>.
-    acct=${${${${t%/projects/*}:t}#.claude}#-}
+    _cs_acct ${t%/projects/*}
+    acct=$REPLY
     zstat -A mtime +mtime -- $t
     (( age = EPOCHSECONDS - mtime[1] ))
     if (( age < 3600 )); then age="$(( age / 60 ))m"
     elif (( age < 86400 )); then age="$(( age / 3600 ))h"
     else age="$(( age / 86400 ))d"; fi
-    recent+=("$t"$'\t'"${folder[$t]#$src/}"$'\t'"${title[1,100]}  $dim$age ${acct:-default}$reset"$'\t'"$folder[$t]"$'\t'"$acct")
+    recent+=("$t"$'\t'"${folder[$t]#$src/}"$'\t'"${title[1,100]}  $dim$age ${${(D)acct}:-default}$reset"$'\t'"$folder[$t]"$'\t'"$acct")
   done
   # One row for each session: kind, target, label, its color, path under
   # ~/.local/src, note, folder, account.

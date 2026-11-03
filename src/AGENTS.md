@@ -54,5 +54,8 @@ ls -d ~/.local/src/*/*/*/         # each checkout on this Mac
 ## For agents
 
 - You work in one checkout. Stay in it. A sibling folder is another branch of the same repo, and another agent can use it.
-- Make, move or remove a worktree, or switch the branch, only when the user asks. A switch makes the folder name wrong, so say so in your reply. When work needs its own branch, tell the user, with a branch name that follows the rules above.
+- Make, move or remove a worktree, or switch the branch, only when the user asks. A switch makes the folder name wrong, so say so in your reply.
+- Open as few pull requests as possible. Put all the work that the user gives you in this checkout on its branch, for one pull request: each item of a request, each follow-up, and each fix, feature, refactor, perf change or chore. Do not split work into more branches or pull requests by item, type, area or size, and do not suggest it.
+- A branch can hold commits of different types. Its name takes the type of the main change.
+- In the primary clone, give the user one branch name for all the work, with a name that follows the rules above. Suggest a second branch or pull request only when the user asks for it, or when the work is in another repo.
 - For the code of a repo, its own `AGENTS.md` or `CLAUDE.md` comes before this file.

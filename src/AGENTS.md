@@ -55,6 +55,11 @@ ls -d ~/.local/src/*/*/*/         # each checkout on this Mac
 
 - You work in one checkout. Stay in it. A sibling folder is another branch of the same repo, and another agent can use it.
 - Make, move or remove a worktree, or switch the branch, only when the user asks. A switch makes the folder name wrong, so say so in your reply.
+- When the user asks for a new worktree, make it and give its work to a new session there. Do these steps, and do no work in the new worktree yourself:
+  1. Use the branch name that the user gives, or make one by the rules above. Start from the default branch, unless the user names a base: add `--base <branch>`, or `--base @` for the branch of this checkout.
+  2. Run `wt switch -c <branch> --no-cd --format json`, and take the path of the worktree from its output. In a repo folder `<owner>/<repo>/`, which is not a checkout, add `-C` with a checkout in it. Never add `-y`: the user approves the hooks of a repo.
+  3. When this conversation has facts that the new session needs, such as the task, decisions or findings, write a handoff document as `~/.agents/skills/handoff/SKILL.md` tells.
+  4. Give the user one command that starts a session in the new worktree, then the kickoff prompt from that skill in one fenced block. For Claude Code, keep the account of this session: `cd <path> && claude` when `CLAUDE_CONFIG_DIR` is not set, and `cd <path> && CLAUDE_CONFIG_DIR=<its value> claude` when it is set.
 - Open as few pull requests as possible. Put all the work that the user gives you in this checkout on its branch, for one pull request: each item of a request, each follow-up, and each fix, feature, refactor, perf change or chore. Do not split work into more branches or pull requests by item, type, area or size, and do not suggest it.
 - A branch can hold commits of different types. Its name takes the type of the main change.
 - In the primary clone, give the user one branch name for all the work, with a name that follows the rules above. Suggest a second branch or pull request only when the user asks for it, or when the work is in another repo.

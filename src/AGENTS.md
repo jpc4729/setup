@@ -55,6 +55,7 @@ ls -d ~/.local/src/*/*/*/         # each checkout on this Mac
 
 - You work in one checkout. Stay in it. A sibling folder is another branch of the same repo, and another agent can use it.
 - Make, move or remove a worktree, or switch the branch, only when the user asks. A switch makes the folder name wrong, so say so in your reply.
+- To merge a pull request from a checkout, add `--repo <owner>/<repo>` to `gh pr merge`. Without it, `--delete-branch` switches the checkout to the default branch and deletes the local branch. With it, gh deletes only the remote branch. Remove the worktree later with `wt remove`.
 - When the user asks for a new worktree, make it and give its work to a new session there. Do these steps, and do no work in the new worktree yourself:
   1. Use the branch name that the user gives, or make one by the rules above. Start from the default branch, unless the user names a base: add `--base <branch>`, or `--base @` for the branch of this checkout.
   2. Run `wt switch -c <branch> --no-cd --format json`, and take the path of the worktree from its output. In a repo folder `<owner>/<repo>/`, which is not a checkout, add `-C` with a checkout in it. Never add `-y`: the user approves the hooks of a repo.

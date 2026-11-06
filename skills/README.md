@@ -30,8 +30,7 @@ Skills from upstream, pinned in [`../skills-lock.json`](../skills-lock.json), ea
 - `ponytail`, `ponytail-audit`, `ponytail-debt` and `ponytail-review` from [DietrichGebert/ponytail](https://github.com/DietrichGebert/ponytail), MIT.
 - `security-audit` from [cloudflare/security-audit-skill](https://github.com/cloudflare/security-audit-skill), MIT.
 - `thermo-nuclear-code-quality-review` from [cursor/plugins](https://github.com/cursor/plugins), MIT.
-- `typesafe-ai` from [typesafe-ai/skills](https://github.com/typesafe-ai/skills), MIT.
-- Changes from upstream: a shorter `description`, a `metadata` block and a Codex `agents/openai.yaml`. `security-audit` and `typesafe-ai` are unchanged.
+- Changes from upstream: a shorter `description`, a `metadata` block and a Codex `agents/openai.yaml`. `security-audit` is unchanged.
 
 ## Start rules
 

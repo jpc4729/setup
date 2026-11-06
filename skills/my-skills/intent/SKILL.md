@@ -190,7 +190,7 @@ Check the software against the trees. Read `references/check.md` for the methods
 
 ## verify
 
-Read `references/verify.md` and follow it. It uses the `typesafe-ai` skill when the tool has it.
+Read `references/verify.md` and follow it.
 
 ## tests
 

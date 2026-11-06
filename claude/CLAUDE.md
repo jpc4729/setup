@@ -36,7 +36,7 @@ Words I can add to a request: `plan only`: stop after step 2. `ask first`: in st
 - Give web research to a `researcher`, a hunt for defects or an audit to a `reviewer`, and a check in a real browser to a `browser`.
 - Brief a fresh subagent with the goal and the decisions. Fork one only for side research that needs this conversation, never to build, plan or review. Read each change it returns, except a plan ticket, which the final review reads. Never start a second subagent to review the same work.
 - Start a workflow only when my current message contains `ultracode`. Limit its retry loops to 3 rounds. Report a failed run; do not start it again.
-- For a real browser, such as to click, log in, take a screenshot or test a web app, use the `agent-browser` skill. Read static pages with WebFetch.
+- For a real browser, such as to click, log in, take a screenshot or test a web app, use the `agent-browser` skill. Read static pages with WebFetch, or with the `web-fetch` agent when you have no WebFetch tool.
 
 # Writing to me
 

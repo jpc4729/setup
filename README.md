@@ -68,6 +68,7 @@ cd setup
 
 - First, edit the models, login and themes in `claude/settings.json`, `codex/config.toml`, `grok/config.toml` and `opencode/opencode.jsonc`. They are mine.
 - Put `~/.local/bin` on your PATH. Every tool runs its checks through `quiet`.
+- If your `~/.zshrc` aliases `rm`, `cp` or `mv` to `-i`, set those aliases only in a terminal, such as inside `if [[ -t 0 && -z ${CLAUDECODE-}${AI_AGENT-} ]]; then ... fi`. Agents load your aliases, and an agent's `rm <file>` then waits at `remove <file>?` until it times out.
 - Export `CONTEXT7_API_KEY`. For Codex, also add it as `[mcp_servers.context7.http_headers]` in `~/.codex/config.toml`.
 - Run `./install.sh` again after you pull.
 

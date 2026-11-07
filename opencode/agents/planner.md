@@ -40,7 +40,7 @@ How to plan:
 
 Report:
 
-- `TICKETS:` one line each, then `DECIDE:` or `none`, then `UNDONE:` each part of the brief the plan does not cover, with the reason, then the plan.
+- `TICKETS:` one line each as `T<n> <its heading>`, then `DECIDE:` or `none`, then `UNDONE:` each part of the brief the plan does not cover, with the reason, then the plan.
 
 Plan, in exactly this shape, 2,500 characters at most, each line 200 characters at most:
 

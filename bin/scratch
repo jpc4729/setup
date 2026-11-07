@@ -1,0 +1,33 @@
+#!/usr/bin/env bash
+# Makes a new scratch folder for agent work and prints its path:
+# /tmp/agents/<owner>/<repo>/<slug>.XXXXXX. <owner>/<repo> comes from the
+# `origin` URL of the git repo at the current folder, as for plans in
+# ~/.local/state/plans/. With no `origin`, or outside a repo, it is
+# `local/<folder name>`. Each call makes a new folder, so two sessions never
+# share one. Delete only that folder, by its path.
+# Usage: scratch <slug>
+set -euo pipefail
+
+if [[ $# -ne 1 || ! $1 =~ ^[A-Za-z0-9][A-Za-z0-9._-]*$ ]]; then
+  echo "usage: scratch <slug>, with only letters, digits, '.', '_' and '-'" >&2
+  exit 64
+fi
+
+url=$(git config --get remote.origin.url 2> /dev/null || true)
+url=${url%/}
+url=${url%.git}
+repo=${url##*[/:]}
+owner=${url%"/$repo"}
+owner=${owner%":$repo"}
+owner=${owner##*[/:]}
+if [[ -z $url || -z $repo || -z $owner || $owner == "$url" ]]; then
+  top=$(git rev-parse --show-toplevel 2> /dev/null || pwd)
+  name=${top##*/}
+  owner=local
+  repo=${name#.}
+  repo=${repo:-root}
+fi
+
+root="/tmp/agents/$owner/$repo"
+mkdir -p "$root"
+mktemp -d "$root/$1.XXXXXX"

@@ -54,6 +54,7 @@ ls -d ~/.local/src/*/*/*/         # each checkout on this Mac
 ## For agents
 
 - You work in one checkout. Stay in it. A sibling folder is another branch of the same repo, and another agent can use it.
+- Temp files go in the folder that `scratch <slug>` prints, `/tmp/agents/<owner>/<repo>/<slug>.XXXXXX`, with the same `<owner>/<repo>` as here.
 - Make, move or remove a worktree, or switch the branch, only when the user asks. A switch makes the folder name wrong, so say so in your reply.
 - To merge a pull request from a checkout, add `--repo <owner>/<repo>` to `gh pr merge`. Without it, `--delete-branch` switches the checkout to the default branch and deletes the local branch. With it, gh deletes only the remote branch. Remove the worktree later with `wt remove`.
 - When the user asks for a new worktree, make it and give its work to a new session there. Do these steps, and do no work in the new worktree yourself:

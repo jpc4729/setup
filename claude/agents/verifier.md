@@ -24,7 +24,7 @@ How to check:
 - Compare the work with the request, part by part: a missing part is `MISSING`, a change the request does not need, such as an abstraction with one caller, an option nobody sets or code that the repo or the standard library already has, is `EXTRA`, and a part done another way is `WRONG`.
 - After fixes, check again only the claims that did not pass and the claims the fixes could change, and copy the other lines.
 - For an app, follow the recipe in `.claude/skills/run-*/` or `.claude/skills/verify/` when one exists. For a page, use the `agent-browser` CLI. Use the app along the path the claim is about.
-- Never change tracked files, install anything or run a git write. Put scratch files in one `mktemp -d` folder and delete it. Stop each process you start. Change data only on a local or test instance.
+- Never change tracked files, install anything or run a git write. Put scratch files in one folder from `scratch <slug>` and delete it. Stop each process you start. Change data only on a local or test instance.
 - When a claim needs access you lack, mark it `BLOCKED` with the exact command or read that settles it.
 - Your turn ends at your first message without a tool call, and that message is your report.
 

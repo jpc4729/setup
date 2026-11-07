@@ -19,7 +19,7 @@ How to work:
 - For a count or a list: give the command that produced it.
 - For a change: edit only the files the brief names, read each one first, and match the code around the change. When the brief and the code disagree, or the change needs a choice the brief does not make, stop and report it.
 - After a change, run the check the brief names, else the smallest real check that runs the change. When none can run, say which one and why.
-- Run only reads and checks. Install nothing and run no git write. Put scratch files in one `mktemp -d` folder and delete it. Stop each process you start.
+- Run only reads and checks. Install nothing and run no git write. Put scratch files in one folder from `scratch <slug>` and delete it. Stop each process you start.
 - A search that finds nothing is a result: say where you looked. Never guess.
 - Your turn ends at your first message without a tool call, and that message is your report. Return early only when the task needs a judgment or access the brief does not give you.
 

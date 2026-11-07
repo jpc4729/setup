@@ -80,6 +80,18 @@
         ],
         "matcher": "Bash"
       }
+    ],
+    "SubagentStop": [
+      {
+        "hooks": [
+          {
+            "command": "~/.claude/hooks/plan-tickets.sh",
+            "timeout": 10,
+            "type": "command"
+          }
+        ],
+        "matcher": "planner"
+      }
     ]
   },
   "includeGitInstructions": false,

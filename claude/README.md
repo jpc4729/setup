@@ -14,9 +14,10 @@ The idea: fast by default. Heavy checks run only when a mistake costs much. Hard
 - `CLAUDE.md`: the rules for the main session. One short core, because less text means better adherence.
 - `settings.json`: merged into `~/.claude/settings.json` by `install.sh`. Repo keys win, and Claude Code keeps the keys it writes.
 - `agents/`: `scout`, `verifier`, `worker`, `planner`, `clerk`, `researcher`, `reviewer` and `browser`.
-- `hooks/`: `nested-agents.sh` lets a subagent start only a `clerk` or a `browser`, and `bash-reads.sh` refuses a file read through `cat`, `sed`, `head`, `tail` or `nl`.
+- `hooks/`: `nested-agents.sh` lets a subagent start only a `clerk` or a `browser`, `bash-reads.sh` refuses a file read through `cat`, `sed`, `head`, `tail` or `nl`, and `plan-tickets.sh` shows you the plan path and tickets when a `planner` returns.
 - `mods/worklog/`, off: a mod that draws a live tree of the main session's prompts, decisions, edits, commands and subagents in a pane beside the chat. `/worklog` opens it, `/worklog history` lists the last 5 sessions in the pane, and `/worklog <id>` shows one. The model logs decisions and findings with `mcp__worklog__record`: no system-prompt text, about 110 tokens of tool schema, and no command output in its context. Headless runs record nothing. To turn it on, add `"CLAUDE_CODE_PLUGIN_DIRS": "~/.claude/mods/worklog"` to `env` in `settings.json`, and take `.env.CLAUDE_CODE_PLUGIN_DIRS` out of `claude_drop` in `install.sh`.
 - `statusline-command.sh`: the status line. Profile, folder, branch, model, tokens, rate limits, prompt cache, diff and age in one line. Each part stays dim until it needs you.
+- [`../bin/scratch`](../bin/scratch), installed in `~/.local/bin`: `scratch <slug>` makes and prints a new task folder, `/tmp/agents/<owner>/<repo>/<slug>.XXXXXX`, for the scratch files of an agent.
 - [`../bin/quiet`](../bin/quiet), installed in `~/.local/bin`: `quiet <command>` prints one line on a pass and the full output on a failure, to save context.
 
 ## The rules, in short

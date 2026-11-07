@@ -108,7 +108,7 @@ copy src "$HOME/.local/src"
 
 # Every tool's rules run checks through quiet, so it must be on PATH.
 [[ -n "$dry" ]] || mkdir -p "$HOME/.local/bin"
-rsync -a ${dry:+"$dry"} --backup --suffix=.bak "$repo/bin/quiet" "$repo/bin/agent-stats" "$repo/bin/cs" "$HOME/.local/bin/"
+rsync -a ${dry:+"$dry"} --backup --suffix=.bak "$repo/bin/quiet" "$repo/bin/scratch" "$repo/bin/agent-stats" "$repo/bin/cs" "$HOME/.local/bin/"
 case ":$PATH:" in
   *":$HOME/.local/bin:"*) ;;
   *) echo "install.sh: add ~/.local/bin to PATH, so the agents can run quiet" >&2 ;;

@@ -76,7 +76,7 @@ cd setup
 - Copies each tool folder into its home. A replaced file stays beside it as `<name>.bak`.
 - Merges the five settings files that the apps rewrite. Repo keys win, and the app's own keys stay.
 - Copies the skills into `~/.agents/skills` and `~/.cursor/skills`, and links them into `~/.claude/skills`.
-- Copies `bin/quiet`, `bin/agent-stats` and `bin/cs` into `~/.local/bin`.
+- Copies `bin/quiet`, `bin/scratch`, `bin/agent-stats` and `bin/cs` into `~/.local/bin`.
 - Copies `src/AGENTS.md` into `~/.local/src`, and merges `worktrunk/config.toml` into `~/.config/worktrunk/config.toml`.
 - Merges `herdr/config.toml` into `~/.config/herdr/config.toml`, and copies `herdr/status.sh` beside it. Run `herdr server reload-config` to load it in a running herdr. Copies the `repo-label` plugin into `~/.config/herdr/plugins` and links it: each workspace in `~/.local/src/<owner>/<repo>/<folder>` gets the label `<repo>`, not herdr's `main` or branch folder. When the workspace leaves `~/.local/src`, it gets herdr's label for its folder again. A name you give a workspace stays. `herdr plugin disable local.repo-label` turns it off.
 - On macOS, installs Codex's `requirements.toml` as a managed preference.
@@ -93,6 +93,7 @@ opencode/          → ~/.config/opencode    rules, config, seven agents
 skills/my-skills/  → ~/.agents/skills      skills I wrote or adapted
 skills/vendored/   → ~/.agents/skills      vendored skills, pinned in skills-lock.json
 bin/quiet          → ~/.local/bin/quiet    one line on a pass, full output on a failure
+bin/scratch        → ~/.local/bin/         a new task folder in /tmp/agents/<owner>/<repo>/ for an agent's temp files
 bin/agent-stats    → ~/.local/bin/         Claude Code agent runs, minutes, efforts and quality guards
 bin/cs             → ~/.local/bin/         start, go to or resume a Claude Code session in ~/.local/src
 src/AGENTS.md      → ~/.local/src/         layout, branch names and cleanup for each clone and worktree

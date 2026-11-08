@@ -28,10 +28,6 @@ max_concurrent_threads_per_session = 3
 # Off, as in Claude's skillOverrides. Codex 0.153 matches `name`; its docs show
 # only `path`, which would pin a home directory.
 [[skills.config]]
-name = "bet"
-enabled = false
-
-[[skills.config]]
 name = "thermo-nuclear-code-quality-review"
 enabled = false
 

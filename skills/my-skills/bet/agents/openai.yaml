@@ -1,5 +1,0 @@
-interface:
-  display_name: "BET"
-  short_description: "Branching Expectation Tree test plans"
-policy:
-  allow_implicit_invocation: false

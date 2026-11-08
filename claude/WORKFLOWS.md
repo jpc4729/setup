@@ -58,7 +58,7 @@ cheap summaries or counts     add "use clerks"
 a second review               "review again"
 a bug                         /diagnose <symptom>
 a big, unclear idea           /wayfinder <idea>
-a question, no changes        /read-only <question>
+a question, no changes        add "Change nothing."
 see the app run               /run
 a recipe to prove changes     /verify-setup
 bugs in a diff or an area     "find bugs in <diff or path>"
@@ -131,7 +131,7 @@ Plans are in `~/.local/state/plans/<repo>/`.
 Answer a question, change nothing:
 
 ```text
-/read-only How does <thing> work? Show the path:line evidence.
+How does <thing> work? Change nothing. Show the path:line evidence.
 ```
 
 Risky change, with proof:

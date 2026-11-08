@@ -108,7 +108,7 @@ enabled = []
 
 # The skills Claude's skillOverrides turn off. Grok lists them as [disabled].
 [skills]
-disabled = ["bet", "thermo-nuclear-code-quality-review"]
+disabled = ["thermo-nuclear-code-quality-review"]
 
 # The git rule in code: each git, gh and wt write asks for approval. Ask wins
 # over allow (deny > ask > allow) regardless of source. Under always-approve,

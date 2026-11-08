@@ -1,5 +1,0 @@
-interface:
-  display_name: "Rate"
-  short_description: "Score work to 10 on every axis"
-policy:
-  allow_implicit_invocation: false

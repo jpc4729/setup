@@ -22,14 +22,16 @@ Type "cs"
 Sleep 500ms
 Enter
 Sleep 3s
-Down
+Right
 Sleep 2s
-Down@500ms 3
+Down@500ms 2
 Sleep 500ms
+Right
+Sleep 2s
 Down
 Sleep 3s
-Down@500ms 3
-Sleep 3s
+Left
+Sleep 2s
 Type "login"
 Sleep 2.5s
 Ctrl+T

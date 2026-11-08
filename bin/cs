@@ -17,8 +17,9 @@
 # claude arg, so `cs -c` has no query. README.md has lines for ~/.zshrc that
 # open cs in each new herdr pane that has the focus.
 # Two settings, exported in ~/.zshrc or set before the command: CS_LAYOUT is
-# tree, the default, for each repo with its branches and their sessions, or
-# flat for the checkouts, then the open sessions, then the recent ones.
+# tree, the default, for each repo, which the right arrow opens to its branches
+# and their sessions and the left arrow closes, or flat for the checkouts, then
+# the open sessions, then the recent ones.
 # CS_BRANCH_INFO holds the extra branch data to show, none by default: base for
 # the commits ahead and behind the default branch, merged for a pushed branch
 # with no commit that the default branch lacks, or gone when its upstream is
@@ -52,22 +53,55 @@ cs() {
   (( $#dirs )) || { print -u2 "cs: no checkout in $src"; return 1; }
   # A sort by match would break the tree, and a scroll to a match in the faint
   # path at the end of a long row would hide its label and title. With no sort,
-  # the cursor stays where it was when you type, so move it to the first match.
-  [[ $layout == tree ]] && opts=(--no-sort --no-hscroll --bind=change:first)
-  (( ${info[(Ie)pr]} )) &&
-    pr='(cd {2} && gh pr view --json number,state,title,url -t "#{{.number}} {{.state}} {{.title}}  {{.url}}{{\"\\n\\n\"}}" 2> /dev/null); '
-  out=$(_cs_rows "$src" "${COLUMNS:-80}" "$layout" "$info" "${(M)acct:#/*}" "${dirs[@]}" |
-    fzf --read0 --ansi --delimiter=$'\t' --with-nth=3 --accept-nth=1,2,4,5 --expect=ctrl-o,ctrl-t $opts \
-      --query="$query" ${query:+--select-1} ${query:+--exit-0} --height=100% --layout=reverse \
-      --header="enter: start${acct:+ with ${(D)acct}}, go to or resume claude · ctrl-o: start with another account · ctrl-t: open a shell there" \
-      --preview-window='down,50%' \
-      --preview='case {1} in
-        s) herdr agent read {2} --lines "$FZF_PREVIEW_LINES" ;;
-        r) rg -F "\"last-prompt\"" {2} | jq -r "select(.type == \"last-prompt\") | \"› \" + (.lastPrompt // \"\" | gsub(\"\\n\"; \" \"))" | uniq | tail -n 10 ;;
-        c) '"$pr"'git --no-optional-locks -C {2} -c color.ui=always status -sb; echo; git -C {2} log --oneline --color=always -10 ;;
-        p) for d in {2}/*/; do git -C "$d" worktree list 2> /dev/null && break; done ;;
-      esac') ||
-    { (( $? == 1 )) && [[ -n $query ]] && print -u2 "cs: no match for $query"; return 1; }
+  # the cursor stays where it was when you type, so _cs_key moves it to the first
+  # match. Also with no sort, a fuzzy match in another repo would come first, so
+  # a query is exact.
+  local tmp ret feed
+  tmp=$(mktemp -d "${TMPDIR:-/tmp}/dotfiles-cs.XXXXXX") || return 1
+  {
+    _cs_rows "$src" "${COLUMNS:-80}" "$layout" "$info" "${(M)acct:#/*}" "${dirs[@]}" > $tmp/rows
+    : > $tmp/open
+    print -r -- "${acct:+ with ${(D)acct}}" > $tmp/who
+    # A query searches every row, as a closed repo would hide its sessions.
+    [[ -n $query ]] && : > $tmp/all
+    # fzf runs each key in a new process, which sources this script for _cs_key.
+    print -rl -- "#!$commands[zsh] -f" "source ${(q)${functions_source[cs]:a}} --cs-key" "_cs_key ${(q)tmp} \"\$@\"" > $tmp/ctl
+    chmod +x $tmp/ctl
+    feed=$tmp/rows
+    if [[ $layout == tree ]]; then
+      feed=$tmp/first
+      _cs_key $tmp view > $feed
+      cp $tmp/title $tmp/shown
+      opts=(--exact --no-sort --no-hscroll --header="$(<$tmp/title)" --header-border=line --ellipsis=
+        --bind="change:transform:$tmp/ctl change"
+        --bind="right:transform:$tmp/ctl right {6} {7} {8}"
+        --bind="left:transform:$tmp/ctl left {6} {7} {8}"
+        --bind="result:transform:$tmp/ctl result"
+        --bind="resize:transform:$tmp/ctl resize")
+    fi
+    (( ${info[(Ie)pr]} )) &&
+      pr='(cd {2} && gh pr view --json number,state,title,url -t "#{{.number}} {{.state}} {{.title}}  {{.url}}{{\"\\n\\n\"}}" 2> /dev/null); '
+    _cs_pane ${#${(0)"$(<$feed)"}}
+    print -r -- "$REPLY" > $tmp/pane
+    out=$(fzf --read0 --ansi --highlight-line --delimiter=$'\t' --with-nth=3 --accept-nth=1,2,4,5 --expect=ctrl-o,ctrl-t $opts \
+        --query="$query" ${query:+--select-1} ${query:+--exit-0} --height=100% --layout=reverse \
+        --border=none --info=inline --gutter=' ' --pointer='▌' \
+        --color='bg+:238,hl:215,hl+:215:bold,pointer:117,prompt:117,query:255,info:243,header:243,footer:243,border:238,preview-border:238,list-border:238,header-border:238,separator:238,scrollbar:240,spinner:117,marker:114' \
+        --footer="$(_cs_hint "${acct:+ with ${(D)acct}}" $layout)" \
+        --preview-window="$REPLY" \
+        --preview='case {1} in
+          s) herdr agent read {2} --lines "$FZF_PREVIEW_LINES" ;;
+          r) rg -F "\"last-prompt\"" {2} | jq -r "select(.type == \"last-prompt\") | \"› \" + (.lastPrompt // \"\" | gsub(\"\\n\"; \" \"))" | uniq | tail -n "$FZF_PREVIEW_LINES" ;;
+          c) '"$pr"'git --no-optional-locks -C {2} -c color.ui=always -c color.status.branch=117 -c color.status.remotebranch=245 -c color.status.added=114 -c color.status.changed=180 -c color.status.untracked=245 status -sb; echo; git -C {2} log --color=always --format="%C(180)%h%C(reset) %s" -n "$FZF_PREVIEW_LINES" ;;
+          p) for d in {2}/*/; do
+               if git -C "$d" worktree list 2> /dev/null; then echo; git -C "$d" log --color=always --format="%C(180)%h%C(reset) %s" -n "$FZF_PREVIEW_LINES"; break; fi
+             done ;;
+        esac' < $feed)
+    ret=$?
+  } always {
+    rm -rf -- $tmp
+  }
+  (( ret )) && { (( ret == 1 )) && [[ -n $query ]] && print -u2 "cs: no match for $query"; return 1; }
   key=${out%%$'\n'*} f=("${(@ps:\t:)${out#*$'\n'}}")
   [[ $key == ctrl-t ]] && { cd "$f[3]" && exec "${SHELL:-zsh}"; return; }
   case $f[1] in
@@ -101,7 +135,8 @@ _cs_acct() {
 # an empty arg: kind, target, display text, folder, account. Kind c is a
 # checkout with its changed files and commits ahead and behind, the one with
 # the latest Claude session first; s is a session open in herdr, the ones that
-# wait for you first; r is one of the 10 latest sessions that is not running;
+# wait for you first, as solid blocks; r is one of the 10 latest sessions that
+# is not running, in a muted color, so that it does not compete with them;
 # p, only in the tree layout, is a repo folder. The target is the checkout, the
 # herdr pane, the transcript or the repo folder. _cs_tree gives the tree order.
 # Transcripts are an internal format: read only the folder, entrypoint, titles
@@ -111,11 +146,13 @@ _cs_rows() {
   zmodload -F zsh/stat b:zstat
   zmodload zsh/datetime
   local src=$1 cols=$2 layout=$3 home=$5 r d t k rel title acct age s up w=0 REPLY
-  local yellow=$'\e[33m' cyan=$'\e[36m' bold=$'\e[1m' dim=$'\e[90m' faint=$'\e[38;5;238m' reset=$'\e[0m'
+  local text dim faint bold cyan th amber green rose violet band reset
+  _cs_palette
   local -i i cw
   local -a info=(${=4})
   shift 5
-  local -A color=(blocked 31 done 32 idle 90 working 33) folder entry custom ai asked used heads notes base
+  local -A color=(blocked '1;38;5;232;48;5;203' done '1;38;5;232;48;5;114' idle '38;5;245' working '38;5;221') glyph=(blocked '!' done ✓ idle ○ working ●)
+  local -A folder entry custom ai asked used heads notes base
   local -a sessions files picked recent running records kids f g st ab lr note mtime parts order
   if (( ${+commands[jq]} )); then
     (( ${+commands[herdr]} )) &&
@@ -194,18 +231,18 @@ _cs_rows() {
     if (( age < 3600 )); then age="$(( age / 60 ))m"
     elif (( age < 86400 )); then age="$(( age / 3600 ))h"
     else age="$(( age / 86400 ))d"; fi
-    recent+=("$t"$'\t'"${folder[$t]#$src/}"$'\t'"${title[1,100]}  $dim$age ${${(D)acct}:-default}$reset"$'\t'"$folder[$t]"$'\t'"$acct")
+    recent+=("$t"$'\t'"${folder[$t]#$src/}"$'\t'"${title[1,100]}"$'\t'"$folder[$t]"$'\t'"$acct"$'\t'"$age")
   done
   # One row for each session: kind, target, label, its color, path under
-  # ~/.local/src, note, folder, account.
+  # ~/.local/src, title, folder, account, age.
   for r in $sessions; do
     f=("${(@ps:\t:)r}")
-    g=(s "$f[1]" "● $f[3]" "${color[$f[3]]:-90}" "$f[2]" "$f[4]" "$src/$f[2]" "")
+    g=(s "$f[1]" "${glyph[$f[3]]:-○} $f[3]" "${color[$f[3]]:-38;5;245}" "$f[2]" "$f[4]" "$src/$f[2]" "")
     kids+=("${(pj:\t:)g}")
   done
   for r in $recent; do
     f=("${(@ps:\t:)r}")
-    g=(r "$f[1]" "↺ resume" 35 "$f[2]" "$f[3]" "$f[4]" "$f[5]")
+    g=(r "$f[1]" "↺ resume" '38;5;103' "$f[2]" "$f[3]" "$f[4]" "$f[5]" "$f[6]")
     kids+=("${(pj:\t:)g}")
   done
 
@@ -215,10 +252,10 @@ _cs_rows() {
   for d; do
     st=(${(f)"$(git --no-optional-locks -C "$d" status --porcelain=v2 --branch 2>/dev/null)"})
     ab=(${=${${(M)st:#\# branch.ab *}#\# branch.ab }})
-    note=(${${st:#\#*}:+±${#${st:#\#*}}})
-    (( ${ab[1]#+} )) && note+=("↑${ab[1]#+}")
-    (( ${ab[2]#-} )) && note+=("↓${ab[2]#-}")
-    notes[$d]="${note:+$yellow$note$reset}"
+    note=(${${st:#\#*}:+$amber±${#${st:#\#*}}})
+    (( ${ab[1]#+} )) && note+=("$green↑${ab[1]#+}")
+    (( ${ab[2]#-} )) && note+=("$rose↓${ab[2]#-}")
+    notes[$d]="${note:+$note$reset}"
     heads[$d]=${${(M)st:#\# branch.head *}#\# branch.head }
     (( ${info[(Ie)base]} + ${info[(Ie)merged]} )) || continue
     k=${d:h}
@@ -246,6 +283,14 @@ _cs_rows() {
   done
 
   [[ $layout == tree ]] && { _cs_tree "$@"; return; }
+  # The flat layout has no age or account column: the age is the label, and an
+  # account that is not the default follows the title.
+  for (( i = 1; i <= $#kids; i++ )); do
+    f=("${(@ps:\t:)kids[i]}")
+    [[ $f[1] == r ]] || continue
+    f[3]="↺ $f[9]" f[6]+="${f[8]:+  $dim${(D)f[8]}$reset}"
+    kids[i]="${(pj:\t:)f}"
+  done
   for rel in ${@#$src/}; (( $#rel > w )) && w=$#rel
   for r in $kids; do
     f=("${(@ps:\t:)r}")
@@ -260,7 +305,7 @@ _cs_rows() {
     f=("${(@ps:\t:)r}")
     (( 13 + w + ${#${(S)f[6]//$'\e['*m}} > cols - 6 )) && cw=0
   done
-  for d; _cs_row $w c "$d" "+ new" 36 "${d#$src/}" "$notes[$d]" "$d"
+  for d; _cs_row $w c "$d" "+ new" '38;5;117' "${d#$src/}" "$notes[$d]" "$d"
   for r in $kids; do
     f=("${(@ps:\t:)r}")
     _cs_row $cw "$f[@]"
@@ -268,19 +313,19 @@ _cs_rows() {
 }
 
 # The tree layout of _cs_rows, after its checkouts. It reads and changes the
-# locals of _cs_rows: src, kids, used, heads, notes and the color codes. Each
-# repo comes in order: first the repos with a session that waits for you
-# (blocked or done), then the one with the latest session, then by name. Under
-# it, the sessions in its folder, then each checkout, the primary clone first,
-# with the sessions in it. A repo with one checkout and no session of its own is
-# one row. A checkout shows its branch, and ⚠ with the folder when the branch
-# does not match the folder name. fzf searches only the text it shows, so a row
-# under a repo ends with its path in a faint color.
+# locals of _cs_rows: src, kids, used, heads and notes. It writes records, and
+# _cs_view makes the table from them. Each repo comes in order: first the repos
+# with a session that waits for you (blocked or done), then the one with the
+# latest session, then by name. Under it, the sessions in its folder, then each
+# checkout, the primary clone first, with the sessions in it. A repo with one
+# checkout and no session of its own is one row. A checkout shows its branch,
+# and ⚠ with the folder when the branch does not match the folder name. A repo
+# opens to its checkouts and its own sessions, and a checkout to its sessions.
 _cs_tree() {
   emulate -L zsh
-  local d k rk w
-  local -i i tw
-  local -A names count own
+  local d k c
+  local -i i
+  local -A names count own waits
   local -a repos order ds f parts
   for d; do
     k=${${d:h}#$src/}
@@ -298,16 +343,12 @@ _cs_tree() {
     (( $#parts >= 3 && ${argv[(Ie)$src/$k]} )) || { k=${(j:/:)parts[1,2]}; own[$k]=1; }
     kids[i]=$k$'\t'$kids[i]
     repos+=(${(j:/:)parts[1,2]})
-    [[ $f[1] == s && $f[3] == '● '(blocked|done) ]] && used[$src/${(j:/:)parts[1,2]}]=0
+    [[ $f[1] == s && $f[3] == *' '(blocked|done) ]] || continue
+    used[$src/${(j:/:)parts[1,2]}]=0
+    for c in $k ${(j:/:)parts[1,2]}; do
+      [[ $waits[$c] == blocked ]] || waits[$c]=${f[3]#* }
+    done
   done
-  # The width of the widest repo or checkout text, for the note column.
-  for d; do
-    k=${${d:h}#$src/}
-    if (( ${count[$k]} == 1 )) && [[ -z $own[$k] ]]; then w=$(( $#k + 3 + ${#names[$d]} ))
-    else w=$(( 4 + ${#names[$d]} > $#k ? 4 + ${#names[$d]} : $#k )); fi
-    (( w > tw )) && tw=$w
-  done
-  for k in ${(k)own}; (( $#k > tw )) && tw=$#k
   for k in ${(u)repos}; order+=("${used[$src/$k]:-999999} $k")
   for k in ${${(on)order}#* }; do
     ds=()
@@ -315,32 +356,252 @@ _cs_tree() {
       [[ ${d:h} == $src/$k ]] || continue
       if [[ -d $d/.git ]]; then ds=($d $ds); else ds+=($d); fi
     done
-    rk=$bold$k$reset
-    [[ $k == */* ]] && rk=$dim${k%/*}/$reset$bold${k:t}$reset
     if (( $#ds == 1 )) && [[ -z $own[$k] ]]; then
       d=$ds[1]
-      _cs_trow c "$d" "$rk · $cyan$names[$d]$reset" $(( $#k + 3 + ${#names[$d]} )) "$notes[$d]" "" "${d#$src/}" 4
+      _cs_trow c "$d" r "${k:t}" "$names[$d]" "$notes[$d]" "${d#$src/}" "${d#$src/}" 0 ""
       continue
     fi
-    _cs_trow p "$src/$k" "$rk" $#k "" "" "$k" 4
-    for d in $ds; _cs_trow c "$d" "    $cyan$names[$d]$reset" $(( 4 + ${#names[$d]} )) "$notes[$d]" "${d#$src/}" "${d#$src/}" 8
+    _cs_trow p "$src/$k" r "${k:t}" "" "" "$k" "$k" 0 ""
+    for d in $ds; _cs_trow c "$d" b "$names[$d]" "" "$notes[$d]" "${d#$src/}" "${d#$src/}" 1 "$k"
   done
 }
 
-# One repo or checkout row of _cs_tree, then the session rows of its group:
-# $1 kind, $2 folder, $3 text, $4 its width, $5 note, $6 faint path, $7 group,
-# $8 indent of the session rows. It reads tw, kids and the color codes of its
-# callers.
+# The record of a repo or checkout row, then of the session rows of its group:
+# $1 kind, $2 folder, $3 style (r repo, b branch), $4 name, $5 branch after a
+# repo name, $6 note, $7 path, $8 id, which is also the group, $9 depth, $10 the
+# ids of its parents, joined by |. It reads kids, waits and the color tables of
+# its callers. After the fields of _cs_rows, with an empty display field, come
+# the id, parents, 1 for a row with rows under it, depth, style, name, branch,
+# status, its color, note, age, account and path. The status of a repo or
+# checkout is the most urgent session under it, which shows while it is closed.
 _cs_trow() {
   emulate -L zsh
-  local r
-  local -a f
-  printf '%s\t%s\t%s%*s%s%s\t%s\t\0' "$1" "$2" "$3" $(( tw - $4 + 2 )) '' "$5" "${6:+  $faint$6$reset}" "$2"
-  for r in ${(M)kids:#$7$'\t'*}; do
+  local r has w=$waits[$8]
+  local -a f rows=(${(M)kids:#$8$'\t'*})
+  [[ $1 == p || $#rows -gt 0 ]] && has=1
+  printf '%s\t%s\t\t%s\t\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t\t\t%s\0' "$1" "$2" "$2" \
+    "$8" "${10}" "$has" "$9" "$3" "$4" "$5" "${w:+$glyph[$w] $w}" "${w:+$color[$w]}" "$6" "$7"
+  for r in $rows; do
     f=("${(@ps:\t:)r}")
-    printf '%s\t%s\t%*s\e[%sm%-9s\e[0m  %s  %s%s%s\t%s\t%s\0' "$f[2]" "$f[3]" $8 '' \
-      "$f[5]" "$f[4]" "$f[7]" "$faint" "$f[6]" "$reset" "$f[8]" "$f[9]"
+    printf '%s\t%s\t\t%s\t%s\t\t%s\t\t%s\ts\t%s\t\t%s\t%s\t\t%s\t%s\t%s\0' "$f[2]" "$f[3]" "$f[8]" "$f[9]" \
+      "${10:+${10}|}$8" $(( $9 + 1 )) "$f[7]" "$f[4]" "$f[5]" "$f[10]" "${(D)f[9]}" "$f[6]"
   done
+}
+
+# The 256 colors of cs, into the locals of its caller, as the 16 of the terminal
+# theme are too saturated for a dense list.
+_cs_palette() {
+  text=$'\e[38;5;252m' dim=$'\e[38;5;245m' faint=$'\e[38;5;242m' bold=$'\e[1;38;5;255m' cyan=$'\e[38;5;117m'
+  th=$'\e[1;38;5;244m' amber=$'\e[38;5;180m' green=$'\e[38;5;114m' rose=$'\e[38;5;210m' violet=$'\e[38;5;139m'
+  band=$'\e[48;5;236m' reset=$'\e[0m'
+}
+
+# $1 cut with … or padded to $2 columns, in REPLY.
+_cs_cell() {
+  emulate -L zsh
+  if (( ${(m)#1} > $2 )); then REPLY=${(mr:$2-1:: :)1}…
+  else REPLY=${(mr:$2:: :)1}; fi
+}
+
+# The size of fzf, into C and H of the caller, and the shape that fits it: side
+# is 1 for the preview beside the list, in a wide and low window, and L is the
+# width of the list, less the columns of pointer, marker, scrollbar and border.
+_cs_size() {
+  emulate -L zsh
+  C=${FZF_COLUMNS:-${COLUMNS:-80}} H=${FZF_LINES:-${LINES:-24}} side=0
+  (( C >= 150 && C >= 3 * H )) && side=1
+  L=$(( side ? C - C * 45 / 100 - 4 : C - 3 ))
+}
+
+# The preview window for $1 rows, in REPLY. Under the list, it takes the lines
+# that the rows and 6 lines of prompt, titles and hints leave, at least 35% of
+# the window, so that the list has no empty lines. A low window has no preview.
+_cs_pane() {
+  emulate -L zsh
+  local -i C H L side n
+  _cs_size
+  if (( H < 18 )); then REPLY=hidden
+  elif (( side )); then REPLY=nohidden,right,45%,border-left
+  else
+    n=$(( H - 6 - ${1:-0} ))
+    (( n < H * 35 / 100 )) && n=$(( H * 35 / 100 ))
+    REPLY=nohidden,down,$n,border-top
+  fi
+}
+
+# The key hints that fit the window: $1 is " with <account>" or empty, $2 the layout.
+_cs_hint() {
+  emulate -L zsh
+  local k=$'\e[38;5;117m' t=$'\e[38;5;243m' a b
+  local -i C=${FZF_COLUMNS:-${COLUMNS:-80}}
+  if [[ $2 == tree ]]; then a="$k→$t open    $k←$t close    " b="$k→$t open  $k←$t close  "; fi
+  if (( C >= 120 )); then print -r -- "$a${k}enter$t start$1, go to or resume claude    ${k}ctrl-o$t start with another account    ${k}ctrl-t$t open a shell there"
+  elif (( C >= 64 )); then print -r -- "$b${k}enter$t go  ${k}ctrl-o$t account  ${k}ctrl-t$t shell"
+  else print -r -- "${k}→←$t open  ${k}enter$t go  ${k}^o$t acct  ${k}^t$t shell"; fi
+}
+
+# The rows of the tree that show, as a table that fits them and the list. The
+# column titles go to the title file of the folder $1, because fzf keeps the
+# first header lines after a reload. A column shows only when a row has a value.
+# A table that is too wide gives up, in this order: the path for the owner, the
+# end of long titles, the owner, the account, the status word for its symbol, the
+# age, the git column, and last more of the name. The name comes first, so that
+# it stays in place when a column comes or goes. fzf searches only the text it
+# shows, so what a row does not show goes past the edge of the list.
+_cs_view() {
+  emulate -L zsh
+  local text dim faint bold cyan th amber green rose violet band reset
+  _cs_palette
+  local dir=$1 r s c row ind mark sc isopen hide p all ptitle=PATH REPLY
+  local tot='nw+(sw?sw+2:0)+(gw?gw+2:0)+(ag?ag+2:0)+(aw?aw+2:0)+(pw?pw+2:0)'
+  local -a f up rows open=(${(f)"$(<$dir/open)"})
+  local -i C H L side nw sw gw ag aw pw ow n a b
+  _cs_size
+  [[ -e $dir/all ]] && all=1
+  for r in ${(0)"$(<$dir/rows)"}; do
+    f=("${(@ps:\t:)r}")
+    up=(${(s:|:)f[7]})
+    [[ -n $all || -z ${up:|open} ]] || continue
+    rows+=("$r")
+    n=$(( 2 * f[9] + 2 + ${(m)#f[11]} + ( ${#f[12]} ? 3 + ${(m)#f[12]} : 0 ) ))
+    (( n > nw )) && nw=$n
+    [[ -n $f[13] && ( -z $f[8] || ( -z $all && ${open[(Ie)$f[6]]} -eq 0 ) ) ]] && sw=9
+    n=${#${(S)f[15]//$'\e['*m}}
+    (( n > gw )) && gw=$n
+    (( ${#f[16]} > ag )) && ag=${#f[16]}
+    (( ${#f[17]} > aw )) && aw=${#f[17]}
+    (( ${#f[18]} > pw )) && pw=${#f[18]}
+    n=${#${f[18]%%/*}}
+    (( n > ow )) && ow=$n
+  done
+  # A column is at least as wide as its title.
+  (( gw && gw < 3 )) && gw=3
+  (( ag && ag < 3 )) && ag=3
+  (( aw && aw < 4 )) && aw=4
+  (( aw > 12 )) && aw=12
+  (( pw && pw < 4 )) && pw=4
+  (( ow < 5 )) && ow=5
+  if (( $tot > L )); then pw=$ow ptitle=OWNER; fi
+  n=$(( L * 6 / 10 > 28 ? L * 6 / 10 : 28 ))
+  (( $tot > L && nw > n )) && nw=$n
+  (( $tot > L )) && pw=0
+  (( $tot > L )) && aw=0
+  (( $tot > L && sw )) && sw=1
+  (( $tot > L )) && ag=0
+  (( $tot > L )) && gw=0
+  (( $tot > L )) && nw=$(( L - (sw ? sw + 2 : 0) ))
+  (( nw < 12 )) && nw=12
+  r=${(r:nw:: :)${:-NAME}}
+  (( sw )) && r+="  ${(r:sw:: :)${${sw:#1}:+STATE}}"
+  (( gw )) && r+="  ${(r:gw:: :)${:-GIT}}"
+  (( ag )) && r+="  ${(l:ag:: :)${:-AGE}}"
+  (( aw )) && r+="  ${(r:aw:: :)${:-ACCT}}"
+  (( pw )) && r+="  $ptitle"
+  print -r -- "$th$r$reset" > $dir/title
+  for r in $rows; do
+    f=("${(@ps:\t:)r}")
+    isopen=
+    [[ -n $f[8] && ( -n $all || ${open[(Ie)$f[6]]} -gt 0 ) ]] && isopen=1
+    n=$(( 2 * f[9] ))
+    ind=${(l:n:: :)${:-}}
+    mark='  '
+    [[ -n $f[8] ]] && mark='▸ '
+    [[ -n $isopen ]] && mark='▾ '
+    p="$ind$mark$f[11]${f[12]:+ · $f[12]}"
+    hide=
+    (( ${(m)#p} > nw )) && hide=" $f[11] $f[12]"
+    _cs_cell "$p" $nw
+    a=$(( n + 2 )) b=$(( a + ${#f[11]} ))
+    case $f[10] in
+      r) sc=$cyan
+        [[ $f[12] == (main|master) ]] && sc=$dim
+        row=$dim${REPLY[1,a]}$reset$bold${REPLY[a+1,b]}$reset$sc${REPLY[b+1,-1]}$reset ;;
+      b) row=$dim${REPLY[1,a]}$reset$cyan${REPLY[a+1,-1]}$reset ;;
+      *) row=$text$REPLY$reset ;;
+    esac
+    if (( sw )); then
+      s=
+      [[ -z $isopen ]] && s=$f[13]
+      if [[ -n $s ]]; then printf -v c '  \e[%sm%-*.*s\e[0m' "$f[14]" $sw $sw "$s"
+      else printf -v c '  %*s' $sw ''; fi
+      row+=$c
+    fi
+    if (( gw )); then
+      printf -v c '  %s%*s' "$f[15]" $(( gw - ${#${(S)f[15]//$'\e['*m}} )) ''
+      row+=$c
+    fi
+    if (( ag )); then printf -v c '  %s%*s%s' "$dim" $ag "$f[16]" "$reset"; row+=$c; fi
+    if (( aw )); then printf -v c '  %s%-*.*s%s' "$violet" $aw $aw "$f[17]" "$reset"; row+=$c; fi
+    p=$f[18]
+    [[ $ptitle == OWNER ]] && p=${p%%/*}
+    if (( pw )); then
+      c=$faint
+      (( f[9] )) || c=$dim
+      row+="  $c$p$reset"
+    fi
+    (( pw && $#ptitle == 4 )) || hide+=" $f[18]"
+    (( sw == 9 )) || hide+=" $f[13]"
+    (( aw )) || hide+=" $f[17]"
+    # Past the edge by 8 columns, so that a small error in L shows none of it.
+    n=$(( L + 8 - ( $tot - pw + ( pw ? ${#p} : 0 ) ) ))
+    (( n > 0 )) || n=0
+    printf -v row '%s%*s' "$row" $n ''
+    (( f[9] )) || [[ -z $isopen ]] || row=$band${row//$reset/$reset$band}$reset
+    f[3]=$row$faint$hide$reset
+    printf '%s\0' "${(pj:\t:)f[1,8]}"
+  done
+}
+
+# One key or event of the tree, in the folder $1 of cs, whose rows file holds all
+# rows, whose open file holds the id of each open row, and whose all file exists
+# while there is a query. $2 view prints the rows that show. Each other $2 prints
+# the fzf actions for it: for right and left, $3, $4 and $5 are the id, parents
+# and has-rows fields of the row at the cursor. The arrows move in the query when
+# it is not empty. Closing removes only rows below the row that stays, so its
+# position holds. The preview keeps its size while you type. The titles change
+# after the rows do, on the result event.
+_cs_key() {
+  emulate -L zsh
+  local dir=$1 r target reload="reload-sync($1/ctl view)" REPLY
+  local -a f acts open=(${(f)"$(<$1/open)"})
+  local -i i=1
+  case $2 in
+    view) _cs_view $dir ;;
+    change)
+      if [[ -n $FZF_QUERY && ! -e $dir/all ]]; then : > $dir/all; print -r -- "$reload+first"
+      elif [[ -z $FZF_QUERY && -e $dir/all ]]; then rm -f -- $dir/all; print -r -- "$reload+first"
+      else print first; fi ;;
+    result)
+      r=$(<$dir/title)
+      [[ $r == "$(<$dir/shown)" ]] || { print -r -- "$r" > $dir/shown; acts+=("change-header($r)"); }
+      _cs_pane $FZF_MATCH_COUNT
+      if [[ -z $FZF_QUERY && $REPLY != "$(<$dir/pane)" ]]; then
+        print -r -- "$REPLY" > $dir/pane
+        acts+=("change-preview-window($REPLY)")
+      fi
+      print -r -- "${(j:+:)acts}" ;;
+    resize)
+      _cs_pane $FZF_MATCH_COUNT
+      print -r -- "$REPLY" > $dir/pane
+      print -r -- "change-preview-window($REPLY)+change-footer($(_cs_hint "$(<$dir/who)" tree))+$reload" ;;
+    right)
+      [[ -z $FZF_QUERY ]] || { print forward-char; return; }
+      [[ -n $5 ]] || return 0
+      if (( ${open[(Ie)$3]} )); then print down
+      else print -r -- "$3" >> $dir/open; print -r -- "$reload"; fi ;;
+    left)
+      [[ -z $FZF_QUERY ]] || { print backward-char; return; }
+      target=$3
+      [[ -n $5 ]] && (( ${open[(Ie)$3]} )) || target=${4##*\|}
+      [[ -n $target ]] || return 0
+      for r in ${(0)"$(_cs_view $dir)"}; do
+        f=("${(@ps:\t:)r}")
+        [[ $f[6] == $target ]] && break
+        (( i++ ))
+      done
+      print -rl -- ${open:#$target} > $dir/open
+      print -r -- "pos($i)+$reload" ;;
+  esac
 }
 
 # One row of _cs_rows, ended by NUL so that fzf --read0 shows a second line:
@@ -356,4 +617,5 @@ _cs_row() {
     "$2" "$3" "$5" "$4" "$p[1]" "$p[2]" "${${(j:/:)p[3,-1]}:+/${(j:/:)p[3,-1]}}" "$gap" "$7" "$8" "${9-}"
 }
 
-cs "$@"
+# With --cs-key, fzf only loads the functions: see _cs_key.
+[[ ${1-} == --cs-key ]] || cs "$@"

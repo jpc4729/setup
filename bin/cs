@@ -59,35 +59,35 @@ cs() {
   local tmp ret feed
   tmp=$(mktemp -d "${TMPDIR:-/tmp}/dotfiles-cs.XXXXXX") || return 1
   {
-    _cs_rows "$src" "${COLUMNS:-80}" "$layout" "$info" "${(M)acct:#/*}" "${dirs[@]}" > $tmp/rows
+    _cs_rows "$src" "$layout" "$info" "${(M)acct:#/*}" "${dirs[@]}" > $tmp/rows
     : > $tmp/open
     print -r -- "${acct:+ with ${(D)acct}}" > $tmp/who
+    print -r -- $layout > $tmp/layout
     # A query searches every row, as a closed repo would hide its sessions.
     [[ -n $query ]] && : > $tmp/all
     # fzf runs each key in a new process, which sources this script for _cs_key.
     print -rl -- "#!$commands[zsh] -f" "source ${(q)${functions_source[cs]:a}} --cs-key" "_cs_key ${(q)tmp} \"\$@\"" > $tmp/ctl
     chmod +x $tmp/ctl
-    feed=$tmp/rows
-    if [[ $layout == tree ]]; then
-      feed=$tmp/first
-      _cs_key $tmp view > $feed
-      cp $tmp/title $tmp/shown
-      opts=(--exact --no-sort --no-hscroll --header="$(<$tmp/title)" --header-border=line --ellipsis=
-        --bind="change:transform:$tmp/ctl change"
-        --bind="right:transform:$tmp/ctl right {6} {7} {8}"
-        --bind="left:transform:$tmp/ctl left {6} {7} {8}"
-        --bind="result:transform:$tmp/ctl result"
-        --bind="resize:transform:$tmp/ctl resize")
-    fi
+    feed=$tmp/first
+    _cs_key $tmp view > $feed
+    cp $tmp/title $tmp/shown
+    opts=(--no-hscroll --header="$(<$tmp/title)" --header-border=line --ellipsis=
+      --bind="result:transform:$tmp/ctl result"
+      --bind="resize:transform:$tmp/ctl resize"
+      --bind="ctrl-/:transform:$tmp/ctl preview")
+    [[ $layout == tree ]] && opts+=(--exact --no-sort
+      --bind="change:transform:$tmp/ctl change"
+      --bind="right:transform:$tmp/ctl right {6} {7} {8}"
+      --bind="left:transform:$tmp/ctl left {6} {7} {8}")
     (( ${info[(Ie)pr]} )) &&
       pr='(cd {2} && gh pr view --json number,state,title,url -t "#{{.number}} {{.state}} {{.title}}  {{.url}}{{\"\\n\\n\"}}" 2> /dev/null); '
-    _cs_pane ${#${(0)"$(<$feed)"}}
+    _cs_pane $tmp ${#${(0)"$(<$feed)"}}
     print -r -- "$REPLY" > $tmp/pane
     out=$(fzf --read0 --ansi --highlight-line --delimiter=$'\t' --with-nth=3 --accept-nth=1,2,4,5 --expect=ctrl-o,ctrl-t $opts \
         --query="$query" ${query:+--select-1} ${query:+--exit-0} --height=100% --layout=reverse \
         --border=none --info=inline --gutter=' ' --pointer='▌' \
         --color='bg+:238,hl:215,hl+:215:bold,pointer:117,prompt:117,query:255,info:243,header:243,footer:243,border:238,preview-border:238,list-border:238,header-border:238,separator:238,scrollbar:240,spinner:117,marker:114' \
-        --footer="$(_cs_hint "${acct:+ with ${(D)acct}}" $layout)" \
+        --footer="$(_cs_hint "${acct:+ with ${(D)acct}}" $layout $tmp)" \
         --preview-window="$REPLY" \
         --preview='case {1} in
           s) herdr agent read {2} --lines "$FZF_PREVIEW_LINES" ;;
@@ -130,9 +130,10 @@ _cs_acct() {
   fi
 }
 
-# Rows for cs, after the folder, the terminal width, the layout, the extra
-# branch data and a config home that is not ~/.claude or ~/.claude-<name>, or
-# an empty arg: kind, target, display text, folder, account. Kind c is a
+# Records for cs, after the folder, the layout, the extra branch data and a
+# config home that is not ~/.claude or ~/.claude-<name>, or an empty arg: kind,
+# target, empty display text, folder, account, then the fields that _cs_trow
+# lists, which _cs_view makes into the table. Kind c is a
 # checkout with its changed files and commits ahead and behind, the one with
 # the latest Claude session first; s is a session open in herdr, the ones that
 # wait for you first, as solid blocks; r is one of the 10 latest sessions that
@@ -145,12 +146,12 @@ _cs_rows() {
   emulate -L zsh
   zmodload -F zsh/stat b:zstat
   zmodload zsh/datetime
-  local src=$1 cols=$2 layout=$3 home=$5 r d t k rel title acct age s up w=0 REPLY
+  local src=$1 layout=$2 home=$4 r d t k title acct age s up REPLY
   local text dim faint bold cyan th amber green rose violet band reset
   _cs_palette
-  local -i i cw
-  local -a info=(${=4})
-  shift 5
+  local -i i
+  local -a info=(${=3})
+  shift 4
   local -A color=(blocked '1;38;5;232;48;5;203' done '1;38;5;232;48;5;114' idle '38;5;245' working '38;5;221') glyph=(blocked '!' done ✓ idle ○ working ●)
   local -A folder entry custom ai asked used heads notes base
   local -a sessions files picked recent running records kids f g st ab lr note mtime parts order
@@ -283,33 +284,10 @@ _cs_rows() {
   done
 
   [[ $layout == tree ]] && { _cs_tree "$@"; return; }
-  # The flat layout has no age or account column: the age is the label, and an
-  # account that is not the default follows the title.
-  for (( i = 1; i <= $#kids; i++ )); do
-    f=("${(@ps:\t:)kids[i]}")
-    [[ $f[1] == r ]] || continue
-    f[3]="↺ $f[9]" f[6]+="${f[8]:+  $dim${(D)f[8]}$reset}"
-    kids[i]="${(pj:\t:)f}"
-  done
-  for rel in ${@#$src/}; (( $#rel > w )) && w=$#rel
-  for r in $kids; do
-    f=("${(@ps:\t:)r}")
-    (( ${#f[5]} > w )) && w=${#f[5]}
-  done
-  # When one session row is wider than the list, each session row puts its title
-  # on a second line (width 0). The list is the terminal width less 6 columns of
-  # fzf border and pointer; a row is 13 columns of label and gaps, the path and
-  # the title, less its color codes.
-  cw=$w
-  for r in $kids; do
-    f=("${(@ps:\t:)r}")
-    (( 13 + w + ${#${(S)f[6]//$'\e['*m}} > cols - 6 )) && cw=0
-  done
-  for d; _cs_row $w c "$d" "+ new" '38;5;117' "${d#$src/}" "$notes[$d]" "$d"
-  for r in $kids; do
-    f=("${(@ps:\t:)r}")
-    _cs_row $cw "$f[@]"
-  done
+  # The flat layout: each checkout, then each session, none with parents.
+  for d; printf '%s\t%s\t\t%s\t\t\t\t\t0\tr\t%s\t%s\t%s\t%s\t%s\t\t\t%s\0' c "$d" "$d" \
+    "${d:h:t}" "${heads[$d]:-${d:t}}" '+ new' '38;5;117' "$notes[$d]" "${d#$src/}"
+  for r in $kids; _cs_srow "" 0 "${(@ps:\t:)r}"
 }
 
 # The tree layout of _cs_rows, after its checkouts. It reads and changes the
@@ -377,15 +355,19 @@ _cs_tree() {
 _cs_trow() {
   emulate -L zsh
   local r has w=$waits[$8]
-  local -a f rows=(${(M)kids:#$8$'\t'*})
+  local -a rows=(${(M)kids:#$8$'\t'*})
   [[ $1 == p || $#rows -gt 0 ]] && has=1
   printf '%s\t%s\t\t%s\t\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t\t\t%s\0' "$1" "$2" "$2" \
     "$8" "${10}" "$has" "$9" "$3" "$4" "$5" "${w:+$glyph[$w] $w}" "${w:+$color[$w]}" "$6" "$7"
-  for r in $rows; do
-    f=("${(@ps:\t:)r}")
-    printf '%s\t%s\t\t%s\t%s\t\t%s\t\t%s\ts\t%s\t\t%s\t%s\t\t%s\t%s\t%s\0' "$f[2]" "$f[3]" "$f[8]" "$f[9]" \
-      "${10:+${10}|}$8" $(( $9 + 1 )) "$f[7]" "$f[4]" "$f[5]" "$f[10]" "${(D)f[9]}" "$f[6]"
-  done
+  for r in $rows; _cs_srow "${10:+${10}|}$8" $(( $9 + 1 )) "${(@ps:\t:)${r#*$'\t'}}"
+}
+
+# The record of a session row: $1 the ids of its parents, $2 its depth, then the
+# fields of a session row of _cs_rows.
+_cs_srow() {
+  emulate -L zsh
+  printf '%s\t%s\t\t%s\t%s\t\t%s\t\t%s\ts\t%s\t\t%s\t%s\t\t%s\t%s\t%s\0' "$3" "$4" "$9" "${10}" \
+    "$1" "$2" "$8" "$5" "$6" "${11}" "${(D)10}" "$7"
 }
 
 # The 256 colors of cs, into the locals of its caller, as the 16 of the terminal
@@ -399,55 +381,68 @@ _cs_palette() {
 # $1 cut with … or padded to $2 columns, in REPLY.
 _cs_cell() {
   emulate -L zsh
-  if (( ${(m)#1} > $2 )); then REPLY=${(mr:$2-1:: :)1}…
+  local s
+  if (( ${(m)#1} > $2 )); then
+    s=${(mr:$2-1:: :)1}
+    # zsh keeps a wide character that crosses the cut, one column too many.
+    (( ${(m)#s} < $2 )) || s=$s[1,-2]
+    REPLY=${(mr:$2:: :)${:-$s…}}
   else REPLY=${(mr:$2:: :)1}; fi
 }
 
-# The size of fzf, into C and H of the caller, and the shape that fits it: side
-# is 1 for the preview beside the list, in a wide and low window, and L is the
-# width of the list, less the columns of pointer, marker, scrollbar and border.
+# The size of fzf, into C and H of the caller, and the shape that fits it, for
+# the folder $1 of cs: side is 1 for the preview beside the list, in a wide and
+# low window that shows a preview, and L is the width of the list, less the
+# columns of pointer, marker, scrollbar and border.
 _cs_size() {
   emulate -L zsh
   C=${FZF_COLUMNS:-${COLUMNS:-80}} H=${FZF_LINES:-${LINES:-24}} side=0
-  (( C >= 150 && C >= 3 * H )) && side=1
+  (( H >= 18 && C >= 150 && C >= 3 * H )) && [[ ! -e $1/nopane ]] && side=1
   L=$(( side ? C - C * 45 / 100 - 4 : C - 3 ))
 }
 
-# The preview window for $1 rows, in REPLY. Under the list, it takes the lines
-# that the rows and 6 lines of prompt, titles and hints leave, at least 35% of
-# the window, so that the list has no empty lines. A low window has no preview.
+# The preview window for $2 rows of the folder $1, in REPLY. Under the list, it
+# takes the lines that the rows and 6 lines of prompt, titles and hints leave, at
+# least 35% of the window, so that the list has no empty lines. A low window, or
+# one where ctrl-/ hid it, has no preview. Long lines wrap.
 _cs_pane() {
   emulate -L zsh
   local -i C H L side n
-  _cs_size
-  if (( H < 18 )); then REPLY=hidden
-  elif (( side )); then REPLY=nohidden,right,45%,border-left
+  _cs_size $1
+  if (( H < 18 )) || [[ -e $1/nopane ]]; then REPLY=hidden
+  elif (( side )); then REPLY=nohidden,right,45%,border-left,wrap
   else
-    n=$(( H - 6 - ${1:-0} ))
+    n=$(( H - 6 - ${2:-0} ))
     (( n < H * 35 / 100 )) && n=$(( H * 35 / 100 ))
-    REPLY=nohidden,down,$n,border-top
+    REPLY=nohidden,down,$n,border-top,wrap
   fi
 }
 
-# The key hints that fit the window: $1 is " with <account>" or empty, $2 the layout.
+# The longest key hints that fit the list: $1 is " with <account>" or empty, $2
+# the layout, $3 the folder of cs.
 _cs_hint() {
   emulate -L zsh
-  local k=$'\e[38;5;117m' t=$'\e[38;5;243m' a b
-  local -i C=${FZF_COLUMNS:-${COLUMNS:-80}}
-  if [[ $2 == tree ]]; then a="$k→$t open    $k←$t close    " b="$k→$t open  $k←$t close  "; fi
-  if (( C >= 120 )); then print -r -- "$a${k}enter$t start$1, go to or resume claude    ${k}ctrl-o$t start with another account    ${k}ctrl-t$t open a shell there"
-  elif (( C >= 64 )); then print -r -- "$b${k}enter$t go  ${k}ctrl-o$t account  ${k}ctrl-t$t shell"
-  else print -r -- "${k}→←$t open  ${k}enter$t go  ${k}^o$t acct  ${k}^t$t shell"; fi
+  local k=$'\e[38;5;117m' t=$'\e[38;5;243m' a b c d s
+  local -i C H L side
+  _cs_size $3
+  if [[ $2 == tree ]]; then a="$k→$t open    $k←$t close    " b="$k→$t open  $k←$t close  " c="$k→←$t open  " d="$k→←$t "; fi
+  for s in "$a${k}enter$t start$1, go to or resume claude    ${k}ctrl-o$t start with another account    ${k}ctrl-t$t open a shell there" \
+    "$b${k}enter$t go  ${k}ctrl-o$t account  ${k}ctrl-t$t shell" \
+    "$c${k}enter$t go  ${k}^o$t acct  ${k}^t$t shell" \
+    "$d$k⏎$t $k^o$t $k^t$t"; do
+    (( ${(m)#${(S)s//$'\e['*m}} <= L )) && break
+  done
+  print -r -- "$s"
 }
 
-# The rows of the tree that show, as a table that fits them and the list. The
+# The rows that show, as a table that fits them and the list. The
 # column titles go to the title file of the folder $1, because fzf keeps the
 # first header lines after a reload. A column shows only when a row has a value.
 # A table that is too wide gives up, in this order: the path for the owner, the
-# end of long titles, the owner, the account, the status word for its symbol, the
-# age, the git column, and last more of the name. The name comes first, so that
-# it stays in place when a column comes or goes. fzf searches only the text it
-# shows, so what a row does not show goes past the edge of the list.
+# end of long titles and accounts, the owner, the account, the status word for
+# its symbol, the age, the git column, and last more of the name. The name comes
+# first, so that it stays in place when a column comes or goes. fzf searches only
+# the text it shows, so what a row does not show goes past the edge of the list.
 _cs_view() {
   emulate -L zsh
   local text dim faint bold cyan th amber green rose violet band reset
@@ -456,7 +451,7 @@ _cs_view() {
   local tot='nw+(sw?sw+2:0)+(gw?gw+2:0)+(ag?ag+2:0)+(aw?aw+2:0)+(pw?pw+2:0)'
   local -a f up rows open=(${(f)"$(<$dir/open)"})
   local -i C H L side nw sw gw ag aw pw ow n a b
-  _cs_size
+  _cs_size $dir
   [[ -e $dir/all ]] && all=1
   for r in ${(0)"$(<$dir/rows)"}; do
     f=("${(@ps:\t:)r}")
@@ -478,12 +473,12 @@ _cs_view() {
   (( gw && gw < 3 )) && gw=3
   (( ag && ag < 3 )) && ag=3
   (( aw && aw < 4 )) && aw=4
-  (( aw > 12 )) && aw=12
   (( pw && pw < 4 )) && pw=4
   (( ow < 5 )) && ow=5
   if (( $tot > L )); then pw=$ow ptitle=OWNER; fi
   n=$(( L * 6 / 10 > 28 ? L * 6 / 10 : 28 ))
   (( $tot > L && nw > n )) && nw=$n
+  (( $tot > L && aw > 12 )) && aw=12
   (( $tot > L )) && pw=0
   (( $tot > L )) && aw=0
   (( $tot > L && sw )) && sw=1
@@ -531,7 +526,7 @@ _cs_view() {
       row+=$c
     fi
     if (( ag )); then printf -v c '  %s%*s%s' "$dim" $ag "$f[16]" "$reset"; row+=$c; fi
-    if (( aw )); then printf -v c '  %s%-*.*s%s' "$violet" $aw $aw "$f[17]" "$reset"; row+=$c; fi
+    if (( aw )); then _cs_cell "$f[17]" $aw; row+="  $violet$REPLY$reset"; fi
     p=$f[18]
     [[ $ptitle == OWNER ]] && p=${p%%/*}
     if (( pw )); then
@@ -541,7 +536,7 @@ _cs_view() {
     fi
     (( pw && $#ptitle == 4 )) || hide+=" $f[18]"
     (( sw == 9 )) || hide+=" $f[13]"
-    (( aw )) || hide+=" $f[17]"
+    (( ${(m)#f[17]} <= aw )) || hide+=" $f[17]"
     # Past the edge by 8 columns, so that a small error in L shows none of it.
     n=$(( L + 8 - ( $tot - pw + ( pw ? ${#p} : 0 ) ) ))
     (( n > 0 )) || n=0
@@ -552,14 +547,15 @@ _cs_view() {
   done
 }
 
-# One key or event of the tree, in the folder $1 of cs, whose rows file holds all
+# One key or event of cs, in the folder $1 of cs, whose rows file holds all
 # rows, whose open file holds the id of each open row, and whose all file exists
 # while there is a query. $2 view prints the rows that show. Each other $2 prints
 # the fzf actions for it: for right and left, $3, $4 and $5 are the id, parents
 # and has-rows fields of the row at the cursor. The arrows move in the query when
 # it is not empty. Closing removes only rows below the row that stays, so its
 # position holds. The preview keeps its size while you type. The titles change
-# after the rows do, on the result event.
+# after the rows do, on the result event. ctrl-/ hides or shows the preview, and
+# the list then refits as it does when the window changes size.
 _cs_key() {
   emulate -L zsh
   local dir=$1 r target reload="reload-sync($1/ctl view)" REPLY
@@ -574,16 +570,18 @@ _cs_key() {
     result)
       r=$(<$dir/title)
       [[ $r == "$(<$dir/shown)" ]] || { print -r -- "$r" > $dir/shown; acts+=("change-header($r)"); }
-      _cs_pane $FZF_MATCH_COUNT
+      _cs_pane $dir $FZF_MATCH_COUNT
       if [[ -z $FZF_QUERY && $REPLY != "$(<$dir/pane)" ]]; then
         print -r -- "$REPLY" > $dir/pane
         acts+=("change-preview-window($REPLY)")
       fi
       print -r -- "${(j:+:)acts}" ;;
+    preview)
+      if [[ -e $dir/nopane ]]; then rm -f -- $dir/nopane; else : > $dir/nopane; fi ;&
     resize)
-      _cs_pane $FZF_MATCH_COUNT
+      _cs_pane $dir $FZF_MATCH_COUNT
       print -r -- "$REPLY" > $dir/pane
-      print -r -- "change-preview-window($REPLY)+change-footer($(_cs_hint "$(<$dir/who)" tree))+$reload" ;;
+      print -r -- "change-preview-window($REPLY)+change-footer($(_cs_hint "$(<$dir/who)" "$(<$dir/layout)" $dir))+$reload" ;;
     right)
       [[ -z $FZF_QUERY ]] || { print forward-char; return; }
       [[ -n $5 ]] || return 0
@@ -602,19 +600,6 @@ _cs_key() {
       print -rl -- ${open:#$target} > $dir/open
       print -r -- "pos($i)+$reload" ;;
   esac
-}
-
-# One row of _cs_rows, ended by NUL so that fzf --read0 shows a second line:
-# $1 path column width, or 0 to put the note on a second line indented 4 spaces,
-# $2 kind, $3 target, $4 label, $5 its color, $6 path under ~/.local/src, $7
-# note, $8 folder, $9 account.
-_cs_row() {
-  emulate -L zsh
-  local -a p=("${(@s:/:)6}")
-  local gap=$'\n    '
-  (( $1 )) && printf -v gap '%*s' $(( $1 - ${#6} + 2 )) ''
-  printf '%s\t%s\t\e[%sm%-9s\e[0m  \e[90m%s/\e[0;1m%s\e[0m%s%s%s\t%s\t%s\0' \
-    "$2" "$3" "$5" "$4" "$p[1]" "$p[2]" "${${(j:/:)p[3,-1]}:+/${(j:/:)p[3,-1]}}" "$gap" "$7" "$8" "${9-}"
 }
 
 # With --cs-key, fzf only loads the functions: see _cs_key.

@@ -1,21 +1,23 @@
 #!/usr/bin/env zsh
 # cs: start, go to or resume a Claude Code session in ~/.local/src, from any
-# folder. Needs fzf, git and rg; jq for the recent and open sessions; herdr
-# for the open sessions. Claude runs in the checkout, and your shell stays in
+# folder. Needs fzf, git and rg; jq for the recent and open sessions and the
+# limits of each profile; herdr for the open sessions. Claude runs in the checkout, and your shell stays in
 # its folder. An account <name> is the config home ~/.claude-<name>.
 
 # Pick in ~/.local/src: a checkout ~/.local/src/<owner>/<repo>/<folder>, or a
 # repo folder in the tree layout, starts a new Claude Code session there, with
-# the account you pick on ctrl-o; an open session goes to its herdr pane; a
+# the profile in the prompt, the one with the lowest use when cs opens, or the
+# one that tab and shift-tab select; an open session goes to its herdr pane; a
 # recent one resumes in its folder with the account that owns it. ctrl-t on any
 # row opens a new shell in its folder.
 # The other args go to claude, except, in any place, --<name> for the account
-# ~/.claude-<name>, such as --mode1, or --config <path> for any config home: a
-# new session then starts with that account. Sessions in a home that is not
+# ~/.claude-<name>, such as --work, or --config <path> for any config home: it
+# is then the profile in the prompt. Sessions in a home that is not
 # ~/.claude or ~/.claude-<name> also show, and resume with that home.
 # One match for the query skips fzf. A first arg that starts with - is a
 # claude arg, so `cs -c` has no query. README.md has lines for ~/.zshrc that
-# open cs in each new herdr pane that has the focus.
+# open cs in each new herdr pane that has the focus. While it shows, _cs_refresh
+# gets live limits in the background.
 # Two settings, exported in ~/.zshrc or set before the command: CS_LAYOUT is
 # tree, the default, for each repo, which the right arrow opens to its branches
 # and their sessions and the left arrow closes, or flat for the checkouts, then
@@ -30,10 +32,11 @@ cs() {
   local -a args
   while (( $# )); do
     case $1 in
-      --config) (( $# > 1 )) || { print -u2 'cs: --config needs a path'; return 1; }
+      --config) (( $# > 1 )) && [[ -n $2 ]] || { print -u2 'cs: --config needs a path'; return 1; }
         home=$2; shift ;;
-      --config=*) home=${${1#--config=}/#\~/$HOME} ;;
-      --?*) if [[ -d $HOME/.claude-${1#--} ]]; then acct=${1#--}; else args+=("$1"); fi ;;
+      --config=?*) home=${${1#--config=}/#\~/$HOME} ;;
+      --config=) print -u2 'cs: --config needs a path'; return 1 ;;
+      --?*) if [[ -d $HOME/.claude-${1#--} ]]; then _cs_acct $HOME/.claude-${1#--}; acct=$REPLY; else args+=("$1"); fi ;;
       *) args+=("$1") ;;
     esac
     shift
@@ -46,7 +49,7 @@ cs() {
     acct=$REPLY
   fi
   [[ ${1-} == -* ]] || { query=${1-}; (( $# )) && shift; }
-  local -a dirs=("$src"/*/*/*(N/)) f accts run=(claude) info=(${=CS_BRANCH_INFO-}) known=(base merged pr) bad opts
+  local -a dirs=("$src"/*/*/*(N/)) f run=(claude) info=(${=CS_BRANCH_INFO-}) known=(base merged pr) bad opts
   [[ $layout == (tree|flat) ]] || { print -u2 "cs: CS_LAYOUT is tree or flat, not $layout"; return 1; }
   bad=(${info:|known})
   (( $#bad )) && { print -u2 "cs: CS_BRANCH_INFO takes base, merged and pr, not $bad"; return 1; }
@@ -56,50 +59,70 @@ cs() {
   # the cursor stays where it was when you type, so _cs_key moves it to the first
   # match. Also with no sort, a fuzzy match in another repo would come first, so
   # a query is exact.
-  local tmp ret feed
+  local tmp ret feed pick job
   tmp=$(mktemp -d "${TMPDIR:-/tmp}/dotfiles-cs.XXXXXX") || return 1
   {
     _cs_rows "$src" "$layout" "$info" "${(M)acct:#/*}" "${dirs[@]}" > $tmp/rows
     : > $tmp/open
-    print -r -- "${acct:+ with ${(D)acct}}" > $tmp/who
     print -r -- $layout > $tmp/layout
+    # A flag fixes the selection. The default home has an empty account here.
+    # The file flag keeps the home listed after tab has replaced the file fixed.
+    if [[ -n $acct || -n $home ]]; then
+      print -r -- "${acct:-default}" > $tmp/fixed
+      cp $tmp/fixed $tmp/flag
+    fi
     # A query searches every row, as a closed repo would hide its sessions.
     [[ -n $query ]] && : > $tmp/all
     # fzf runs each key in a new process, which sources this script for _cs_key.
     print -rl -- "#!$commands[zsh] -f" "source ${(q)${functions_source[cs]:a}} --cs-key" "_cs_key ${(q)tmp} \"\$@\"" > $tmp/ctl
     chmod +x $tmp/ctl
+    _cs_key $tmp read-limits
+    _cs_pick $tmp
     feed=$tmp/first
     _cs_key $tmp view > $feed
     cp $tmp/title $tmp/shown
-    opts=(--no-hscroll --header="$(<$tmp/title)" --header-border=line --ellipsis=
+    opts=(--no-hscroll --header="$(<$tmp/title)" --header-border=line --ellipsis= --prompt="$(_cs_prompt $tmp)"
       --bind="result:transform:$tmp/ctl result"
       --bind="resize:transform:$tmp/ctl resize"
-      --bind="ctrl-/:transform:$tmp/ctl preview")
+      --bind="ctrl-/:transform:$tmp/ctl preview"
+      --bind="tab:transform:$tmp/ctl profile 1"
+      --bind="shift-tab:transform:$tmp/ctl profile -1")
     [[ $layout == tree ]] && opts+=(--exact --no-sort
       --bind="change:transform:$tmp/ctl change"
       --bind="right:transform:$tmp/ctl right {6} {7} {8}"
       --bind="left:transform:$tmp/ctl left {6} {7} {8}")
     (( ${info[(Ie)pr]} )) &&
       pr='(cd {2} && gh pr view --json number,state,title,url -t "#{{.number}} {{.state}} {{.title}}  {{.url}}{{\"\\n\\n\"}}" 2> /dev/null); '
+    # fzf takes a socket only with a .sock name, and fails to start on a path
+    # past the 103 bytes that macOS allows.
+    if (( $#tmp + 9 < 104 )); then
+      opts+=(--listen=$tmp/fzf.sock)
+      { _cs_refresh $tmp; : > $tmp/ended; } < /dev/null > /dev/null 2>&1 &!
+      job=$!
+    fi
     _cs_pane $tmp ${#${(0)"$(<$feed)"}}
     print -r -- "$REPLY" > $tmp/pane
-    out=$(fzf --read0 --ansi --highlight-line --delimiter=$'\t' --with-nth=3 --accept-nth=1,2,4,5 --expect=ctrl-o,ctrl-t $opts \
+    out=$(fzf --read0 --ansi --highlight-line --delimiter=$'\t' --with-nth=3 --accept-nth=1,2,4,5 --expect=ctrl-t $opts \
         --query="$query" ${query:+--select-1} ${query:+--exit-0} --height=100% --layout=reverse \
         --border=none --info=inline --gutter=' ' --pointer='▌' \
         --color='bg+:238,hl:215,hl+:215:bold,pointer:117,prompt:117,query:255,info:243,header:243,footer:243,border:238,preview-border:238,list-border:238,header-border:238,separator:238,scrollbar:240,spinner:117,marker:114' \
-        --footer="$(_cs_hint "${acct:+ with ${(D)acct}}" $layout $tmp)" \
+        --footer="$(_cs_hint $layout $tmp)" \
         --preview-window="$REPLY" \
-        --preview='case {1} in
-          s) herdr agent read {2} --lines "$FZF_PREVIEW_LINES" ;;
-          r) rg -F "\"last-prompt\"" {2} | jq -r "select(.type == \"last-prompt\") | \"› \" + (.lastPrompt // \"\" | gsub(\"\\n\"; \" \"))" | uniq | tail -n "$FZF_PREVIEW_LINES" ;;
+        --preview="$tmp/ctl limits {1}; "'case {1} in
+          s) herdr agent read {2} --lines "$('"$tmp"'/ctl room)" ;;
+          r) rg -F "\"last-prompt\"" {2} | jq -r "select(.type == \"last-prompt\") | \"› \" + (.lastPrompt // \"\" | gsub(\"\\n\"; \" \"))" | uniq | tail -n "$('"$tmp"'/ctl room)" ;;
           c) '"$pr"'git --no-optional-locks -C {2} -c color.ui=always -c color.status.branch=117 -c color.status.remotebranch=245 -c color.status.added=114 -c color.status.changed=180 -c color.status.untracked=245 status -sb; echo; git -C {2} log --color=always --format="%C(180)%h%C(reset) %s" -n "$FZF_PREVIEW_LINES" ;;
           p) for d in {2}/*/; do
                if git -C "$d" worktree list 2> /dev/null; then echo; git -C "$d" log --color=always --format="%C(180)%h%C(reset) %s" -n "$FZF_PREVIEW_LINES"; break; fi
              done ;;
         esac' < $feed)
     ret=$?
+    _cs_chosen $tmp
+    pick=$REPLY
   } always {
-    rm -rf -- $tmp
+    # cs can stay open for days, and the pid of an ended job can be another process.
+    [[ -n $job && ! -e $tmp/ended ]] && kill $job 2> /dev/null
+    rm -rf -- $tmp 2> /dev/null
   }
   (( ret )) && { (( ret == 1 )) && [[ -n $query ]] && print -u2 "cs: no match for $query"; return 1; }
   key=${out%%$'\n'*} f=("${(@ps:\t:)${out#*$'\n'}}")
@@ -107,26 +130,28 @@ cs() {
   case $f[1] in
     s) [[ -n ${HERDR_ENV-} ]] || { print -u2 'cs: go to an open session from inside herdr'; return 1; }
       herdr agent focus "$f[2]" > /dev/null; return ;;
-    r) acct=$f[4]
+    r) pick=${f[4]:-default}
       set -- --resume "${f[2]:t:r}" "$@" ;;
-    c|p) if [[ $key == ctrl-o ]]; then
-        accts=($HOME/.claude-*(N/:t))
-        acct=$(print -rl default ${accts#.claude-} | fzf --height=~10 --layout=reverse --header='account') || return
-        [[ $acct == default ]] && acct=
-      fi ;;
   esac
-  if [[ $acct == /* ]]; then export CLAUDE_CONFIG_DIR=$acct
-  elif [[ -n $acct ]]; then export CLAUDE_CONFIG_DIR=$HOME/.claude-$acct; fi
+  # Claude Code keys the login to CLAUDE_CONFIG_DIR, so the default home needs it
+  # unset: set to ~/.claude, it is another login. An empty pick has no profile
+  # to use.
+  case $pick in
+    default) unset CLAUDE_CONFIG_DIR ;;
+    /*) export CLAUDE_CONFIG_DIR=$pick ;;
+    ?*) export CLAUDE_CONFIG_DIR=$HOME/.claude-$pick ;;
+  esac
   cd "$f[3]" && $run "$@"
 }
 
 # The account of the config home $1, in REPLY: empty for ~/.claude, the
-# default; <name> for ~/.claude-<name>; else the absolute path of the home.
+# default; <name> for ~/.claude-<name>; else the absolute path of the home, as
+# also for ~/.claude-default, because default names only ~/.claude.
 _cs_acct() {
   emulate -L zsh
   REPLY=${1:a}
   if [[ $REPLY == $HOME/.claude ]]; then REPLY=
-  elif [[ ${REPLY:h} == $HOME && ${REPLY:t} == .claude-?* ]]; then REPLY=${${REPLY:t}#.claude-}
+  elif [[ ${REPLY:h} == $HOME && ${REPLY:t} == .claude-?* && ${REPLY:t} != .claude-default ]]; then REPLY=${${REPLY:t}#.claude-}
   fi
 }
 
@@ -182,7 +207,7 @@ _cs_rows() {
       zstat -A mtime +mtime -- $t
       parts+=("$mtime[1] $t")
     done
-    files=(${${(On)parts}#* })
+    files=(${(u)${${(On)parts}#* }})
   fi
   (( $#files && ${+commands[rg]} && ${+commands[jq]} )) || files=()
   (( $#files )) &&
@@ -390,6 +415,293 @@ _cs_cell() {
   else REPLY=${(mr:$2:: :)1}; fi
 }
 
+# Saves the limits of each logged-in home to the file limits of the folder $1,
+# one line for each, by name: name, percent and reset time of the session, then
+# of the week, then the time the value was saved, in seconds. The home named in
+# the file flag of $1 joins them, with empty values if it is not logged in. What
+# is missing or has another shape is empty, and so is a value saved for another
+# account: the key is internal to Claude Code, so no shape of it may stop cs. The
+# file is replaced at once, as a preview may be reading it.
+_cs_limits() {
+  emulate -L zsh
+  local h j r REPLY flag
+  local -a files rows
+  local prog='
+    def win: if type == "object" and (.utilization | type) == "number"
+      then [(.utilization | [., 0] | max | [., 100] | min | floor),
+        (try (.resets_at | sub("\\.[0-9]+"; "") | sub("\\+00:00$"; "Z") | fromdateiso8601) catch "")]
+      else ["", ""] end;
+    (.oauthAccount.accountUuid // "") as $id
+    | select($id | type == "string" and . != "")
+    | (.cachedUsageUtilization | try .accountUuid catch null) as $saved
+    | (if $saved == null or $saved == $id then .cachedUsageUtilization else null end) as $c
+    | [($c | try .utilization.five_hour catch null | win),
+       ($c | try .utilization.seven_day catch null | win),
+       ($c | try (.fetchedAtMs | if type == "number" then . / 1000 | floor else "" end) catch "")]
+    | flatten | @tsv'
+  [[ -e $1/flag ]] && flag=$(<$1/flag)
+  if (( ${+commands[jq]} )); then
+    for h in $HOME/.claude(|-?*)(N-/) ${(M)flag:#/*}; do
+      _cs_acct $h
+      files=($h/.claude.json)
+      # Claude Code keeps the account of ~/.claude in ~/.claude.json.
+      [[ -n $REPLY ]] || files=($HOME/.claude.json $files)
+      for j in $files; do
+        r=$(jq -r $prog $j 2>/dev/null) && [[ -n $r ]] || continue
+        rows+=("${REPLY:-default}"$'\t'$r)
+        [[ ${REPLY:-default} == "$flag" ]] && flag=
+        break
+      done
+    done
+  fi
+  # A home from a flag shows even when it is not logged in.
+  [[ -n $flag ]] && rows+=("$flag"$'\t\t\t\t\t')
+  print -rl -- ${(ou)rows} > $1/limits.$$ && mv -f -- $1/limits.$$ $1/limits
+}
+
+# The line $1 of the limits file into the array f of the caller. A window past its
+# reset counts as 0%, with no reset time.
+_cs_fields() {
+  zmodload zsh/datetime
+  f=("${(@ps:\t:)1}")
+  [[ -n $f[3] ]] && (( f[3] <= EPOCHSECONDS )) && f[2]=0 f[3]=
+  [[ -n $f[5] ]] && (( f[5] <= EPOCHSECONDS )) && f[4]=0 f[5]=
+  return 0
+}
+
+# The higher percent of the two windows of the limits line $1, in REPLY: empty
+# when neither window has a value.
+_cs_used() {
+  emulate -L zsh
+  local -a f
+  _cs_fields "$1"
+  REPLY=
+  [[ -n $f[2]$f[4] ]] && REPLY=$(( ${f[2]:-0} > ${f[4]:-0} ? ${f[2]:-0} : ${f[4]:-0} ))
+  return 0
+}
+
+# Writes the preselected profile to the file pick of the folder $1: the lowest
+# used percent. A profile with no value comes after those with one, and the limits
+# file has the names in order, so the first of equal profiles is the first by
+# name. Empty with no profile. The file is replaced at once, as cs may read it
+# while _cs_refresh writes it.
+_cs_pick() {
+  emulate -L zsh
+  local line best REPLY
+  local -a rows=(${(f)"$(<$1/limits)"})
+  local -i low=-1
+  best=${rows[1]%%$'\t'*}
+  for line in $rows; do
+    _cs_used "$line"
+    [[ -n $REPLY ]] && (( low < 0 || REPLY < low )) || continue
+    low=$REPLY best=${line%%$'\t'*}
+  done
+  print -r -- "$best" > $1/pick.$$ && mv -f -- $1/pick.$$ $1/pick
+}
+
+# The selected profile of the folder $1, in REPLY: its file fixed, from a flag or
+# tab, else its file pick. Only tab writes the one and only _cs_pick the other, so
+# a late _cs_refresh cannot undo a tab.
+_cs_chosen() {
+  if [[ -e $1/fixed ]]; then REPLY=$(<$1/fixed); else REPLY=$(<$1/pick); fi
+}
+
+# Prints the prompt for the folder $1 of cs, from its files and the size of fzf
+# alone, so that any key can call it: the selected profile and its used percent,
+# then ❯. With no profile it is the ❯ of FZF_DEFAULT_OPTS. The whole prompt takes
+# at most half of L from _cs_size, so that the query has room: the percent drops
+# first, and then _cs_cell cuts the name.
+_cs_prompt() {
+  emulate -L zsh
+  local name line pct REPLY
+  local -i C H L side room
+  _cs_chosen $1
+  name=$REPLY
+  [[ -n $name ]] || { print -r -- '❯ '; return; }
+  for line in ${(f)"$(<$1/limits)"}; do
+    [[ $line == "$name"$'\t'* ]] || continue
+    _cs_used "$line"
+    pct=$REPLY
+    break
+  done
+  name=${name/#$HOME\//\~/}
+  _cs_size $1
+  room=$(( L / 2 ))
+  if [[ -n $pct ]] && (( ${(m)#name} + 1 + $#pct + 3 <= room )); then
+    name+=" $pct"
+  elif (( ${(m)#name} + 3 > room )); then
+    _cs_cell "$name" $(( room > 4 ? room - 3 : 1 ))
+    name=$REPLY
+  fi
+  print -r -- "$name ❯ "
+}
+
+# Gets live limits for each listed home of the folder $1 of cs whose saved value
+# is older than 5 minutes or missing, one claude for each home at once: print
+# mode /usage costs no turn or API time and saves the value that _cs_limits reads.
+# No home is tried twice in 5 minutes, as the fetch can be rate limited and cs
+# opens in each new herdr pane: a stamp file for each home, touched before the
+# run, holds the time of the last attempt, and also stops two panes from
+# fetching at once. Runs that end, or that the 20 second limit stops, then
+# update the limits and the preselection; fzf redraws through its socket only
+# the preview and the prompt, so its cursor, query and list stay. A failed run
+# leaves the saved value, and with no curl the new one shows at the next open. cs stops this job with a TERM; the trap only sets a
+# flag, so that each claude already started is in pids and is stopped too, with
+# a KILL 2 seconds later for one that ignores the TERM.
+_cs_refresh() {
+  emulate -L zsh
+  zmodload zsh/datetime zsh/zselect 2>/dev/null || return 0
+  zmodload -F zsh/stat b:zstat 2>/dev/null || return 0
+  local dir=$1 cache=${XDG_CACHE_HOME:-$HOME/.cache}/cs line name stamp pid sig
+  local -a f mtime run pids live size
+  local -i stop i deadline
+  trap 'stop=1' TERM
+  mkdir -p -- $cache && builtin cd -q -- $cache || return 0
+  for line in ${(f)"$(<$dir/limits)"}; do
+    (( stop )) && break
+    f=("${(@ps:\t:)line}")
+    name=$f[1]
+    [[ -n $f[6] ]] && (( EPOCHSECONDS - f[6] <= 300 )) && continue
+    stamp=$cache/${name//\//%}
+    zstat -A mtime +mtime -- $stamp 2>/dev/null && (( EPOCHSECONDS - mtime[1] < 300 )) && continue
+    touch -- $stamp || continue
+    # As Enter does: the default home needs the variable unset, not set to ~/.claude.
+    case $name in
+      default) run=(env -u CLAUDE_CONFIG_DIR) ;;
+      /*) run=(env "CLAUDE_CONFIG_DIR=$name") ;;
+      *) run=(env "CLAUDE_CONFIG_DIR=$HOME/.claude-$name") ;;
+    esac
+    # Run from the cache folder, which has no project settings or hooks. Claude
+    # Code keeps a folder in the home for each path it runs in, so the path stays.
+    $run claude -p /usage --output-format json \
+      --no-session-persistence --model haiku --max-turns 1 --strict-mcp-config \
+      --mcp-config '{"mcpServers":{}}' --setting-sources project &
+    pids+=($!)
+  done
+  (( $#pids )) || return 0
+  deadline=$(( EPOCHSECONDS + 20 ))
+  while (( $#pids && ! stop )); do
+    if (( EPOCHSECONDS >= deadline )); then
+      kill -${sig:-TERM} $pids 2>/dev/null
+      sig=KILL
+      (( deadline += 2 ))
+    fi
+    zselect -t 20
+    live=()
+    for pid in $pids; kill -0 $pid 2>/dev/null && live+=($pid)
+    pids=($live)
+  done
+  if (( stop )); then
+    kill $pids 2>/dev/null
+    zselect -t 200
+    kill -KILL $pids 2>/dev/null
+    return 0
+  fi
+  $dir/ctl read-limits
+  _cs_pick $dir
+  # In its own process group, this job gets no resize signal: ask the terminal.
+  size=(${=$(stty size < /dev/tty 2>/dev/null)})
+  (( $#size == 2 )) && { FZF_LINES=$size[1]; FZF_COLUMNS=$size[2]; }
+  # fzf may not listen yet, and a run can end before it starts.
+  for (( i = 0; i < 25 && ! stop; i++ )); do
+    curl -fs --max-time 2 --unix-socket $dir/fzf.sock \
+      -d "refresh-preview+change-prompt:$(_cs_prompt $dir)" http://localhost && return 0
+    zselect -t 20
+  done
+}
+
+# $1 seconds in short form, in REPLY: 40m, 6h, 1d or 1d 1h.
+_cs_span() {
+  emulate -L zsh
+  local -i s=$(( $1 < 0 ? 0 : $1 ))
+  if (( s < 3600 )); then REPLY="$(( s / 60 ))m"
+  elif (( s < 86400 )); then REPLY="$(( s / 3600 ))h"
+  else
+    REPLY="$(( s / 86400 ))d"
+    (( s % 86400 < 3600 )) || REPLY+=" $(( s % 86400 / 3600 ))h"
+  fi
+}
+
+# The percent $1, or - when it is empty, right-aligned to $2 columns in its
+# color, in REPLY. It reads the colors of its caller.
+_cs_pct() {
+  emulate -L zsh
+  local c=$text v="$1%"
+  if [[ -z $1 ]]; then c=$dim v=-
+  elif (( $1 >= 100 )); then c=$'\e[2m'$rose
+  elif (( $1 >= 90 )); then c=$rose
+  elif (( $1 >= 70 )); then c=$amber; fi
+  printf -v REPLY '%s%*s%s' "$c" $2 "$v" "$reset"
+}
+
+# The limits block at the top of the preview, for the folder $1, fitted to the
+# preview: a title line and a row for each logged-in home. A window past its
+# reset counts as 0%. RESETS is the reset of the window with the higher percent,
+# the week when they are equal. AGE shows when a value is older than 15 minutes.
+# A preview too narrow for all columns gives up RESETS, then AGE, then SESSION,
+# after the name column has shrunk to 12. Each row starts with two columns, which
+# hold ▸ on the selected profile when the row kind $2 starts a new session.
+_cs_limits_block() {
+  emulate -L zsh
+  zmodload zsh/datetime
+  local text dim faint bold cyan th amber green rose violet band reset
+  _cs_palette
+  local line row c pick shown REPLY
+  local tot='2+pm+(sw?sw+2:0)+(ww?ww+2:0)+(tw?tw+2:0)+(aw?aw+2:0)'
+  local -a f ids names session week resets ages rows=(${(f)"$(<$1/limits)"})
+  local -i W=${FZF_PREVIEW_COLUMNS:-80} sw=7 ww=4 tw=6 aw=3 nw=7 pw pm old i
+  (( $#rows )) || return 0
+  if [[ $2 == [cp] ]]; then
+    _cs_chosen $1
+    pick=$REPLY
+  fi
+  for line in $rows; do
+    _cs_fields "$line"
+    shown=${f[1]/#$HOME\//\~/}
+    ids+=("$f[1]") names+=("$shown") session+=("$f[2]") week+=("$f[4]")
+    (( ${(m)#shown} > nw )) && nw=${(m)#shown}
+    # Empty fields of a window sort below every percent.
+    c=$f[3]
+    [[ -n $f[4] ]] && (( f[4] >= ${f[2]:--1} )) && c=$f[5]
+    if [[ -n $c ]]; then _cs_span $(( c - EPOCHSECONDS )); else REPLY=-; fi
+    resets+=("$REPLY")
+    (( $#REPLY > tw )) && tw=$#REPLY
+    if [[ -n $f[6] ]]; then
+      (( EPOCHSECONDS - f[6] > 900 )) && old=1
+      _cs_span $(( EPOCHSECONDS - f[6] ))
+    else REPLY=-; fi
+    ages+=("$REPLY")
+    (( $#REPLY > aw )) && aw=$#REPLY
+  done
+  (( old )) || aw=0
+  pm=$(( nw > 12 ? 12 : nw ))
+  (( $tot > W )) && tw=0
+  (( $tot > W )) && aw=0
+  (( $tot > W )) && sw=0
+  (( $tot > W )) && ww=0
+  pw=$(( W - 2 - (sw ? sw + 2 : 0) - (ww ? ww + 2 : 0) - (tw ? tw + 2 : 0) - (aw ? aw + 2 : 0) ))
+  (( pw > nw )) && pw=$nw
+  (( pw < 1 )) && pw=1
+  _cs_cell PROFILE $pw
+  row="  $REPLY"
+  (( sw )) && row+="  SESSION"
+  (( ww )) && row+="  WEEK"
+  (( tw )) && row+="  ${(l:tw:: :)${:-RESETS}}"
+  (( aw )) && row+="  ${(l:aw:: :)${:-AGE}}"
+  print -r -- "$th$row$reset"
+  for (( i = 1; i <= $#names; i++ )); do
+    _cs_cell "$names[i]" $pw
+    c='  '
+    [[ $ids[i] == "$pick" ]] && c="$cyan▸$reset "
+    row="$c$text$REPLY$reset"
+    if (( sw )); then _cs_pct "$session[i]" $sw; row+="  $REPLY"; fi
+    if (( ww )); then _cs_pct "$week[i]" $ww; row+="  $REPLY"; fi
+    (( tw )) && row+="  $dim${(l:tw:: :)resets[i]}$reset"
+    (( aw )) && row+="  $dim${(l:aw:: :)ages[i]}$reset"
+    print -r -- "$row"
+  done
+}
+
 # The size of fzf, into C and H of the caller, and the shape that fits it, for
 # the folder $1 of cs: side is 1 for the preview beside the list, in a wide and
 # low window that shows a preview, and L is the width of the list, less the
@@ -404,32 +716,38 @@ _cs_size() {
 # The preview window for $2 rows of the folder $1, in REPLY. Under the list, it
 # takes the lines that the rows and 6 lines of prompt, titles and hints leave, at
 # least 35% of the window, so that the list has no empty lines. A low window, or
-# one where ctrl-/ hid it, has no preview. Long lines wrap.
+# one where ctrl-/ hid it, has no preview. Long lines wrap. The limits block
+# stays at the top while the rest scrolls; fzf would draw the scroll position
+# over its first line, so a preview with the block shows none.
 _cs_pane() {
   emulate -L zsh
   local -i C H L side n
+  local -a limits=(${(f)"$(<$1/limits)"})
+  local top=${limits:+,noinfo,~$(( $#limits + 1 ))}
   _cs_size $1
   if (( H < 18 )) || [[ -e $1/nopane ]]; then REPLY=hidden
-  elif (( side )); then REPLY=nohidden,right,45%,border-left,wrap
+  elif (( side )); then REPLY=nohidden,right,45%,border-left,wrap$top
   else
     n=$(( H - 6 - ${2:-0} ))
     (( n < H * 35 / 100 )) && n=$(( H * 35 / 100 ))
-    REPLY=nohidden,down,$n,border-top,wrap
+    REPLY=nohidden,down,$n,border-top,wrap$top
   fi
 }
 
-# The longest key hints that fit the list: $1 is " with <account>" or empty, $2
-# the layout, $3 the folder of cs.
+# The longest key hints that fit the list: $1 is the layout, $2 the folder of cs.
+# Only two or more profiles have a tab hint, as with fewer the key does nothing.
 _cs_hint() {
   emulate -L zsh
-  local k=$'\e[38;5;117m' t=$'\e[38;5;243m' a b c d s
+  local k=$'\e[38;5;117m' t=$'\e[38;5;243m' a b c d s x y z
+  local -a rows=(${(f)"$(<$2/limits)"})
   local -i C H L side
-  _cs_size $3
-  if [[ $2 == tree ]]; then a="$k→$t open    $k←$t close    " b="$k→$t open  $k←$t close  " c="$k→←$t open  " d="$k→←$t "; fi
-  for s in "$a${k}enter$t start$1, go to or resume claude    ${k}ctrl-o$t start with another account    ${k}ctrl-t$t open a shell there" \
-    "$b${k}enter$t go  ${k}ctrl-o$t account  ${k}ctrl-t$t shell" \
-    "$c${k}enter$t go  ${k}^o$t acct  ${k}^t$t shell" \
-    "$d$k⏎$t $k^o$t $k^t$t"; do
+  _cs_size $2
+  (( $#rows > 1 )) && x="${k}tab$t profile    " y="${k}tab$t profile  " z="${k}tab$t "
+  if [[ $1 == tree ]]; then a="$k→$t open    $k←$t close    " b="$k→$t open  $k←$t close  " c="$k→←$t open  " d="$k→←$t "; fi
+  for s in "$a${k}enter$t start, go to or resume claude    $x${k}ctrl-t$t open a shell there" \
+    "$b${k}enter$t go  $y${k}ctrl-t$t shell" \
+    "$c${k}enter$t go  $y${k}^t$t shell" \
+    "$d$k⏎$t $z$k^t$t"; do
     (( ${(m)#${(S)s//$'\e['*m}} <= L )) && break
   done
   print -r -- "$s"
@@ -555,7 +873,15 @@ _cs_view() {
 # it is not empty. Closing removes only rows below the row that stays, so its
 # position holds. The preview keeps its size while you type. The titles change
 # after the rows do, on the result event. ctrl-/ hides or shows the preview, and
-# the list then refits as it does when the window changes size.
+# the list then refits as it does when the window changes size. read-limits
+# saves the limits, limits prints their block for the row kind $3, and room prints
+# the preview lines that the block leaves, at least 1. profile moves the selection
+# $3 steps through the limits file, which is in name order, and wraps; the file
+# fixed then holds it, and with fewer than two profiles it does nothing. A resize
+# or a preview that grows ends with a full redraw, as fzf leaves old cells in the
+# scrollbar column beside fixed preview lines; a redraw shows a blank frame, so
+# no other change gets one.
+# change-prompt comes last, in its colon form, so that a name can hold ) or +.
 _cs_key() {
   emulate -L zsh
   local dir=$1 r target reload="reload-sync($1/ctl view)" REPLY
@@ -563,6 +889,12 @@ _cs_key() {
   local -i i=1
   case $2 in
     view) _cs_view $dir ;;
+    read-limits) _cs_limits $dir ;;
+    limits) _cs_limits_block $dir $3 ;;
+    room)
+      f=(${(f)"$(<$dir/limits)"})
+      i=$(( ${FZF_PREVIEW_LINES:-1} - ( $#f ? $#f + 1 : 0 ) ))
+      print -- $(( i > 0 ? i : 1 )) ;;
     change)
       if [[ -n $FZF_QUERY && ! -e $dir/all ]]; then : > $dir/all; print -r -- "$reload+first"
       elif [[ -z $FZF_QUERY && -e $dir/all ]]; then rm -f -- $dir/all; print -r -- "$reload+first"
@@ -571,9 +903,11 @@ _cs_key() {
       r=$(<$dir/title)
       [[ $r == "$(<$dir/shown)" ]] || { print -r -- "$r" > $dir/shown; acts+=("change-header($r)"); }
       _cs_pane $dir $FZF_MATCH_COUNT
-      if [[ -z $FZF_QUERY && $REPLY != "$(<$dir/pane)" ]]; then
+      target=$(<$dir/pane)
+      if [[ -z $FZF_QUERY && $REPLY != "$target" ]]; then
         print -r -- "$REPLY" > $dir/pane
         acts+=("change-preview-window($REPLY)")
+        (( ${${REPLY#*,down,}%%,*} > ${${target#*,down,}%%,*} )) && acts+=(clear-screen)
       fi
       print -r -- "${(j:+:)acts}" ;;
     preview)
@@ -581,7 +915,14 @@ _cs_key() {
     resize)
       _cs_pane $dir $FZF_MATCH_COUNT
       print -r -- "$REPLY" > $dir/pane
-      print -r -- "change-preview-window($REPLY)+change-footer($(_cs_hint "$(<$dir/who)" "$(<$dir/layout)" $dir))+$reload" ;;
+      print -r -- "change-preview-window($REPLY)+change-footer($(_cs_hint "$(<$dir/layout)" $dir))+$reload+clear-screen+change-prompt:$(_cs_prompt $dir)" ;;
+    profile)
+      f=(${${(f)"$(<$dir/limits)"}%%$'\t'*})
+      (( $#f > 1 )) || return 0
+      _cs_chosen $dir
+      i=$(( (${f[(ie)$REPLY]} - 1 + $3 + $#f) % $#f + 1 ))
+      print -r -- "$f[i]" > $dir/fixed.$$ && mv -f -- $dir/fixed.$$ $dir/fixed
+      print -r -- "refresh-preview+change-prompt:$(_cs_prompt $dir)" ;;
     right)
       [[ -z $FZF_QUERY ]] || { print forward-char; return; }
       [[ -n $5 ]] || return 0

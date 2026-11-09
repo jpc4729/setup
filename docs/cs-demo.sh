@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 # Builds the example ~/.local/src for docs/cs.tape in /tmp/cs-demo: a fake HOME
-# with foo repos, Claude Code transcripts in two accounts, and a stub herdr with
-# two open sessions. It reads no real repo or session. Needs git, jq and macOS date.
+# with foo repos, Claude Code transcripts in two accounts, four logged-in
+# profiles with saved limits, and a stub herdr with two open sessions. It reads
+# no real repo or session. Needs git, jq and macOS date.
 set -euo pipefail
 repo_root=$(cd "$(dirname "$0")/.." && pwd)
 D=/tmp/cs-demo
@@ -75,6 +76,27 @@ session "" acme/api/feat-rate-limit 1500 "Plan the rate limiter" \
   "plan a rate limit per API key, 100 requests a minute" "write the plan to docs/rate-limit.md"
 session "" foo/bar/main 3000 "Add a CI badge to the README" "add the CI status badge to the README"
 session "" acme/web/main 6000 "Why is the build slow?" "the build takes 4 minutes, find why" "cache the node_modules step"
+
+# Saved limits that are fresh and reset in the future, so cs starts no live
+# refresh. The account of ~/.claude is in ~/.claude.json, as in Claude Code.
+window() { # percent, minutes to its reset
+  jq -n --argjson p "$1" --arg at "$(date -u -v+"$2"M +%Y-%m-%dT%H:%M:%SZ)" '{utilization: $p, resets_at: $at}'
+}
+profile() { # account ("" for the default), session percent or "", week percent
+  local home=$HOME/.claude${1:+-$1} json now
+  json=$home/.claude.json
+  [ -n "$1" ] || json=$HOME/.claude.json
+  mkdir -p "$home"
+  now=$(date +%s)
+  jq -n --arg id "demo-${1:-default}" --argjson ms "$((now * 1000))" \
+    --argjson five "$(if [ -n "$2" ]; then window "$2" 200; else echo null; fi)" \
+    --argjson week "$(window "$3" 5000)" \
+    '{oauthAccount: {accountUuid: $id}, cachedUsageUtilization: {fetchedAtMs: $ms, accountUuid: $id, utilization: {five_hour: $five, seven_day: $week}}}' > "$json"
+}
+profile "" 62 41
+profile personal 100 57
+profile spare "" 18
+profile work 72 91
 
 # A stub herdr: two open sessions and the text of their panes.
 cat > "$D/pane-w1.txt" << 'EOF'

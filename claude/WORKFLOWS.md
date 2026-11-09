@@ -22,7 +22,7 @@ The same flow for every task. A small task skips the plan.
         v
 +----------------+   small: Claude does it
 | 3. Build       |   plan: a fresh worker per ticket
-+----------------+   (fails twice: replan once, then stop)
++----------------+   (fails twice: replan once on Fable, then stop)
         |
         v
 +----------------+   smallest check while working,
@@ -52,7 +52,7 @@ eval a skill                  paste "Eval the skill <name>"
 stop after the plan           add "plan only"
 options before any work       add "ask first"
 proof for risky work          add "verify this"
-proof from two models         add "verify this with two models"
+proof from Opus and Fable     add "verify this with two models"
 parts built in parallel       add "use workers"
 cheap summaries or counts     add "use clerks"
 a second review               "review again"

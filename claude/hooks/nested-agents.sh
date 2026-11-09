@@ -5,8 +5,10 @@ set -euo pipefail
 # and worker and verifier a `clerk` or a `browser`, and nothing else. Claude
 # Code ignores the type list in `Agent(...)` inside subagent frontmatter, so
 # the rule lives here. A `model` override is refused too, because it outranks
-# the agent's own `model`. The main session (no agent_id) and every other
-# agent keep their usual Agent tool. Exit 2 blocks the call and shows the
+# the agent's own `model`. The main session (no agent_id) may start only a
+# `planner` or a `verifier` on Fable, and only with `Fable: <reason>` as the
+# first line of the brief, the Fable rule in CLAUDE.md. Every other agent
+# keeps its usual Agent tool. Exit 2 blocks the call and shows the
 # reason to the agent that made it. Any other failure, such as bad JSON or no
 # jq, lets the call through: this gate limits spend, and a broken gate must
 # not stop the main session's agents.
@@ -15,7 +17,13 @@ set -euo pipefail
 reason=$(jq -r '
   (.tool_input.subagent_type // "" | if . == "" then "general-purpose" else . end) as $type
   | (if .agent_type | IN("worker", "verifier") then ["clerk", "browser"] else ["clerk"] end) as $allowed
-  | if (.agent_id // "") == "" then empty
+  | if (.agent_id // "") == "" then
+    if (.tool_input.model // "" | test("fable"; "i") | not) then empty
+    elif ($type | IN("planner", "verifier") | not) then
+      "Only a planner or a verifier runs on Fable. Start the \($type) without the model override."
+    elif (.tool_input.prompt // "" | split("\n")[0] | test("^Fable: \\S") | not) then
+      "Make `Fable: <reason>` the first line of the brief, with a reason from the Fable rule in CLAUDE.md, or start the \($type) without the model override. It runs on Opus."
+    else empty end
   elif (.agent_type | IN("scout", "worker", "verifier", "planner", "reviewer") | not) then empty
   elif ($type | IN($allowed[]) | not) then
     "A \(.agent_type) starts only a \($allowed | join(" or a ")), not \($type). Do that work yourself."

@@ -65,6 +65,8 @@ bugs in a diff or an area     "find bugs in <diff or path>"
 a deeper bug review           /code-review
 simpler code                  /simplify
 write or fix a skill          /skills-claude
+a rough prompt to sharpen     /sharpen-prompt <prompt>
+with a session as context     add "use session <id>" or "find the session about <words>"
 conflicts after a rule edit   /doctor prompt-audit
 a workflow of agents          add "ultracode"
 ```

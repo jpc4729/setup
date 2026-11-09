@@ -1,0 +1,5 @@
+interface:
+  display_name: "Sharpen Prompt"
+  short_description: "Rough prompt into a short, direct one"
+policy:
+  allow_implicit_invocation: true

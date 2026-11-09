@@ -12,6 +12,7 @@ Skills that I wrote, or that I adapted, changed or took ideas from another skill
 - `intent`: writes intent trees, then checks the code against them.
 - `paper-use`: builds, mirrors and audits Paper design files.
 - `retro`: turns a session's mistakes into a check, hook, script or rule. Adapted from [retro](https://github.com/mattpocock/skills/tree/main/skills/engineering/retro) from Matt Pocock's skills, MIT.
+- `sharpen-prompt`: rewrites a rough prompt into a short, direct one. When you ask, it uses a Claude Code session as context, found by its ID or by a search.
 - `skills-claude`: writes, reviews or fixes a skill to the standards of the native Claude Code skills.
 - `ui-principles`: rules for clean, scannable UI layout.
 - `verify-setup`: writes a repo's `.claude/skills/verify/SKILL.md`, the recipe that agents follow to prove a change in the real app. Inspired by `create-verification-skill` from poteto's [pstack](https://github.com/cursor/plugins/tree/main/pstack), MIT.
@@ -30,6 +31,6 @@ Skills from upstream, pinned in [`../skills-lock.json`](../skills-lock.json), ea
 
 ## Start rules
 
-- Each skill in `my-skills` but `ui-principles` starts only when you type its name: `disable-model-invocation: true` for Claude Code, Cursor and Grok, and `allow_implicit_invocation: false` for Codex. opencode ignores those flags.
+- Each skill in `my-skills` but `sharpen-prompt` and `ui-principles` starts only when you type its name: `disable-model-invocation: true` for Claude Code, Cursor and Grok, and `allow_implicit_invocation: false` for Codex. opencode ignores those flags.
 - `grilling`, the four `ponytail` skills and `security-audit` start only when you type their name.
 - `thermo-nuclear-code-quality-review` is off in every tool but Cursor, which has no switch for it.

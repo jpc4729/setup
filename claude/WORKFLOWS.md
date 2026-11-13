@@ -178,5 +178,5 @@ Then `/clear`, and paste the kickoff prompt that `/handoff` printed.
 ## Keep it quick
 
 - One task in a session. Type `/clear` between unrelated tasks.
-- Near 300k tokens with work left: `/handoff`, then `/clear`.
+- After a compaction with work left: `/handoff`, then `/clear`.
 - A session went wrong: `/retro`.

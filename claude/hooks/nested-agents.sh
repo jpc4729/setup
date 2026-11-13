@@ -20,7 +20,7 @@ reason=$(jq -r '
   | if (.agent_id // "") == "" then
     if (.tool_input.model // "" | test("fable"; "i") | not) then empty
     elif (.tool_input.prompt // "" | split("\n")[0] | test("^Fable: \\S") | not) then
-      "Make `Fable: <reason>` the first line of the brief, with a reason from the Fable rule in CLAUDE.md, or start the \($type) without the model override. It runs on Opus."
+      "Make `Fable: <reason>` the first line of the brief, with a reason from the Fable rule in CLAUDE.md, or start the \($type) without the model override. It runs on its own model."
     else empty end
   elif (.tool_input.model // "" | test("fable"; "i")) then
     "Only the main session starts an agent on Fable. Start the \($type) without the model override."
@@ -29,7 +29,7 @@ reason=$(jq -r '
     "A \(.agent_type) starts only a \($allowed | join(" or a ")), not \($type). Do that work yourself."
   elif (.tool_input.model // "") != "" then
     "Start the \($type) without a model override; it runs on its own model."
-  else empty end' <<< "$payload")
+  else empty end' <<< "$payload" 2> /dev/null) || exit 0
 
 [[ -z $reason ]] && exit 0
 echo "$reason" >&2

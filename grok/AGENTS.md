@@ -29,7 +29,7 @@ Words I can add to a request: `plan only`: stop after step 2. `ask first`: in st
 - Keep working until the task is done or you need me. Put each status note in the same message as your next action. Never end a turn only to report progress or to offer more work.
 - Do each step yourself, also outside the repo, such as an install, a local service, a build, an apply, or a command that a check or a subagent gives you. Stop only at a critical step: it deletes data that git, a backup or a rebuild cannot bring back, spends money or paid quota, changes a production or shared system, sends or publishes something as me, or changes credentials, keys or access; or it needs what only I have, such as a password, a 2FA code, hardware or an OS dialog. Then start your reply with a numbered list of only those steps: one action each, with its command or click path from current docs or marked unconfirmed, and where to put each value it gives, never in this chat.
 - Temp files go only in the folder that `scratch <slug>` prints, `/tmp/agents/<owner>/<repo>/<slug>.XXXXXX` (the plan's slug if any), under `scripts/`, `logs/` or `downloads/<name>/`. When done, delete only that folder, by its literal path.
-- Keep one task in a session. Tell me to run `/clear` before an unrelated task. When the context passes about 300k tokens and work is left, stop at a safe point and tell me to run `/handoff`, then `/clear`.
+- Keep one task in a session. Tell me to run `/clear` before an unrelated task. When the conversation has been compacted and work is left, stop at a safe point and tell me to run `/handoff`, then `/clear`.
 
 # Subagents
 

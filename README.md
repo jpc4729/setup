@@ -81,6 +81,7 @@ cd setup
 - Copies `src/AGENTS.md` into `~/.local/src`, and merges `worktrunk/config.toml` into `~/.config/worktrunk/config.toml`.
 - Merges `herdr/config.toml` into `~/.config/herdr/config.toml`, and copies `herdr/status.sh` beside it. Run `herdr server reload-config` to load it in a running herdr. Copies the `repo-label` plugin into `~/.config/herdr/plugins` and links it: each workspace in `~/.local/src/<owner>/<repo>/<folder>` gets the label `<repo>`, not herdr's `main` or branch folder. When the workspace leaves `~/.local/src`, it gets herdr's label for its folder again. A name you give a workspace stays. `herdr plugin disable local.repo-label` turns it off.
 - On macOS, installs Codex's `requirements.toml` as a managed preference.
+- Fetches Emil Kowalski's skills, pinned to one commit, into `~/.local/share/emil-kowalski-ui-skills`, the copy that the `emil-kowalski-ui-skills` skill reads. It fetches again only when the pin in `install.sh` changes.
 - Never links and never deletes. A link would carry agent state back into the repo.
 
 ## Layout
@@ -95,7 +96,7 @@ skills/my-skills/  → ~/.agents/skills      skills I wrote or adapted
 skills/vendored/   → ~/.agents/skills      vendored skills, pinned in skills-lock.json
 bin/quiet          → ~/.local/bin/quiet    one line on a pass, full output on a failure
 bin/scratch        → ~/.local/bin/         a new task folder in /tmp/agents/<owner>/<repo>/ for an agent's temp files
-bin/agent-stats    → ~/.local/bin/         Claude Code agent runs, minutes, efforts and quality guards
+bin/agent-stats    → ~/.local/bin/         Claude Code agent runs, minutes, efforts, list-price costs and quality guards
 bin/cs             → ~/.local/bin/         start, go to or resume a Claude Code session in ~/.local/src
 src/AGENTS.md      → ~/.local/src/         layout, branch names and cleanup for each clone and worktree
 worktrunk/         → ~/.config/worktrunk   the worktree path for that layout, merged
@@ -208,7 +209,7 @@ Subagents:
 
 The 22 skills are in [skills/](skills/README.md), one copy for every tool:
 
-- `skills/my-skills/`: 11 skills that I wrote, or adapted from other skills, such as `wayfinder` and `handoff` from Matt Pocock's skills.
+- `skills/my-skills/`: 12 skills that I wrote, or adapted from other skills, such as `wayfinder` and `handoff` from Matt Pocock's skills.
 - `skills/vendored/`: 8 skills from upstream, each with its upstream `LICENSE`.
 
 ## License

@@ -180,6 +180,7 @@ A reference supplies values, inventories and parts, never a verdict. Every value
 - `references/typography.md`: scales, roles, measure, figures, wrapping and icons beside text, for Laws 14, 15, 17 and 22.
 - `references/material.md`: elevation levels, shadow recipes, tone steps, transparency and radius, for Laws 4, 14 and 16.
 - `references/motion.md`: curves, durations, properties and reduced motion, for Law 19.
+- The `emil-kowalski-ui-skills` skill: Emil Kowalski's recipes and checks for animation, gestures and touch feel, for Law 19 motion and touch work.
 - `references/states.md`: states, data edges, widths, inputs, environments, target sizes, and the evidence each one needs, rendered or read from source, for Laws 12, 13 and 21 and the Findings.
 - `references/tools.md`: open tools, specs and checkers grouped by Law, each with its license.
 - `references/shadcn-tailwind.md`: every catalogue entry sorted by how well it carries the Laws, each skeleton in named parts, and the utilities that make the scales real, for when the repo has a `components.json` or the surface is otherwise built on shadcn/ui and Tailwind CSS.

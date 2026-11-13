@@ -6,8 +6,9 @@ set -euo pipefail
 # rule to list the tickets did not hold as text alone. It prints a
 # `systemMessage`, which Claude Code shows to you, not to the model. A line
 # counts when, after list marks, `*`, backticks and a `TICKETS:` label, it
-# starts with `PATH:` or `T<n>`. A report with no ticket line, such as `NO PLAN:`, shows nothing. Any
-# failure, such as bad JSON or no jq, shows nothing and never stops the planner.
+# starts with `PATH:` or `T<n>`. A report with no ticket line, such as
+# `NO PLAN:`, shows nothing. Any failure, such as bad JSON or no jq, shows
+# nothing and never stops the planner.
 
 { payload=$(< /dev/stdin); } 2> /dev/null || payload=$(cat)
 jq -c '[.last_assistant_message // "" | splits("\n")

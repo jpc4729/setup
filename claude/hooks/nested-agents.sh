@@ -7,9 +7,9 @@ set -euo pipefail
 # the rule lives here. A `model` override is refused too, because it outranks
 # the agent's own `model`. The main session (no agent_id) may start any agent
 # on Fable, but only with `Fable: <reason>` as the first line of the brief,
-# the Fable rule in CLAUDE.md. No subagent may start
-# an agent on Fable. Every other agent keeps its usual Agent tool. Exit 2
-# blocks the call and shows the reason to the agent that made it. Any other failure, such as bad JSON or no
+# the Fable rule in CLAUDE.md. No subagent may start an agent on Fable. Every
+# other agent keeps its usual Agent tool. Exit 2 blocks the call and shows the
+# reason to the agent that made it. Any other failure, such as bad JSON or no
 # jq, lets the call through: this gate limits spend, and a broken gate must
 # not stop the main session's agents.
 

@@ -7,7 +7,7 @@ Every skill in this setup. `./install.sh` copies each skill folder into `~/.agen
 Skills that I wrote, or that I adapted, changed or took ideas from another skill, vendored or public. They are under the repo's MIT license. When a skill comes from another one, its line names the source.
 
 - `context-doctor`: trims agent context files to what earns its tokens.
-- `emil-kowalski-ui-skills`: routes a motion or touch-feel request to the right file of [Emil Kowalski's skills](https://github.com/emilkowalski/skills), MIT. `install.sh` fetches a copy pinned to one commit into `~/.local/share/emil-kowalski-ui-skills/`, and the skill reads it there.
+- `emil-kowalski-ui-skills`: routes motion work, when you type its name, to the right file of [Emil Kowalski's skills](https://github.com/emilkowalski/skills), MIT. `install.sh` fetches a copy pinned to one commit into `~/.local/share/emil-kowalski-ui-skills/`, and the skill reads it there.
 - `diagnose`: finds a bug's cause from a command that shows the failure. Inspired by [diagnosing-bugs](https://github.com/mattpocock/skills/tree/main/skills/engineering/diagnosing-bugs) from Matt Pocock's skills, MIT.
 - `handoff`: turns a conversation into a handoff document and a kickoff prompt. Adapted from [handoff](https://github.com/mattpocock/skills/tree/main/skills/productivity/handoff) from Matt Pocock's skills, MIT.
 - `intent`: writes intent trees, then checks the code against them.
@@ -32,6 +32,6 @@ Skills from upstream, pinned in [`../skills-lock.json`](../skills-lock.json), ea
 
 ## Start rules
 
-- Each skill in `my-skills` but `emil-kowalski-ui-skills`, `sharpen-prompt` and `ui-principles` starts only when you type its name: `disable-model-invocation: true` for Claude Code, Cursor and Grok, and `allow_implicit_invocation: false` for Codex. opencode ignores those flags.
+- Each skill in `my-skills` but `sharpen-prompt` and `ui-principles` starts only when you type its name: `disable-model-invocation: true` for Claude Code, Cursor and Grok, and `allow_implicit_invocation: false` for Codex. opencode ignores those flags.
 - `grilling`, the four `ponytail` skills and `security-audit` start only when you type their name.
 - `thermo-nuclear-code-quality-review` is off in every tool but Cursor, which has no switch for it.

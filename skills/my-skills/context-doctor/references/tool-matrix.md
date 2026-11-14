@@ -8,7 +8,7 @@ A home surface is named only where it changes what a project file must carry, an
 
 - `AGENTS.md` — the canonical always-on handbook. Claude Code, Codex, Cursor, Grok, OpenCode and Windsurf read it.
 - `AGENTS.override.md` — in Codex it replaces `AGENTS.md` for that one directory. Rare, and easy to miss. Claude Code never reads it.
-- `CLAUDE.md` — leftover Claude Code file. Prefer `AGENTS.md`. Delete a pointer or fold a unique body into `AGENTS.md`. A `CLAUDE.md` on the project path hides `AGENTS.md`.
+- `CLAUDE.md`: delete it when it holds only a pointer, symlink or copy of `AGENTS.md`. Keep it, with `@AGENTS.md` first, when it holds rules only Claude Code needs.
 
 ## Claude Code
 
@@ -16,11 +16,11 @@ Docs: https://code.claude.com/docs/en/memory
 
 - From v2.1.277, reads `AGENTS.md` and `.claude/AGENTS.md` when there is no `CLAUDE.md`, `.claude/CLAUDE.md`, or `CLAUDE.local.md` in the working directory or above it. `~/.claude/CLAUDE.md` and managed policy do not count. Default Project instructions is `claude-md-or-agents-md`.
 - A `CLAUDE.md` or `CLAUDE.local.md` on that path hides `AGENTS.md`. Claude then reads `CLAUDE.md` files only, unless Project instructions is `claude-md-and-agents-md`.
-- A one-line `@AGENTS.md` in `CLAUDE.md` still works and is never a double load. Delete it anyway. Prefer `AGENTS.md`. Bedrock, Vertex, Foundry, telemetry off, and versions before 2.1.277 still cannot load `AGENTS.md`; that is a host gap, not a reason to keep a bridge.
+- A one-line `@AGENTS.md` in `CLAUDE.md` still works and is never a double load.
 - Session start also reads `.claude/AGENTS.md` at the same scopes as `AGENTS.md`.
 - A nested `AGENTS.md` loads when Claude reads a file in that subtree and that directory has none of the three `CLAUDE.md` files of its own.
 - Does not read `AGENTS.local.md`, `AGENTS.override.md`, or anything under `.agents/`.
-- A directly loaded `AGENTS.md` does not appear in `/memory` or `/context`; look for the `AGENTS.md loaded` line. `InstructionsLoaded` hooks do not fire for it.
+- `InstructionsLoaded` hooks do not fire for a directly loaded `AGENTS.md`.
 - Loads `./CLAUDE.md` and `./.claude/CLAUDE.md` — both, where both exist — plus `CLAUDE.local.md`, from the working directory and every directory above it, concatenated root-first. The file nearest the cwd is read last.
 - A file below the cwd is not loaded at launch. It loads when Claude reads a file in that subtree, so a nested `CLAUDE.md` is a lazy load and never a guarantee.
 - `.claude/rules/**/*.md`, recursive under the project root and under each ancestor that carries the directory. Without `paths` a rule loads every session; with `paths` it loads when a matching file is read.
@@ -29,7 +29,7 @@ Docs: https://code.claude.com/docs/en/memory
 - A `CLAUDE.md` over 4 MiB is skipped. HTML comments are stripped before injection here, and only here.
 - Auto-memory is `MEMORY.md` under the tool home (first 200 lines or 25 KiB). Machine-local, never committed.
 - Enforcement is hooks plus `.claude/settings.json` permissions. Prose is not enforcement.
-- Proof: `/context` lists the loaded memory files and `/memory` opens them, but both are user-run UI commands. The scriptable proof is the `InstructionsLoaded` hook, whose payload names each file and why it loaded.
+- Proof: `/context all` lists the loaded memory files and `/memory` opens them, but both are user-run UI commands. The scriptable proof is the `InstructionsLoaded` hook, whose payload names each file and why it loaded.
 
 ## Codex CLI
 
@@ -75,28 +75,11 @@ Docs: https://opencode.ai/docs/rules/
 - The Claude Code compatibility layer also picks up `~/.claude/skills/`.
 - Treat the `CLAUDE.md` fallback as version-dependent and never as the mechanism a repo relies on.
 
-## GitHub Copilot
+## Other tools
 
-Docs: https://docs.github.com/en/copilot/how-tos/configure-custom-instructions/add-repository-instructions
-
-- Reads `.github/copilot-instructions.md`, plus path-scoped `.github/instructions/*.instructions.md` with `applyTo` frontmatter. A dead `applyTo` glob is the same silent miss as a dead `paths` entry.
-- Agent surfaces also read `AGENTS.md` (nearest first) and, on some of them, root `CLAUDE.md` or `GEMINI.md`. Where both `AGENTS.md` and `.github/copilot-instructions.md` exist, both are used.
-- Prefer omitting `.github/copilot-instructions.md` when `AGENTS.md` already loads; a one-line pointer only where that surface will not read `AGENTS.md`.
-
-## Windsurf and Cascade
-
-Docs: https://docs.windsurf.com/windsurf/cascade/agents-md
-
-- Reads `AGENTS.md` in any directory. Root is always-on; a nested file auto-globs to that subtree.
-- Native rules live under `.windsurf/rules/` or `.devin/rules/`, capped at 12000 characters per workspace rule file. The 6000-character cap belongs to the single global rules file, which is a home file. There is no documented cap on the tree.
-- Never maintain a unique Windsurf essay. Keep the scoped files tiny or omit them.
-
-## Gemini CLI and Jules
-
-Docs: https://geminicli.com/docs/cli/gemini-md
-
-- Defaults to `GEMINI.md` and supports project-relative `@./path` imports.
-- `context.fileName` in settings can be `AGENTS.md`, or a list of names. Configure that rather than forking a second handbook.
+- GitHub Copilot: https://docs.github.com/en/copilot/how-tos/configure-custom-instructions/add-repository-instructions
+- Windsurf and Cascade: https://docs.windsurf.com/windsurf/cascade/agents-md
+- Gemini CLI and Jules: https://geminicli.com/docs/cli/gemini-md
 
 ## Skills across tools
 
@@ -118,31 +101,10 @@ A skill is a directory holding `SKILL.md`, and all four tools agree on that much
 
 Proof: `grok inspect --json` lists every skill Grok resolved with its source path and `userInvocable`. Claude Code shows the post-budget listing size in `/context` and estimates it in `/doctor`.
 
-## Scan these paths
-
-From the repo root, and again under every directory that carries a rules tree:
-
-```text
-AGENTS.md  AGENTS.override.md  AGENT.md  Agents.md
-CLAUDE.md  CLAUDE.local.md  Claude.md  GEMINI.md  CONTEXT.md  MEMORY.md
-.cursorrules  .windsurfrules
-.github/copilot-instructions.md  .github/instructions/
-opencode.json  opencode.jsonc  .opencode/opencode.json
-.claude/  .cursor/  .codex/  .grok/  .opencode/  .agents/  .windsurf/  .devin/  .gemini/
-```
-
-User-global, never committed, never counted in a project total:
-
-```text
-~/.claude/CLAUDE.md  ~/.claude/rules/  ~/.codex/AGENTS.md
-~/.config/opencode/AGENTS.md  ~/.agents/AGENTS.md
-```
-
 ## Re-check before resting a finding on it
 
 - Whether Cursor's nested `AGENTS.md` support has a depth or size limit.
 - Whether an OpenCode `instructions` glob resolves from the project root or the config file.
-- Whether Copilot reads `AGENTS.md` on every surface this repo's contributors actually use.
 - Whether Grok ever reads `.mdc` (documented as `*.md` only).
 - Whether Claude Code still concatenates `./CLAUDE.md` and `./.claude/CLAUDE.md` when both are one-line pointers.
 - Whether a nested `.claude/AGENTS.md` loads on demand the same way a nested `AGENTS.md` does.

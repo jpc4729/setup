@@ -46,6 +46,7 @@ The same flow for every task. A small task skips the plan.
 what you want                 type
 ----------------------------  ---------------------------------
 any task                      just ask
+a hard task, Fable as lead    claude --model fable
 a list of fixes               paste it: "Refute these, then fix"
 attack a plan, no edits       paste "Attack this plan"
 eval a skill                  paste "Eval the skill <name>"
@@ -152,7 +153,7 @@ Check a page in a real browser:
 A long job toward one number:
 
 ```text
-/goal <number> reaches <target>, measured by <command>. Make one change at a time and measure after each. Revert a change that does not move the number. Do not delete a feature or a test. Stop after 50 turns. This goal overrides the "two fixes that do not help" stop.
+/goal <number> reaches <target>, measured by <command>. Make one change at a time and measure after each. Revert a change that does not move the number. Do not delete a feature or a test. Stop after 50 turns. This goal overrides the "two fixes that do not help" stop and the stop after compaction.
 ```
 
 Eval a skill:

@@ -7,22 +7,16 @@
 # but nothing here writes into the repo under audit: an audit that can edit is an
 # audit nobody re-runs on a repo they do not own.
 #
-# The defect count is a floor. Everything here is mechanical; the content half of
-# references/triage.md needs a reader, and scripts/vitals.py reads the lines.
+# The defect count is a floor. Everything here is mechanical; content needs a
+# reader.
 #
 # Usage: intake.sh [--strict] [repo-root]
 #   --strict  exit 1 when any defect was reported, for a CI gate
 set -euo pipefail
 
 # Codex truncates the merged chain at this many bytes and says nothing, so a
-# chain at or over the cap loses its tail in every session. The rest of the caps
-# and their sources are in references/triage.md, Budget defects.
+# chain at or over the cap loses its tail in every session.
 CODEX_CHAIN_CAP=32768
-# The root file is loaded every session by every tool, and past about 60 lines
-# the model follows the first half.
-ROOT_LINE_CAP=60
-# Every other context file is read against a narrower boundary and less often,
-# so it carries more before the same thing happens.
 ANY_LINE_CAP=200
 # Windsurf counts characters, not bytes, and 12000 is the workspace-rule cap. The
 # 6000 figure belongs to the home global file, which this script never sees.
@@ -100,7 +94,6 @@ char_count() {
 # The token estimate is bytes over four, the usual English-prose average for the
 # GPT and Claude tokenizer families; path-heavy markdown runs denser, so it reads
 # slightly high there. It is an estimate for a budget, never a tokenizer.
-# scripts/vitals.py estimates on the same basis.
 stat_line() {
   local b
   b="$(byte_count "$1")"
@@ -165,8 +158,7 @@ is_import_pointer() {
   [[ "$body" == "@"* && "$count" == "1" ]]
 }
 
-# A CLAUDE.md @import that is not AGENTS.md is a fork. Prefer AGENTS.md and
-# delete the CLAUDE.md either way.
+# A CLAUDE.md @import that is not AGENTS.md is a fork.
 is_agents_pointer() {
   local body path
   is_import_pointer "$1" || return 1
@@ -174,6 +166,15 @@ is_agents_pointer() {
   path="${body#@}"
   path="${path#./}"
   [[ "$(basename "$path")" == "AGENTS.md" ]]
+}
+
+# A live `@AGENTS.md` line, outside a fence, above or below a body.
+imports_agents() {
+  awk '
+    { sub(/\r$/, "") }
+    /^[[:space:]]*(```|~~~)/ { fence = !fence; next }
+    !fence && /^@(\.\/)?AGENTS\.md[[:space:]]*$/ { found = 1 }
+    END { exit !found }' "$1"
 }
 
 # The path a one-line pointer names, empty for anything else. Claude Code expands
@@ -200,8 +201,7 @@ import_path() {
 
 # Claude Code skips an import inside a code span or a fenced block on purpose, so
 # a fenced `@AGENTS.md` is a pointer that points nowhere. Only a file whose whole
-# body is that inert import qualifies; a body with prose around it is a body, and
-# defect 1 already covers it.
+# body is that inert import qualifies; a body with prose around it is a body.
 has_only_inert_import() {
   local rest
   rest="$(awk '
@@ -500,7 +500,7 @@ fi
 ((CI_SEEN)) || echo "- none"
 echo
 
-# scripts/vitals.py and references/triage.md decide from this section whether a
+# The skill decides from this section whether a
 # prose rule is already enforced by a tool: a rule a formatter or a hook owns is
 # a rule the context file does not need to carry.
 echo "## enforcement"
@@ -742,7 +742,7 @@ while IFS= read -r f; do
     CLAUDE.local.md)
       if [[ -L "$f" && ! -e "$f" ]]; then
         echo "- $f  dangling"
-        defect "$f is a symlink to a file that does not exist; nothing loads there (triage 13)"
+        defect "$f is a symlink to a file that does not exist; repair it if a task needs it, else delete it"
       else
         echo "- $f  personal overlay"
       fi
@@ -750,44 +750,44 @@ while IFS= read -r f; do
     CLAUDE.md | Claude.md)
       if [[ -L "$f" && ! -e "$f" ]]; then
         echo "- $f  dangling"
-        defect "$f is a symlink to a file that does not exist; nothing loads there (triage 13)"
+        defect "$f is a symlink to a file that does not exist; repair it if a task needs it, else delete it"
       elif [[ -L "$f" ]]; then
         echo "- $f  pointer (symlink -> $(readlink "$f"))"
         case "$(basename "$(readlink "$f")")" in
           AGENTS.md)
-            defect "$f is a symlink onto AGENTS.md; delete it so Claude Code reads AGENTS.md (triage 34)"
+            defect "$f is a symlink onto AGENTS.md; delete it; Grok loads it as a second copy"
             ;;
           *)
-            defect "$f is a symlink that is not AGENTS.md; prefer AGENTS.md and delete this file (triage 1)"
+            defect "$f is a symlink that is not AGENTS.md; delete it unless its target holds rules only Claude Code needs"
             ;;
         esac
       elif is_import_pointer "$f"; then
         if [[ ! -f "$(import_path "$f")" ]]; then
-          defect "$f import target missing or not a file: $(pointer_target "$f") (triage 13)"
+          defect "$f import target missing or not a file: $(pointer_target "$f"); repair or delete the import"
         fi
         if is_agents_pointer "$f"; then
           echo "- $f  pointer"
           if [[ -f "$(import_path "$f")" ]]; then
-            defect "$f is a leftover Claude bridge; delete it so Claude Code reads AGENTS.md (triage 2)"
+            defect "$f is a leftover Claude bridge; delete it so Claude Code reads AGENTS.md"
           fi
         else
           echo "- $f  pointer (wrong target)"
-          defect "$f is an @import that is not AGENTS.md; prefer AGENTS.md and delete this file (triage 1)"
+          defect "$f is an @import that is not AGENTS.md; delete it unless its target holds rules only Claude Code needs"
         fi
       elif has_only_inert_import "$f"; then
         echo "- $f  pointer (inert)"
-        defect "$f has its @import inside a code span or fence; Claude Code skips it (triage 3)"
+        defect "$f has its @import inside a code span or fence; Claude Code skips it; unfence it if a task needs it, else delete it"
       else
-        echo "- $f  duplicate (a body where an import belongs)"
+        echo "- $f  body"
         _dir="$(dirname "$f")"
         _sib="$_dir/AGENTS.md"
         [[ "$_dir" == "." ]] && _sib="AGENTS.md"
-        if grep -qiE '\b(read|follow|see|consult)\b' "$f" && grep -q 'AGENTS.md' "$f"; then
-          defect "$f is a prose-read of AGENTS.md, not an @import; delete it so Claude Code reads AGENTS.md (triage 1)"
-        elif [[ -e "$_sib" ]]; then
-          defect "$f carries a body; Claude Code reads it instead of AGENTS.md, Grok loads both, OpenCode never opens it (triage 1)"
+        if imports_agents "$f" || [[ ! -e "$_sib" ]]; then
+          echo "check: $f carries a body; keep it only for rules only Claude Code needs, else move it into AGENTS.md"
+        elif grep -qiE '\b(read|follow|see|consult)\b' "$f" && grep -q 'AGENTS.md' "$f"; then
+          defect "$f is a prose-read of AGENTS.md, not an @import; delete it if it holds nothing else"
         else
-          defect "$f carries a body; make AGENTS.md the home and delete this file (triage 1)"
+          defect "$f carries a body with no @AGENTS.md line; Claude Code reads it instead of AGENTS.md; put @AGENTS.md first or move the body there"
         fi
         unset _dir _sib
       fi
@@ -798,12 +798,12 @@ while IFS= read -r f; do
     CONTEXT.md | MEMORY.md)
       if [[ "$(basename "$f")" == "MEMORY.md" ]]; then
         echo "- $f  auto-memory (not a project load path)"
-        defect "$f is auto-memory; it is not a project load path for any of the eight (triage 31)"
+        defect "$f is auto-memory; no tool loads it as project context; move a needed rule out, and keep human notes"
       elif [[ -L "$f" ]] || is_import_pointer "$f"; then
         echo "- $f  pointer"
       else
         echo "- $f  duplicate (a second handbook)"
-        defect "$f is another copy of the handbook; leave a one-line pointer or delete it (triage 32)"
+        defect "$f is another copy of the handbook; check configured imports, then leave a one-line pointer or delete it"
       fi
       ;;
   esac
@@ -815,15 +815,15 @@ for p in GEMINI.md .github/copilot-instructions.md; do
     echo "- $p  pointer"
   else
     echo "- $p  duplicate (a second handbook for one tool)"
-    defect "$p is another copy of the handbook; leave a one-line pointer or delete it (triage 12)"
+    defect "$p is another copy of the handbook; delete the repeated text and keep only an entry point its tool needs"
   fi
 done
 
 if [[ -f .cursorrules ]]; then
-  defect ".cursorrules is legacy; move unique rules into AGENTS.md or .cursor/rules, then delete it (triage 12)"
+  defect ".cursorrules is legacy; move unique rules into AGENTS.md or .cursor/rules, then delete it"
 fi
 if [[ -f .windsurfrules ]]; then
-  defect ".windsurfrules is legacy; leave a pointer or delete it, never a second essay (triage 12)"
+  defect ".windsurfrules is legacy; leave a pointer or delete it, never a second essay"
 fi
 echo
 
@@ -851,7 +851,7 @@ while IFS= read -r f; do
   case "$(basename "$f")" in AGENTS.md | AGENT.md | Agents.md) ;; *) continue ;; esac
   is_in_tool_tree "$f" || continue
   is_claude_agents_file "$f" && continue
-  defect "$f is on no tool's load path; Claude Code reads AGENTS.md or .claude/AGENTS.md (triage 7)"
+  defect "$f is on no tool's load path; Claude Code reads AGENTS.md or .claude/AGENTS.md; move a needed rule there, else delete agent-only text"
 done <<< "$CONTEXT_FILES"
 
 while IFS= read -r f; do
@@ -861,7 +861,7 @@ while IFS= read -r f; do
   other="$dir/.claude/CLAUDE.md"
   [[ "$dir" == "." ]] && other=".claude/CLAUDE.md"
   if [[ -e "$other" ]]; then
-    defect "both $f and $other load; Claude Code concatenates them (triage 29)"
+    defect "both $f and $other load; Claude Code concatenates them; keep one"
   fi
 done <<< "$CONTEXT_FILES"
 
@@ -872,9 +872,9 @@ while IFS= read -r f; do
   sibling="$dir/AGENTS.md"
   [[ "$dir" == "." ]] && sibling="AGENTS.md"
   if [[ -e "$sibling" ]] && ! same_inode "$f" "$sibling"; then
-    defect "$f sits beside $sibling; Grok loads every recognized name (triage 30)"
+    defect "$f sits beside $sibling; Grok loads every recognized name; keep one and every unique rule"
   elif [[ ! -e "$sibling" ]]; then
-    defect "$f is a Grok-only name; rename it to AGENTS.md (triage 30)"
+    defect "$f is a Grok-only name; rename it to AGENTS.md"
   fi
 done <<< "$CONTEXT_FILES"
 
@@ -884,9 +884,9 @@ while IFS= read -r f; do
   sibling="$dir/CLAUDE.md"
   [[ "$dir" == "." ]] && sibling="CLAUDE.md"
   if [[ -e "$sibling" ]] && ! same_inode "$f" "$sibling"; then
-    defect "$f sits beside $sibling; Grok loads every recognized name (triage 30)"
+    defect "$f sits beside $sibling; Grok loads every recognized name; keep one and every unique rule"
   elif [[ ! -e "$sibling" ]]; then
-    defect "$f is a Grok-only name; rename it to AGENTS.md (triage 30)"
+    defect "$f is a Grok-only name; rename it to AGENTS.md"
   fi
 done <<< "$CONTEXT_FILES"
 
@@ -901,21 +901,21 @@ while IFS= read -r rules; do
   if [[ "$tool" == ".cursor" ]]; then
     while IFS= read -r f; do
       [[ -n "$f" ]] || continue
-      defect "$f is .md; Cursor reads .mdc only, and Grok reads .md only, in this directory (triage 4)"
+      defect "$f is .md; Cursor reads .mdc only, and Grok reads .md only, in this directory; check which tool must load it before a rename or delete"
     done <<< "$(find -L "$rules" -type f -name '*.md' | sort || true)"
     while IFS= read -r f; do
       [[ -n "$f" ]] || continue
-      defect "$f sets alwaysApply: true; check it against AGENTS.md duplication (triage 17)"
+      defect "$f sets alwaysApply: true; check it against AGENTS.md duplication"
     done <<< "$(grep -rlE '^alwaysApply:[[:space:]]*true' "$rules" 2> /dev/null || true)"
   fi
 
   # Without `paths` a Claude rule loads in every session at the same cost as the
-  # root file, which is the budget the root cap exists to protect.
+  # root file.
   if [[ "$tool" == ".claude" ]]; then
     while IFS= read -r f; do
       [[ -n "$f" ]] || continue
       frontmatter_of "$f" | grep -qE '^paths:' ||
-        defect "$f has no paths frontmatter; it loads every session — check it against AGENTS.md (triage 17)"
+        defect "$f has no paths frontmatter; it loads every session — check it against AGENTS.md"
     done <<< "$(find -L "$rules" -type f -name '*.md' | sort || true)"
 
     # Grok reads *.md under all three rules trees and never a .mdc, so a .md twin
@@ -927,7 +927,7 @@ while IFS= read -r rules; do
       for twin in "$base/.cursor/rules/$stem.md" "$base/.grok/rules/$stem.md"; do
         [[ -f "$twin" ]] || continue
         is_import_pointer "$twin" && continue
-        defect "$twin repeats $f as .md; Grok reads both trees in one pass (triage 5)"
+        defect "$twin repeats $f as .md; Grok reads both trees in one pass; keep one source"
       done
       mdc="$base/.cursor/rules/${stem}.mdc"
       [[ -f "$mdc" ]] || continue
@@ -936,7 +936,7 @@ while IFS= read -r rules; do
       elif [[ "$(body_digest "$mdc")" == "$(body_digest "$f")" ]]; then
         echo "- $mdc  paired adapter (body matches $f)"
       else
-        defect "$mdc and $f are a paired adapter whose bodies have drifted (triage 26)"
+        defect "$mdc and $f are a paired adapter whose bodies have drifted; change the source, then regenerate the copy"
       fi
     done <<< "$(find -L "$rules" -type f -name '*.md' | sort || true)"
   fi
@@ -947,17 +947,15 @@ done <<< "$RULE_DIRS"
 # A glob is probed from the repo root and from the tree's own base, because which
 # of the two a nested rules directory resolves against is tool-dependent.
 check_globs() {
-  local file="$1" base="$2" pattern probe hits cite
+  local file="$1" base="$2" pattern probe hits
   while IFS= read -r pattern; do
     [[ -n "$pattern" ]] || continue
     case "$pattern" in *[{}]*) continue ;; esac
     probe="$(printf '%s' "$pattern" | sed -e 's|\*\*/|*|g' -e 's|\*\*|*|g')"
     hits="$(find . "${PRUNE_ARGS[@]}" \
       \( -path "./$probe" -o -path "./$base/$probe" \) -print 2> /dev/null | head -1 || true)"
-    cite=8
-    [[ "$file" == *.instructions.md ]] && cite=33
     [[ -n "$hits" ]] ||
-      defect "$file scopes on '$pattern', which matches no file here (triage $cite)"
+      defect "$file scopes on '$pattern', which matches no file here; repair the scope or delete the rule"
   done <<< "$(frontmatter_of "$file" | awk '
       # `paths: ["a", "b"]` is the YAML flow list, as valid as the block form.
       # The brackets have to go before the comma split, or the first and last
@@ -999,7 +997,7 @@ for cfg in opencode.json opencode.jsonc .opencode/opencode.json; do
   grep -Eq '"instructions"' "$cfg" || continue
   if grep -Eq 'AGENTS\.md|CLAUDE\.md' "$cfg"; then
     echo "- $cfg  overlap"
-    defect "$cfg lists a file that already auto-loads; overlap (triage 11)"
+    defect "$cfg lists a file that already auto-loads; remove the duplicate include"
   fi
 done
 
@@ -1011,7 +1009,7 @@ if git rev-parse --is-inside-work-tree > /dev/null 2>&1; then
     [[ "$(basename "$f")" == "CLAUDE.local.md" ]] && continue
     [[ "$(basename "$f")" == "MEMORY.md" ]] && continue
     if git check-ignore -q "$f" 2> /dev/null; then
-      defect "$f is gitignored; the rule exists for one machine and not for CI (triage 10)"
+      defect "$f is gitignored; the rule exists for one machine and not for CI; right for personal context, a gap for a shared rule"
     fi
   done <<< "$CONTEXT_FILES"
 fi
@@ -1020,7 +1018,7 @@ for d in .claude/skills .agents/skills; do
   [[ -d "$d" ]] || continue
   while IFS= read -r link; do
     [[ -n "$link" ]] || continue
-    defect "$link is a dangling symlink; the skill it names never loads (triage 25)"
+    defect "$link is a dangling symlink; the skill it names never loads; repair it only if a tool in use needs the skill"
   done <<< "$(find "$d" -maxdepth 1 -type l ! -exec test -e {} \; -print 2> /dev/null || true)"
 done
 
@@ -1038,7 +1036,7 @@ for skill_root in .agents/skills .claude/skills; do
     seen_skills="$seen_skills$name"$'\n'
     while IFS= read -r rule; do
       [[ -n "$rule" ]] || continue
-      defect "$rule is a per-tool copy of the $name skill; keep the skill, delete the adapter (triage 35)"
+      defect "$rule is a per-tool copy of the $name skill; keep the skill, delete the adapter"
     done <<< "$(find . "${PRUNE_ARGS[@]}" -type f \( -name "${name}.md" -o -name "${name}.mdc" \) \( -path '*/.cursor/rules/*' -o -path '*/.claude/rules/*' -o -path '*/.grok/rules/*' -o -path '*/.windsurf/rules/*' -o -path '*/.kiro/steering/*' -o -path '*/.qoder/rules/*' -o -path '*/.clinerules/*' \) -print 2> /dev/null | sed 's|^\./||' | sort || true)"
   done <<< "$(find "$skill_root" -mindepth 1 -maxdepth 1 \( -type d -o -type l \) -print 2> /dev/null | sort || true)"
 done
@@ -1053,7 +1051,7 @@ while IFS= read -r f; do
   digest="$(body_digest "$f")"
   prev="$(printf '%s' "$DIGESTS" | sed -nE "s/^$digest (.*)$/\1/p" | head -1)"
   if [[ -n "$prev" ]]; then
-    defect "$f and $prev have the same body; one of them is a duplicate (triage 16)"
+    defect "$f and $prev have the same body; keep one, at the scope both reach"
   else
     DIGESTS="$DIGESTS$digest $f"$'\n'
   fi
@@ -1061,32 +1059,15 @@ done <<< "$CONTEXT_FILES"
 echo
 
 echo "## budgets"
-# The root cap belongs to whichever file carries the root body. Prefer
-# AGENTS.md. A CLAUDE.md with a body is counted only when there is no AGENTS.md.
-ROOT_BODY=""
-if [[ -f AGENTS.md ]]; then
-  ROOT_BODY="AGENTS.md"
-elif [[ -f CLAUDE.md ]] && ! is_import_pointer CLAUDE.md; then
-  ROOT_BODY="CLAUDE.md"
-fi
-if [[ -n "$ROOT_BODY" ]]; then
-  n="$(line_count "$ROOT_BODY")"
-  echo "- $ROOT_BODY  $n lines (cap $ROOT_LINE_CAP)"
-  if ((n > ROOT_LINE_CAP)); then
-    defect "$ROOT_BODY is $n lines, over the $ROOT_LINE_CAP cap (triage 15)"
-  fi
-fi
-
 # A symlink is measured through its target somewhere else in this walk, and a
 # pointer is one line by definition, so neither is weighed here.
 while IFS= read -r f; do
   [[ -n "$f" ]] || continue
-  [[ "$f" == "$ROOT_BODY" ]] && continue
   [[ -L "$f" ]] && continue
   is_import_pointer "$f" && continue
   n="$(line_count "$f")"
   if ((n > ANY_LINE_CAP)); then
-    defect "$f is $n lines, over the $ANY_LINE_CAP cap (triage 15)"
+    defect "$f is $n lines, over the $ANY_LINE_CAP cap; cut content, never split the file to pass"
   fi
 done <<< "$CONTEXT_FILES"
 
@@ -1096,7 +1077,7 @@ while IFS= read -r rules; do
     [[ -n "$f" ]] || continue
     n="$(line_count "$f")"
     if ((n > ANY_LINE_CAP)); then
-      defect "$f is $n lines, over the $ANY_LINE_CAP cap (triage 15)"
+      defect "$f is $n lines, over the $ANY_LINE_CAP cap; cut content, never split the file to pass"
     fi
   done <<< "$(find -L "$rules" -type f \( -name '*.md' -o -name '*.mdc' \) | sort || true)"
 done <<< "$RULE_DIRS"
@@ -1136,7 +1117,7 @@ done <<< "$CONTEXT_FILES"
 if ((worst_total > 0)); then
   echo "- worst chain  $worst_dir  $worst_total bytes (cap $CODEX_CHAIN_CAP)"
   if ((worst_total >= CODEX_CHAIN_CAP)); then
-    defect "the chain at $worst_dir is $worst_total bytes; Codex stops adding nested files (triage 14)"
+    defect "the chain at $worst_dir is $worst_total bytes; Codex stops adding nested files; delete content before you scope it"
   fi
 fi
 
@@ -1151,7 +1132,7 @@ while IFS= read -r rules; do
     c="$(char_count "$f")"
     ws_total=$((ws_total + c))
     if ((c >= WINDSURF_FILE_CAP)); then
-      defect "$f is $c characters, at or over the $WINDSURF_FILE_CAP Windsurf cap (triage 18)"
+      defect "$f is $c characters, at or over the $WINDSURF_FILE_CAP Windsurf cap; cut it and check the installed limit"
     fi
   done <<< "$(find -L "$rules" -type f -name '*.md' | sort || true)"
 done <<< "$RULE_DIRS"
@@ -1161,9 +1142,9 @@ echo
 
 echo "## summary"
 if ((EMPTY_REPO)); then
-  echo "note: no context file; create one only for a concrete hazard; see references/prescriptions.md"
+  echo "note: no context file; create one only for a concrete hazard"
 fi
-echo "$DEFECTS mechanical defects. Next: scripts/vitals.py for the per-line reading, then references/triage.md."
+echo "$DEFECTS mechanical defects."
 if ((STRICT)) && ((DEFECTS)); then
   exit 1
 fi

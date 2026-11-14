@@ -26,7 +26,7 @@ Expected reduction:
 2. Run tests through `just test <path>`; bare `pytest` skips fixture setup.
 ```
 
-Delete the tour, exposed version, generic advice, and redundant command. Delete the formatter reminder only after verifying that the relevant formatting obligation is already satisfied elsewhere. Retain both non-obvious contracts. Stopping because the original file was below 60 lines fails this case.
+Delete the tour, exposed version, generic advice, and redundant command. Delete the formatter reminder only after verifying that the relevant formatting obligation is already satisfied elsewhere. Retain both non-obvious contracts. Stopping because the original file was already short fails this case.
 
 ## Similar words with different obligations
 
@@ -44,7 +44,7 @@ These are three distinct contracts. Removing “production,” deleting the loca
 
 Root says to use pnpm. The website handbook repeats that instruction and adds a screenshot command needed only for visual changes. Another tool adapter repeats the whole root.
 
-Delete the repeated package-manager instruction only if the root reaches website tasks. Keep the screenshot exception in its narrower scope. Remove the adapter's duplicate body only after verifying the tool still receives the root through an existing load mechanism. Prefer `AGENTS.md`. Delete a leftover `CLAUDE.md`. Do not add adapters for unused tools.
+Delete the repeated package-manager instruction only if the root reaches website tasks. Keep the screenshot exception in its narrower scope. Remove the adapter's duplicate body only after verifying the tool still receives the root through an existing load mechanism. Do not add adapters for unused tools.
 
 Probe a website visual change and an unrelated backend edit. The first must receive the screenshot command; the second must gain no unconditional screenshot guidance. A nested npm instruction is a possible exception or conflict, not a paraphrase of pnpm.
 

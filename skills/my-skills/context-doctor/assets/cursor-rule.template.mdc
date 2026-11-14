@@ -1,7 +1,0 @@
----
-description: "<scope>"
-globs: "<verified-glob>"
-alwaysApply: false
----
-
-1. <Necessary instruction for this scope.>

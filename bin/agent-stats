@@ -1,7 +1,7 @@
 #!/usr/bin/env -S python3 -I
 """Measure the speed and quality balance of Claude Code from local transcripts.
 
-Reads ~/.claude and every ~/.claude-* home. Read-only, standard library only.
+Reads ~/.claude, every ~/.claude-* home and $CLAUDE_CONFIG_DIR. Read-only, standard library only.
 
 Usage: agent-stats [DAYS | YYYY-MM-DD]
   DAYS        window of the last DAYS days, default 7
@@ -180,6 +180,11 @@ def collect(start_dt):
     homes = [os.path.expanduser("~/.claude")] + sorted(
         glob.glob(os.path.expanduser("~/.claude-*"))
     )
+    # A session started with CLAUDE_CONFIG_DIR at another path keeps its
+    # transcripts there. Compare real paths so no home is counted twice.
+    env_home = os.environ.get("CLAUDE_CONFIG_DIR")
+    if env_home and os.path.realpath(env_home) not in map(os.path.realpath, homes):
+        homes.append(env_home)
     jobs = []
     for home in homes:
         projects = os.path.join(home, "projects")

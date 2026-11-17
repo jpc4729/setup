@@ -193,7 +193,7 @@ Short text:
 - Less text means better adherence, and each rule line costs context in every request.
 - STE and no bold: one meaning per word, and easy to scan.
 - `quiet` keeps a long passing log out of the context.
-- In Claude Code, the `bash-reads.sh` hook refuses a Bash command that prints a file through `cat`, `sed`, `head`, `tail` or `nl`, and tells the agent to use Read with a line range. The rule as text alone did not hold. A pipe, a redirect, a heredoc, `sed -i`, a file under a temp folder and a command such as `git diff` still pass.
+- In Claude Code, the `bash-reads.sh` hook refuses a Bash command that prints a file through `cat`, `sed`, `head`, `tail` or `nl`, and tells the agent to use Read with a line range. The rule as text alone did not hold. A read that pipes into another command, such as `cat f | rg x`, is refused too, because `rg x f` does the same. A redirect to a file, a heredoc, `sed -i`, `tail -f`, a file under a temp folder and a command such as `git diff` still pass.
 - One review round and one fix round, never a score: loops of review cost the most time.
 
 Subagents:

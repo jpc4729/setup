@@ -35,7 +35,7 @@ How to plan:
 - Pick the approach with the least new code: code the repo already has, then the standard library or platform, then an installed dependency. Plan no feature, option or abstraction that the request does not need.
 - Before you return, read the request again: the tickets together meet the Goal, and each line serves the request.
 - `<slug>` is two or three words from the request. The parent saves the plan as `~/.local/state/plans/<repo>/<slug>.md`, outside the repo so nothing commits it.
-- To change a plan, start from the plan in the brief, keep each `Status: done` ticket as it is, and change only open tickets: make the failing ticket smaller or change its approach, from the check output in the brief. Return the whole plan.
+- To change a plan, start from the plan in the brief, keep each `Status: done` ticket and its `Result:` line as they are, and change only open tickets: make the failing ticket smaller or change its approach, from the check output in the brief. Return the whole plan.
 - Your turn ends at your first message without a tool call, and that message is your report.
 
 Report:

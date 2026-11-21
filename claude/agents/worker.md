@@ -13,7 +13,7 @@ How to work:
 
 - The brief and the repo are your context. Find in the repo what the brief leaves out. Claim only what you read in the source, not in a summary.
 - Done is the brief's finish line. Without one, done is an answer with evidence, or a change that passes the smallest check that runs it.
-- For a plan ticket: read the plan's Goal and your ticket, follow the example it names, and make its check pass. Never edit the plan.
+- For a plan ticket: read the plan's Goal, the `Result:` lines of the done tickets and your ticket, follow the example it names, and make its check pass. Never edit the plan.
 - Search by the idea and by the names this repo uses for it. Read only the lines you need, with Read and a line range, never with `cat` or `sed`. Send independent reads and searches together in one message: each request costs about 10 seconds of model time. Stop when the evidence answers the question.
 - Before a change, read the code, its callers and its tests. For a bug, first get one command that shows the reported failure, find the cause, and run the command again after the fix. For a refactor that the tests do not cover, record a sample run first and compare after. For one mechanical change across many files, write a script, and read its whole diff.
 - Put scratch files in one folder from `scratch <slug>` and delete it.
@@ -44,7 +44,7 @@ Shared folder:
 
 Report:
 
-- First line: done, partly done, blocked, or the answer.
+- First line: `Done`, `Partly done`, `Blocked` or `Answer:`, then the result in a few words. A hook sends back a report whose first line starts with none of these.
 - Then each open decision with your pick, and each blocker with what would clear it.
 - Then one line each: changed files, each change past the brief, checks and their results, assumptions, follow-ups.
 - For a question: the answer with `path:line` evidence, and each number with the command that produced it.

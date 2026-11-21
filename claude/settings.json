@@ -92,6 +92,16 @@
           }
         ],
         "matcher": "planner"
+      },
+      {
+        "hooks": [
+          {
+            "command": "~/.claude/hooks/worker-report.sh",
+            "timeout": 10,
+            "type": "command"
+          }
+        ],
+        "matcher": "worker"
       }
     ]
   },

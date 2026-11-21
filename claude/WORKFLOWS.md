@@ -21,8 +21,8 @@ The same flow for every task. A small task skips the plan.
         |
         v
 +----------------+   small: Claude does it
-| 3. Build       |   plan: a fresh worker per ticket
-+----------------+   (fails twice: replan once on Fable, then stop)
+| 3. Build       |   plan: a fresh worker per ticket, one retry
++----------------+   in it (fails twice: replan once on Fable, then stop)
         |
         v
 +----------------+   smallest check while working,
@@ -153,7 +153,7 @@ Check a page in a real browser:
 A long job toward one number:
 
 ```text
-/goal <number> reaches <target>, measured by <command>. Make one change at a time and measure after each. Revert a change that does not move the number. Do not delete a feature or a test. Stop after 50 turns. This goal overrides the "two fixes that do not help" stop and the stop after compaction.
+/goal <number> reaches <target>, measured by <command>. Make one change at a time and measure after each. Revert a change that does not move the number. Do not delete a feature or a test. Stop after 50 turns. This goal overrides the "two fixes that do not help" stop.
 ```
 
 Eval a skill:
@@ -179,5 +179,4 @@ Then `/clear`, and paste the kickoff prompt that `/handoff` printed.
 ## Keep it quick
 
 - One task in a session. Type `/clear` between unrelated tasks.
-- After a compaction with work left: `/handoff`, then `/clear`.
 - A session went wrong: `/retro`.

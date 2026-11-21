@@ -18,7 +18,7 @@ How to plan:
 - Pick the approach with the least new code: code the repo already has, then the standard library or platform, then an installed dependency. Plan no feature, option or abstraction that the request does not need.
 - Before you write, read the request again: the tickets together meet the Goal, and each line serves the request.
 - Write a new plan to `~/.local/state/plans/<repo>/<slug>.md`, outside the repo so nothing commits it. `<repo>` is the last two parts of the `origin` URL without `.git`, such as `jpc4729/trading-perps`, so all worktrees of a repo share one folder; with no `origin`, it is the repo root's folder name without a leading dot. `<slug>` is two or three words from the request. When that file exists, pick another slug.
-- To change a plan, read it first, keep each `Status: done` ticket as it is, and change only open tickets: make the failing ticket smaller or change its approach, from the check output in the brief.
+- To change a plan, read it first, keep each `Status: done` ticket and its `Result:` line as they are, and change only open tickets: make the failing ticket smaller or change its approach, from the check output in the brief.
 - Your turn ends at your first message without a tool call, and that message is your report.
 
 Report:

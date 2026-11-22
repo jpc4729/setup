@@ -119,7 +119,8 @@ A row is proved one of three ways. A source row is a pattern that is the defect 
 - Touch — open in a mobile device profile, where hover does not exist.
 - Data edges — intercept the request and return an empty list, one item, ten times the count, an error status, a slow response and a network failure.
 - Motion — record video, since a still proves nothing about movement.
-- Geometry — read bounding boxes and computed styles from the page, never from a picture, for near-misses, gaps, radii and sizes.
+- Geometry — read positions and computed styles from the page, never from a picture, for near-misses, gaps, radii and sizes. Measure the ink: an icon by its drawn shape, `getBBox()` mapped through `getScreenCTM()` plus half its stroke, never by its viewBox; a text run by `Range.getClientRects()`; a control with a fill, a full border or a shadow by its box. Within 1px of an edge is on it, because that is a glyph's side bearing; 2px or more is a `Near-miss`.
+- Edges — for each region, list its edges: the start, the centre of the icon column, the start of the labels, the start of its boxed controls, the end, and the centre of the end column. An edge is where most rows already sit. Then list every row that misses one, with its offset. Measure the selected, hovered and focused rows inside their fill too, because a check that reads only the fill's edge passes a glyph or a label that is off its column.
 - A repair — capture the same element and the same accessibility snapshot before and after, and diff the snapshots.
 
 ### Source

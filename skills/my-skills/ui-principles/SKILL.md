@@ -165,7 +165,7 @@ Review
 Fix
 
 1. Run Review.
-2. Repair a shared cause at its owner and a local defect locally, in the project's own idiom.
+2. Repair a shared cause at its owner and a local defect locally, in the project's own idiom. An edge repair moves the rows that miss onto the edge most rows already hold, unless the design system names another, and changes the inset every row of the container reads, never a margin on the one row that missed.
 3. Take the cheapest repair that holds: delete, then use the platform, then reuse what the product already has, then correct the value, and only then add. An addition where a deletion held is its own finding.
 4. Stay inside the stack. A library migration, a second styling system, hand-built keyboard or focus behavior where a primitive exists, and ARIA where a native element would do are proposed, not applied.
 5. Prove each repair with a fresh render of the state it changed, captured before and after, not with another review.

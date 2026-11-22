@@ -10,21 +10,25 @@ A record under work splits into three vertical panes, separated by one hairline 
 - Center pane — the record at work. The widest pane, and the only one that scrolls a long tail: a trend, a task list, a feed of what happened.
 - Right pane — the record itself. Who this is, the numbers that describe it, and the facts that answer a lookup.
 
-The three panes share one top edge and one bottom edge. Each pane's own start edge is the spine of everything inside it. The hairline between two panes is a third edge, and the pane on either side hangs from it.
+The three panes share one top edge and one bottom edge. Each pane's own start edge is the spine of everything inside it. The hairline between two panes is a third edge, and the pane on either side hangs from it. In a desktop app window, the first bar of each pane shares the vertical centre of the window controls.
 
 In the markup the left pane is a labelled `nav`, the center pane is the view's one `main`, and the right pane is a labelled `aside`, so assistive technology meets the same three regions the eye does.
 
 ### Sidebar
 
-The spine is the start edge of the icon column. Every row makes contact there with its glyph, and a second contact with the shared start edge of the labels, so the labels form a column of their own. A row is an outline glyph, then a word. Nothing else.
+The spine is the start edge of the icon column. Every row makes contact there with its glyph, and a second contact with the shared start edge of the labels, so the labels form a column of their own. A row is an outline glyph, then a word. Nothing else. Glyphs of different widths centre on one vertical line through the column, never start-align, or the labels after them stagger.
 
-Above the rows sit two fixtures: a workspace row carrying a square mark, the workspace name and a switch affordance, then a search field with its shortcut hint parked on the end edge.
+Above the rows sit two fixtures: a workspace row carrying a square mark, the workspace name and a switch affordance, then a search field with its shortcut hint parked on the end edge. The mark is wider than the icon column, so it starts on the pill's edge and the name still starts on the label edge; the gap after the mark takes up the difference.
 
-The destination rows come first, undifferentiated on purpose. The current one wears a filled pill and is the only filled row in the pane.
+The destination rows come first, undifferentiated on purpose. The current one wears a filled pill and is the only filled row in the pane. The pill starts its own padding before the icon column, so its glyph and its label stay on the columns of every other row. A pill that starts on the icon column pushes its label off the label edge.
 
-Saved views drop the glyph and lead with a colored dot instead. The dot is the row's whole identity, and the column of dots reads as one set before a single label is read.
+Saved views drop the glyph and lead with a colored dot instead. The dot is the row's whole identity, and the column of dots reads as one set before a single label is read. The dot centres on the icon column, so the labels after it keep their edge.
 
-Section headings — `SAVED VIEWS`, `SEGMENTS` — are small, uppercase and muted, each with an add affordance on the end edge. They are the pane's landmarks, and there are two of them for twenty rows.
+A nested row indents by exactly one column: its glyph starts where its parent's label starts, and a child with no glyph starts its label there too. An indent with a value of its own is a third column nothing else uses.
+
+Section headings — `SAVED VIEWS`, `SEGMENTS` — are small, uppercase and muted, each with an add affordance on the end edge. They are the pane's landmarks, and there are two of them for twenty rows. A heading starts on the start edge of the icon column, not on the label edge, so it reads as the owner of the rows under it.
+
+Every trailing item, the counts, the add affordances and the actions in the pane's top bar, ends on one end edge, or centres on one vertical line when their widths differ.
 
 The utility rows at the foot — settings, help, invite — carry no heading. A larger gap is the only cue, and it is enough.
 

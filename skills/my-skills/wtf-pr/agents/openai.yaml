@@ -1,0 +1,5 @@
+interface:
+  display_name: "WTF PR"
+  short_description: "What a PR does, in plain words"
+policy:
+  allow_implicit_invocation: true

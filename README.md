@@ -207,9 +207,9 @@ Subagents:
 
 ## Skills
 
-The 22 skills are in [skills/](skills/README.md), one copy for every tool:
+The 21 skills are in [skills/](skills/README.md), one copy for every tool:
 
-- `skills/my-skills/`: 12 skills that I wrote, or adapted from other skills, such as `wayfinder` and `handoff` from Matt Pocock's skills.
+- `skills/my-skills/`: 13 skills that I wrote, or adapted from other skills, such as `wayfinder` and `handoff` from Matt Pocock's skills.
 - `skills/vendored/`: 8 skills from upstream, each with its upstream `LICENSE`.
 
 ## License

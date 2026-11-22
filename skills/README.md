@@ -18,6 +18,7 @@ Skills that I wrote, or that I adapted, changed or took ideas from another skill
 - `ui-principles`: rules for clean, scannable UI layout.
 - `verify-setup`: writes a repo's `.claude/skills/verify/SKILL.md`, the recipe that agents follow to prove a change in the real app. Inspired by `create-verification-skill` from poteto's [pstack](https://github.com/cursor/plugins/tree/main/pstack), MIT.
 - `wayfinder`: settles the open decisions of a big idea, one per session. Adapted from [wayfinder](https://github.com/mattpocock/skills/tree/main/skills/engineering/wayfinder) from Matt Pocock's skills, MIT.
+- `wtf-pr`: explains what a GitHub PR does, of any size, in plain words and a fixed layout, so a person can decide on it. It does not review the code.
 
 ## vendored
 
@@ -32,6 +33,6 @@ Skills from upstream, pinned in [`../skills-lock.json`](../skills-lock.json), ea
 
 ## Start rules
 
-- Each skill in `my-skills` but `sharpen-prompt` and `ui-principles` starts only when you type its name: `disable-model-invocation: true` for Claude Code, Cursor and Grok, and `allow_implicit_invocation: false` for Codex. opencode ignores those flags.
+- Each skill in `my-skills` but `sharpen-prompt`, `ui-principles` and `wtf-pr` starts only when you type its name: `disable-model-invocation: true` for Claude Code, Cursor and Grok, and `allow_implicit_invocation: false` for Codex. opencode ignores those flags.
 - `grilling`, the four `ponytail` skills and `security-audit` start only when you type their name.
 - `thermo-nuclear-code-quality-review` is off in every tool but Cursor, which has no switch for it.

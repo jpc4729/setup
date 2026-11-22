@@ -63,6 +63,7 @@ a question, no changes        add "Change nothing."
 see the app run               /run
 a recipe to prove changes     /verify-setup
 bugs in a diff or an area     "find bugs in <diff or path>"
+what a PR does                /wtf-pr <PR>
 a deeper bug review           /code-review
 simpler code                  /simplify
 write or fix a skill          /skills-claude

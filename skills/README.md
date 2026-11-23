@@ -7,7 +7,7 @@ Every skill in this setup. `./install.sh` copies each skill folder into `~/.agen
 Skills that I wrote, or that I adapted, changed or took ideas from another skill, vendored or public. They are under the repo's MIT license. When a skill comes from another one, its line names the source.
 
 - `context-doctor`: trims agent context files to what earns its tokens.
-- `emil-kowalski-ui-skills`: routes motion work, when you type its name, to the right file of [Emil Kowalski's skills](https://github.com/emilkowalski/skills), MIT. `install.sh` fetches a copy pinned to one commit into `~/.local/share/emil-kowalski-ui-skills/`, and the skill reads it there.
+- `emil-kowalski-ui-skills`: routes UI work, when you type its name, to the right part of two skill sets: motion and touch to the right file of [Emil Kowalski's skills](https://github.com/emilkowalski/skills), MIT, and visual direction, palettes, fonts, UX rules, charts and stack guidance to the search tool or the references of [UI UX Pro Max](https://github.com/nextlevelbuilder/ui-ux-pro-max-skill), MIT. `install.sh` fetches a copy of each, pinned to one commit, into `~/.local/share/emil-kowalski-ui-skills/` and `~/.local/share/ui-ux-pro-max/`, and the skill reads them there.
 - `diagnose`: finds a bug's cause from a command that shows the failure. Inspired by [diagnosing-bugs](https://github.com/mattpocock/skills/tree/main/skills/engineering/diagnosing-bugs) from Matt Pocock's skills, MIT.
 - `handoff`: turns a conversation into a handoff document and a kickoff prompt. Adapted from [handoff](https://github.com/mattpocock/skills/tree/main/skills/productivity/handoff) from Matt Pocock's skills, MIT.
 - `intent`: writes intent trees, then checks the code against them.

@@ -154,26 +154,32 @@ for dir in "$repo"/skills/vendored/*/ "$repo"/skills/my-skills/*/; do
   fi
 done
 
-# The emil-kowalski-ui-skills skill reads Emil Kowalski's skills from a copy
-# pinned to one commit. To move the pin, replace the SHA, run this script, and
-# check that each file and heading that the skill's Step 1 names still exists.
-emil_sha=f7ce8c02d6e3c8f0d980a44c57bcc41a40254349
-emil="$HOME/.local/share/emil-kowalski-ui-skills"
-if [[ -n "$dry" ]]; then
-  echo "fetch $emil at $emil_sha"
-elif [[ "$(cat "$emil/.pin" 2> /dev/null)" != "$emil_sha" ]]; then
-  emil_tmp="$(mktemp -d)"
-  if curl -fsSL "https://github.com/emilkowalski/skills/archive/$emil_sha.tar.gz" |
-    tar -xz -C "$emil_tmp" --strip-components 1 \
-      --exclude '*/skills/write-swift/*' --exclude '*/skills/emil-design-eng/*'; then
-    echo "$emil_sha" > "$emil_tmp/.pin"
-    mkdir -p "$emil"
-    rsync -a --delete "$emil_tmp/" "$emil/"
-  else
-    echo "install.sh: could not fetch Emil Kowalski's skills; emil-kowalski-ui-skills has no copy to read" >&2
+# The emil-kowalski-ui-skills skill reads two third-party skill sets from
+# copies pinned to one commit each. To move a pin, replace the SHA, run this
+# script, and check that each file, heading and search.py flag that the
+# skill's Step 1 names still exists.
+fetch_pinned() { # <folder in ~/.local/share> <sha> <owner/repo> <tar args>...
+  local dest="$HOME/.local/share/$1" sha="$2" repo="$3" tmp
+  shift 3
+  if [[ -n "$dry" ]]; then
+    echo "fetch $dest at $sha"
+  elif [[ "$(cat "$dest/.pin" 2> /dev/null)" != "$sha" ]]; then
+    tmp="$(mktemp -d)"
+    if curl -fsSL "https://github.com/$repo/archive/$sha.tar.gz" |
+      tar -xz -C "$tmp" --strip-components 1 "$@"; then
+      echo "$sha" > "$tmp/.pin"
+      mkdir -p "$dest"
+      rsync -a --delete "$tmp/" "$dest/"
+    else
+      echo "install.sh: could not fetch $repo; emil-kowalski-ui-skills has no copy of it to read" >&2
+    fi
+    rm -rf "$tmp"
   fi
-  rm -rf "$emil_tmp"
-fi
+}
+fetch_pinned emil-kowalski-ui-skills f7ce8c02d6e3c8f0d980a44c57bcc41a40254349 emilkowalski/skills \
+  --exclude '*/skills/write-swift/*' --exclude '*/skills/emil-design-eng/*'
+fetch_pinned ui-ux-pro-max f823ab5fb970de820e5a0626a0786aba9aee0543 nextlevelbuilder/ui-ux-pro-max-skill \
+  --exclude '*/scripts/tests/*' '*/LICENSE' '*/.claude/skills/ui-ux-pro-max/*'
 
 # Skills you start by name. The `user-invocable-only` entries of Claude's
 # skillOverrides are the one list. Codex, Cursor and Grok have no such setting,

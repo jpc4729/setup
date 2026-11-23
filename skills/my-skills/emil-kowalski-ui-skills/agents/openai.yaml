@@ -1,5 +1,5 @@
 interface:
   display_name: "Emil Kowalski UI Skills"
-  short_description: "Router to Emil Kowalski's UI skills"
+  short_description: "Router to Emil Kowalski's and UI UX Pro Max's UI skills"
 policy:
   allow_implicit_invocation: false

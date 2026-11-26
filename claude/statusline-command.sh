@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Claude Code Status Line
-# Format: profile | dir | branch | model effort | used/total tokens | limits | cache | +lines/-lines | age
+# Format: profile | dir | branch | model effort | running subagents | used/total tokens | limits | cache | +lines/-lines | age
 
 # Every profile runs this one file, so the profile comes from the config dir at runtime.
 PROFILE="$(basename "${CLAUDE_CONFIG_DIR:-$HOME/.claude}")"
@@ -22,7 +22,7 @@ settings="${CLAUDE_CONFIG_DIR:-$HOME/.claude}/settings.json"
 # control characters, so a name can neither break the split nor print an
 # escape sequence.
 IFS=$'\x1f' read -r cwd model ctx_size compact_window lines_added lines_removed input_tokens cache_create cache_read duration_ms effort \
-  five_pct five_reset week_pct week_reset cache_seen cache_expires cache_ttl < <(
+  five_pct five_reset week_pct week_reset cache_seen cache_expires cache_ttl transcript_path < <(
     jq -r --rawfile settings "$settings" '
     def clean: gsub("[[:cntrl:]]"; "");
     # The auto-compact window as Claude Code picks it from settings: the
@@ -50,7 +50,8 @@ IFS=$'\x1f' read -r cwd model ctx_size compact_window lines_added lines_removed 
       (.rate_limits.seven_day.resets_at // 0 | floor),
       (.prompt_cache.caching_observed // false),
       (.prompt_cache.expires_at // 0 | floor),
-      (.prompt_cache.ttl // "" | clean)
+      (.prompt_cache.ttl // "" | clean),
+      (.transcript_path // "" | clean)
     ] | map(tostring) | join("\u001f")
   ' <<< "$input"
   )
@@ -103,15 +104,57 @@ fi
 # HEAD is a plain file, so a crafted repo could put an escape sequence in it.
 branch=${branch//[[:cntrl:]]/}
 
-# Model shortname
-model_short=""
-case "$model" in
-  *[Oo]pus*) model_short="opus" ;;
-  *[Ss]onnet*) model_short="sonnet" ;;
-  *[Hh]aiku*) model_short="haiku" ;;
-  *[Ff]able*) model_short="fable" ;;
-  *) model_short="${model:0:8}" ;;
-esac
+# Model shortname of $1, in short_name.
+short_model() {
+  case "$1" in
+    *[Oo]pus*) short_name="opus" ;;
+    *[Ss]onnet*) short_name="sonnet" ;;
+    *[Hh]aiku*) short_name="haiku" ;;
+    *[Ff]able*) short_name="fable" ;;
+    *) short_name="${1:0:8}" ;;
+  esac
+}
+short_model "$model"
+model_short=$short_name
+
+# Running subagents of this session, by agent type and the model that answers
+# them, as "worker fable, reviewer opus ×2". The input describes only the main
+# session, even in a subagent's pane, so read each subagent transcript: it runs
+# until its last message is a finished turn. Only the end of a file is read, as
+# it can be megabytes. The type comes from the meta file next to it. A
+# transcript untouched for an hour is left out, so a session killed mid-run
+# shows no subagent forever.
+agents_display=""
+sub_dir="${transcript_path%.jsonl}/subagents"
+if [[ "$transcript_path" == *.jsonl && -d "$sub_dir" ]]; then
+  sub_agents=""
+  while IFS= read -r sub_file; do
+    sub_meta="${sub_file%.jsonl}.meta.json"
+    [[ -r "$sub_meta" ]] || sub_meta=/dev/null
+    sub_line=$(tail -c 262144 "$sub_file" | jq -nRr --rawfile meta "$sub_meta" '
+      def word: gsub("[[:cntrl:][:space:]]"; "");
+      [inputs | fromjson? | select(.type == "assistant" or .type == "user")] as $e
+      | ($e | last) as $l
+      | if $l == null or ($l.type == "assistant" and $l.message.stop_reason == "end_turn") then empty
+        else
+          ((try ($meta | fromjson | .agentType) catch null) // "" | tostring | word
+            | if . == "" then "agent" else . end),
+          ([$e[] | select(.type == "assistant") | .message.model // empty] | last // "" | word
+            | if . == "" then "?" else . end)
+        end
+    ' 2> /dev/null | paste -sd ' ' -) || continue
+    [[ -n "$sub_line" ]] || continue
+    short_model "${sub_line#* }"
+    sub_agents+="${sub_line%% *} $short_name"$'\n'
+  done < <(find "$sub_dir" -name 'agent-*.jsonl' -mmin -60 2> /dev/null)
+  while read -r count name; do
+    [[ -n "$agents_display" ]] && agents_display+="${DIM},${RESET} "
+    agents_display+="${CYAN}${name}${RESET}"
+    if ((count > 1)); then
+      agents_display+=" ${DIM}×${count}${RESET}"
+    fi
+  done < <(printf '%s' "$sub_agents" | sort | uniq -c)
+fi
 
 # Reasoning effort level — dimmed suffix on the model (absent when the
 # selected model has no effort parameter, so the segment stays clean).
@@ -262,6 +305,7 @@ out="${MAGENTA}${PROFILE}${RESET}"
 [[ -n "$dir" ]] && out="$out ${DIM}|${RESET} $dir"
 [[ -n "$branch" ]] && out="$out ${DIM}|${RESET} $branch"
 [[ -n "$model_short" ]] && out="$out ${DIM}|${RESET} ${CYAN}$model_short${RESET}$effort_display"
+[[ -n "$agents_display" ]] && out="$out ${DIM}|${RESET} $agents_display"
 [[ -n "$ctx_display" ]] && out="$out ${DIM}|${RESET} $ctx_display"
 [[ -n "$limits_display" ]] && out="$out ${DIM}|${RESET} $limits_display"
 [[ -n "$cache_display" ]] && out="$out ${DIM}|${RESET} $cache_display"

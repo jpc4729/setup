@@ -154,7 +154,7 @@ for dir in "$repo"/skills/vendored/*/ "$repo"/skills/my-skills/*/; do
   fi
 done
 
-# The emil-kowalski-ui-skills skill reads two third-party skill sets from
+# The ui-refs skill reads two third-party skill sets from
 # copies pinned to one commit each. To move a pin, replace the SHA, run this
 # script, and check that each file, heading and search.py flag that the
 # skill's Step 1 names still exists.
@@ -171,7 +171,7 @@ fetch_pinned() { # <folder in ~/.local/share> <sha> <owner/repo> <tar args>...
       mkdir -p "$dest"
       rsync -a --delete "$tmp/" "$dest/"
     else
-      echo "install.sh: could not fetch $repo; emil-kowalski-ui-skills has no copy of it to read" >&2
+      echo "install.sh: could not fetch $repo; ui-refs has no copy of it to read" >&2
     fi
     rm -rf "$tmp"
   fi

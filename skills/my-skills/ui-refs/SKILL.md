@@ -1,5 +1,5 @@
 ---
-name: emil-kowalski-ui-skills
+name: ui-refs
 description: "Route UI work to the pinned skills of Emil Kowalski and UI UX Pro Max"
 argument-hint: "[intent] [path]"
 disable-model-invocation: true
@@ -7,7 +7,7 @@ metadata:
   short-description: "Router to Emil Kowalski's and UI UX Pro Max's UI skills"
 ---
 
-# Emil Kowalski UI Skills
+# UI Refs
 
 This skill routes UI work to two third-party skill sets. They are not installed. A copy of each, pinned to one commit, is on disk (both MIT, see `LICENSE` in each):
 

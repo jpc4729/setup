@@ -7,7 +7,6 @@ Every skill in this setup. `./install.sh` copies each skill folder into `~/.agen
 Skills that I wrote, or that I adapted, changed or took ideas from another skill, vendored or public. They are under the repo's MIT license. When a skill comes from another one, its line names the source.
 
 - `context-doctor`: trims agent context files to what earns its tokens.
-- `emil-kowalski-ui-skills`: routes UI work, when you type its name, to the right part of two skill sets: motion and touch to the right file of [Emil Kowalski's skills](https://github.com/emilkowalski/skills), MIT, and visual direction, palettes, fonts, UX rules, charts and stack guidance to the search tool or the references of [UI UX Pro Max](https://github.com/nextlevelbuilder/ui-ux-pro-max-skill), MIT. `install.sh` fetches a copy of each, pinned to one commit, into `~/.local/share/emil-kowalski-ui-skills/` and `~/.local/share/ui-ux-pro-max/`, and the skill reads them there.
 - `diagnose`: finds a bug's cause from a command that shows the failure. Inspired by [diagnosing-bugs](https://github.com/mattpocock/skills/tree/main/skills/engineering/diagnosing-bugs) from Matt Pocock's skills, MIT.
 - `handoff`: turns a conversation into a handoff document and a kickoff prompt. Adapted from [handoff](https://github.com/mattpocock/skills/tree/main/skills/productivity/handoff) from Matt Pocock's skills, MIT.
 - `intent`: writes intent trees, then checks the code against them.
@@ -16,6 +15,7 @@ Skills that I wrote, or that I adapted, changed or took ideas from another skill
 - `sharpen-prompt`: rewrites a rough prompt into a short, direct one. When you ask, it uses a Claude Code session as context, found by its ID or by a search.
 - `skills-claude`: writes, reviews or fixes a skill to the standards of the native Claude Code skills.
 - `ui-principles`: rules for clean, scannable UI layout.
+- `ui-refs`: routes UI work, when you type its name, to the right part of two skill sets: motion and touch to the right file of [Emil Kowalski's skills](https://github.com/emilkowalski/skills), MIT, and visual direction, palettes, fonts, UX rules, charts and stack guidance to the search tool or the references of [UI UX Pro Max](https://github.com/nextlevelbuilder/ui-ux-pro-max-skill), MIT. `install.sh` fetches a copy of each, pinned to one commit, into `~/.local/share/emil-kowalski-ui-skills/` and `~/.local/share/ui-ux-pro-max/`, and the skill reads them there.
 - `verify-setup`: writes a repo's `.claude/skills/verify/SKILL.md`, the recipe that agents follow to prove a change in the real app. Inspired by `create-verification-skill` from poteto's [pstack](https://github.com/cursor/plugins/tree/main/pstack), MIT.
 - `wayfinder`: settles the open decisions of a big idea, one per session. Adapted from [wayfinder](https://github.com/mattpocock/skills/tree/main/skills/engineering/wayfinder) from Matt Pocock's skills, MIT.
 - `wtf-pr`: explains what a GitHub PR does, of any size, in plain words and a fixed layout, so a person can decide on it. It does not review the code.
